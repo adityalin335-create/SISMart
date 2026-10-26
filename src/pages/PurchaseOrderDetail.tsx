@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Building2, CalendarDays, Pencil, Printer, Send } from 'lucide-react';
+import { ArrowDownToLine, ArrowLeft, Building2, CalendarDays, Pencil, Printer, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,7 +64,7 @@ export default function PurchaseOrderDetailPage() {
           <h1 className="text-xl font-bold truncate">{order.poNumber}</h1>
           <p className="text-xs text-muted-foreground">{t('purchaseOrders.detailTitle')}</p>
         </div>
-        <Badge variant={order.status === 'submitted' ? 'default' : 'secondary'}>
+        <Badge variant={order.status !== 'draft' ? 'default' : 'secondary'}>
           {t(`purchaseOrders.status.${order.status}`)}
         </Badge>
       </div>
@@ -76,6 +76,13 @@ export default function PurchaseOrderDetailPage() {
       {order.status === 'draft' && (
         <Button asChild variant="outline" className="w-full sm:w-auto">
           <Link to={`/purchase-orders/${order.id}/edit`}><Pencil className="w-4 h-4 mr-2" />{t('purchaseOrders.editDraft')}</Link>
+        </Button>
+      )}
+      {['submitted', 'partially_received'].includes(order.status) && (
+        <Button asChild className="w-full sm:w-auto">
+          <Link to={`/receivings/new?purchaseOrderId=${order.id}`}>
+            <ArrowDownToLine className="w-4 h-4 mr-2" />{t('receivings.createFromPo')}
+          </Link>
         </Button>
       )}
 
@@ -136,7 +143,7 @@ export default function PurchaseOrderDetailPage() {
       {order.status === 'submitted' && (
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
           <Send className="w-4 h-4 mt-0.5 text-primary shrink-0" />
-          <p className="text-xs text-muted-foreground">{t('purchaseOrders.receivingPhaseNote')}</p>
+          <p className="text-xs text-muted-foreground">{t('receivings.createFromPoHint')}</p>
         </div>
       )}
 

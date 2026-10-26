@@ -248,9 +248,6 @@ export default function Laporan() {
                 } catch (err) {
                   console.error('Failed to request in-app review:', err);
                 }
-              } else {
-                console.log('In-app review requested (mocked for PWA/Web)');
-                toast.info(t('dailyReceipt.reviewPromptWeb', 'Beri rating aplikasi kami di Play Store!'));
               }
             }
           }}

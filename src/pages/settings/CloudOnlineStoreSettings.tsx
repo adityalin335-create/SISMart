@@ -431,7 +431,7 @@ export default function CloudOnlineStoreSettings() {
             <img src="\${qrUrl}" alt="QR Code" />
             <h1>\${store?.name || 'Toko Online'}</h1>
             <p>market.freekasir.com/stores/\${store?.identifier}</p>
-            <div class="footer">Dicetak melalui FreeKasir</div>
+            <div class="footer">Dicetak melalui SISMart</div>
           </div>
           <script>
             window.onload = function() {
@@ -1022,7 +1022,7 @@ export default function CloudOnlineStoreSettings() {
                         <p className="text-xs text-muted-foreground text-left">
                           {hasTemplate 
                             ? 'QR Code telah berhasil digabungkan dengan template cetak Anda.' 
-                            : 'Scan QR Code ini untuk langsung membuka halaman toko online Anda di Market FreeKasir.'
+                            : 'Scan QR Code ini untuk langsung membuka halaman toko online Anda di Market SISMart.'
                           }
                         </p>
                       </DialogHeader>

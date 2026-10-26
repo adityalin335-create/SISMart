@@ -72,6 +72,8 @@ export default function PurchaseOrdersPage() {
             <SelectItem value="all">{t('purchaseOrders.status.all')}</SelectItem>
             <SelectItem value="draft">{t('purchaseOrders.status.draft')}</SelectItem>
             <SelectItem value="submitted">{t('purchaseOrders.status.submitted')}</SelectItem>
+            <SelectItem value="partially_received">{t('purchaseOrders.status.partially_received')}</SelectItem>
+            <SelectItem value="received">{t('purchaseOrders.status.received')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -97,7 +99,7 @@ export default function PurchaseOrdersPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-semibold">{order.poNumber}</p>
-                      <Badge variant={order.status === 'submitted' ? 'default' : 'secondary'}>
+                      <Badge variant={order.status !== 'draft' ? 'default' : 'secondary'}>
                         {t(`purchaseOrders.status.${order.status}`)}
                       </Badge>
                     </div>

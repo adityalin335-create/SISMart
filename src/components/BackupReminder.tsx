@@ -92,8 +92,8 @@ export async function exportBackupData() {
 
       // Share the written file using Android system share dialog
       await Share.share({
-        title: 'Backup FreeKasir',
-        text: 'File backup data FreeKasir (JSON)',
+        title: 'Backup SISMart',
+        text: 'File backup data SISMart (JSON)',
         url: result.uri,
         dialogTitle: 'Simpan / Bagikan Backup',
       });

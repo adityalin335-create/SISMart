@@ -164,12 +164,12 @@ export default function ReceiptSettings() {
             
             <div className="space-y-1.5 opacity-55">
               <div className="flex justify-between">
-                <span>Nasi Goreng Spesial</span>
-                <span>Rp 15.000</span>
+                <span>Air Mineral 600 ml</span>
+                <span>Rp 5.000</span>
               </div>
               <div className="flex justify-between font-bold text-zinc-800 dark:text-zinc-200">
                 <span>TOTAL</span>
-                <span>Rp 15.000</span>
+                <span>Rp 5.000</span>
               </div>
             </div>
 
@@ -184,7 +184,7 @@ export default function ReceiptSettings() {
             {!(hideWatermark && isCloudActive) && (
               <div className="text-center text-[10px] text-zinc-500 pt-2 border-t border-dotted border-zinc-200 dark:border-zinc-800 space-y-0.5">
                 <p>Dicetak Dari Aplikasi</p>
-                <p className="font-semibold">FreeKasir.com</p>
+                <p className="font-semibold">SISMart</p>
               </div>
             )}
           </CardContent>

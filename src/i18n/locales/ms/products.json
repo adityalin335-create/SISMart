@@ -17,6 +17,44 @@
     "stock": "Stok",
     "stockUnmanaged": "Stok tidak diurus"
   },
+  "stockCard": {
+    "title": "Kad Stok",
+    "openAction": "Lihat Kad Stok",
+    "openForProduct": "Lihat kad stok {{product}}",
+    "permission": "Kebenaran melihat stok",
+    "loading": "Memuatkan kad stok...",
+    "notFound": "Produk tidak ditemui.",
+    "backToProducts": "Kembali ke produk",
+    "currentStock": "Stok semasa",
+    "empty": "Belum ada pergerakan stok.",
+    "balanceMismatch": "Baki lejar terakhir ({{ledger}}) tidak sepadan dengan stok produk ({{stock}}). Semak sejarah pergerakan stok.",
+    "columns": {
+      "date": "Tarikh",
+      "opening": "Stok Awal",
+      "receiving": "Penerimaan",
+      "sales": "Jualan",
+      "returns": "Pulangan",
+      "stockOpname": "Pelarasan SO",
+      "otherAdjustment": "Pelarasan Lain",
+      "closing": "Stok Akhir"
+    },
+    "detail": {
+      "time": "Masa",
+      "type": "Jenis",
+      "reference": "Nombor Rujukan",
+      "in": "Stok Masuk",
+      "out": "Stok Keluar",
+      "balance": "Baki Berjalan"
+    },
+    "types": {
+      "opening_stock": "Stok Awal",
+      "receiving": "Penerimaan",
+      "sale": "Jualan",
+      "stock_adjustment": "Pelarasan Stok",
+      "stock_opname": "Stock Opname",
+      "return": "Pulangan"
+    }
+  },
   "dialog": {
     "titleEdit": "Sunting Produk",
     "titleAdd": "Tambah Produk",
@@ -26,7 +64,7 @@
     "photoSelect": "Pilih Foto",
     "photoRemove": "Buang Foto",
     "nameLabel": "Nama Produk",
-    "namePlaceholder": "Cth: Nasi Goreng",
+    "namePlaceholder": "Cth: Beras Premium 5 kg",
     "skuLabel": "SKU",
     "scanCamera": "Imbas melalui kamera",
     "categoryLabel": "Kategori",
@@ -40,7 +78,7 @@
     "stockPlaceholder": "0",
     "manageStockLabel": "Urus Stok",
     "stockEnabledHint": "Stok dikesan secara automatik & dihadkan semasa jualan.",
-    "stockDisabledHint": "Produk sentiasa tersedia, stok tidak dikesan (cth. perkhidmatan, makanan ditempah).",
+    "stockDisabledHint": "Produk sentiasa tersedia dan stok tidak dijejak (cth. perkhidmatan atau produk digital).",
     "unitLabel": "Unit",
     "barcodeLabel": "Barcode",
     "barcodePlaceholder": "Pilihan",
@@ -76,7 +114,7 @@
     "flashUnsupported": "Flash tidak disokong pada peranti ini",
     "httpsRequired": "Aplikasi mesti diakses melalui HTTPS untuk menggunakan kamera.",
     "browserUnsupported": "Pelayar tidak menyokong akses kamera. Cuba kemas kini aplikasi atau guna pelayar lain.",
-    "permissionDeniedNative": "Keizinan kamera ditolak. Pergi ke Tetapan peranti > Apl > FreeKasir > Keizinan, kemudian aktifkan Kamera.",
+    "permissionDeniedNative": "Keizinan kamera ditolak. Pergi ke Tetapan peranti > Apl > SISMart > Keizinan, kemudian aktifkan Kamera.",
     "permissionDeniedWeb": "Keizinan kamera ditolak. Klik ikon gembok di bar alamat dan benarkan akses kamera.",
     "permissionDeniedGeneric": "Keizinan kamera ditolak. Sila benarkan akses kamera dan cuba lagi.",
     "noCamera": "Tiada kamera ditemui pada peranti ini.",

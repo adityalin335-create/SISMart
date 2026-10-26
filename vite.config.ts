@@ -18,11 +18,11 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "kasirgratisan-icon.png", "og-image.png"],
+      includeAssets: ["favicon.ico", "kasirgratisan-icon.png"],
       manifest: {
-        name: "FreeKasir - POS UMKM Gratis",
-        short_name: "FreeKasir",
-        description: "Aplikasi kasir gratis untuk UMKM Indonesia. Offline & tanpa biaya.",
+        name: "SISMart - Sistem Kasir Minimarket",
+        short_name: "SISMart",
+        description: "Sistem kasir dan manajemen stok untuk minimarket.",
         start_url: "/",
         display: "standalone",
         background_color: "#FFFFFF",

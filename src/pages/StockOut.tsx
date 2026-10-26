@@ -71,22 +71,35 @@ export default function StockOutPage() {
       return;
     }
 
-    await db.stockOuts.add({
-      productId: Number(productId),
-      quantity: qty,
-      reason,
-      date: new Date(),
-      notes: notes.trim(),
-      createdBy: currentUser?.id,
-    });
+    try {
+      const movementDate = new Date();
+      const referenceNumber = `STOCK-OUT-${movementDate.getTime()}-${crypto.randomUUID().slice(0, 6)}`;
+      await db.transaction('rw', [db.stockOuts, db.products], async () => {
+        const current = await db.products.get(product.id!);
+        if (!current) throw new Error('Produk tidak ditemukan.');
+        if (qty > current.stock) throw new Error(t('stockOut.toast.exceedsStock'));
+        const isReturn = /retur|return/i.test(reason);
+        await db.stockOuts.add({
+          productId: current.id!,
+          movementType: isReturn ? 'return' : 'stock_adjustment',
+          referenceNumber,
+          quantity: qty,
+          reason,
+          date: movementDate,
+          notes: notes.trim(),
+          createdBy: currentUser?.id,
+        });
+        await db.products.update(current.id!, {
+          stock: Math.round((current.stock - qty) * 1e6) / 1e6,
+          updatedAt: movementDate,
+        });
+      });
 
-    await db.products.update(product.id!, {
-      stock: Math.round((product.stock - qty) * 1e6) / 1e6,
-      updatedAt: new Date(),
-    });
-
-    toast.success(t('stockOut.toast.success', { product: product.name, qty }));
-    setDialogOpen(false);
+      toast.success(t('stockOut.toast.success', { product: product.name, qty }));
+      setDialogOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('stockOut.toast.saveFailed'));
+    }
   };
 
   return (

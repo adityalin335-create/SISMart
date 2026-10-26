@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "FreeKasir",
+    "name": "SISMart",
     "tagline": "POS Percuma — Urus Jualan Dengan Mudah 🇮🇩"
   },
   "nav": {
@@ -64,27 +64,12 @@
     "storageUsed": "Storan Diguna"
   },
   "whatsNew": {
-    "title": "Apa Yang Baru di FreeKasir",
+    "title": "Apa Yang Baru di SISMart",
     "slide": "Slaid {{number}}",
     "finish": "Selesai",
     "skip": "Langkau"
   },
   "whatsNewFeatures": {
-    "2026-07-telegram-support": {
-      "title": "Sokongan Telegram",
-      "description": "Kini anda boleh menghubungi pasukan sokongan FreeKasir secara langsung melalui Telegram untuk bantuan cepat, maklum balas, atau melaporkan kendala.",
-      "ctaLabel": "Hubungi Sekarang"
-    },
-    "2026-06-join-whatsapp": {
-      "title": "Sertai Saluran WhatsApp Rasmi",
-      "description": "Sertai Saluran WhatsApp rasmi FreeKasir untuk mendapatkan maklumat tips perniagaan terkini, panduan penggunaan, serta pengumuman kemas kini ciri secara langsung di WhatsApp anda!",
-      "ctaLabel": "Sertai Sekarang"
-    },
-    "2026-06-kitchen-ticket": {
-      "title": "Cetak Tiket Dapur",
-      "description": "Kini anda boleh mencetak Tiket Dapur (pesanan tanpa harga/jumlah) secara langsung apabila menyimpan bil atau dari senarai Bil Terbuka. Lengkap dengan kotak checklist kosong di sebelah kanan setiap item untuk ditanda secara manual oleh pihak dapur.",
-      "ctaLabel": "Buka Kasir"
-    },
     "2026-06-cashier-layout": {
       "title": "Tampilan Kasir Grid / Baris",
       "description": "Kini anda boleh memilih paparan produk di halaman Kasir antara mod Grid (kad besar) atau mod Baris (senarai ringkas). Sesuai jika produk kedai anda banyak dan mahukan paparan yang lebih mudah. Tetapkan melalui Tetapan → Tampilan Kasir.",
@@ -114,16 +99,6 @@
       "title": "Cetak Laporan Closing Harian",
       "description": "Kini anda boleh melihat pratonton, memuat turun, berkongsi, dan mencetak laporan closing jualan harian terus ke pencetak terma Bluetooth. Halaman Laporan kini dibuka secara automatik ke tab Harian secara lalai, lengkap dengan penunjuk jika tiada transaksi pada hari tersebut.",
       "ctaLabel": "Buka Laporan"
-    },
-    "2026-06-cloud-backup": {
-      "title": "Sandaran Automatik ke Awan",
-      "description": "Data kedai kini boleh disandarkan secara automatik ke awan yang selamat — kekal selamat walaupun telefon hilang, rosak, atau bertukar peranti. Log masuk dengan akaun Google, pilih pakej langganan, dan tetapkan jadual sandaran automatik. Anda juga boleh memulihkan data terus dari awan pada bila-bila masa.",
-      "ctaLabel": "Aktifkan Cloud Backup"
-    },
-    "2026-06-rebrand-freekasir": {
-      "title": "Wajah Baru: FreeKasir",
-      "description": "Aplikasi ini kini dinamakan FreeKasir dengan paparan dan warna baru yang lebih segar. Fungsi & data anda kekal sama. Suka warna lain? Anda masih boleh memilih tema kegemaran anda di Tetapan → Warna Tema.",
-      "ctaLabel": "Tukar Warna Tema"
     },
     "2026-06-stock-search-scan": {
       "title": "Cari & Scan Produk di Stock In/Out",

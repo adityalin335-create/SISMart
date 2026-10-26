@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.freekasir.app',
-  appName: 'FreeKasir',
+  appName: 'SISMart',
   webDir: 'dist',
   android: {
     allowMixedContent: true,

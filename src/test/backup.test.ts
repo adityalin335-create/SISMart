@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { db } from '@/lib/db';
-import { buildBackupData, restoreFromBackupData, BACKUP_VERSION } from '@/lib/backup';
+import { buildBackupData, restoreFromBackupData, BACKUP_VERSION, backupFileName } from '@/lib/backup';
 
 describe('Backup and Restore Logic', () => {
+  it('uses the SISMart brand for new backup file names', () => {
+    expect(backupFileName(new Date('2026-10-26T16:17:44.022Z'))).toBe('sismart-backup-2026-10-26.json');
+  });
+
   beforeEach(async () => {
     // Clear tables before each test
     await db.categories.clear();

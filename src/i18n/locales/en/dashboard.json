@@ -1,6 +1,6 @@
 {
   "title": {
-    "storeNameFallback": "FreeKasir"
+    "storeNameFallback": "SISMart"
   },
   "stats": {
     "salesToday": "Today's Sales",
@@ -10,8 +10,8 @@
     "expenseNotes": "{{count}} entries"
   },
   "openBills": {
-    "title": "Open Bills",
-    "description": "{{count}} bill(s) awaiting payment"
+    "title": "Pending Transactions",
+    "description": "{{count}} transaction(s) awaiting payment"
   },
   "quickActions": {
     "title": "Quick Access",

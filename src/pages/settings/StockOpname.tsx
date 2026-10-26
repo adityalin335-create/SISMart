@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { id as localeId, enUS, ms as localeMs } from 'date-fns/locale';
 import type { Locale } from 'date-fns';
 import { downloadOrShareFile } from '@/lib/file-utils';
+import { completeStockOpname } from '@/lib/stock-opname';
 
 const DATE_LOCALES: Record<string, Locale> = { id: localeId, en: enUS, ms: localeMs };
 
@@ -122,6 +123,7 @@ export default function StockOpnamePage() {
         opnameId,
         productId: p.id!,
         systemStock: p.stock,
+        systemStockUpdatedAt: p.updatedAt,
         realStock: p.stock, // initialize physical stock to system stock
         difference: 0
       }));
@@ -352,53 +354,7 @@ export default function StockOpnamePage() {
     setSubmitting(true);
 
     try {
-      const now = new Date();
-
-      await db.transaction('rw', [db.products, db.stockOpnames, db.stockOpnameItems, db.stockIns, db.stockOuts], async () => {
-        // 1. Update main opname status
-        await db.stockOpnames.update(activeOpname.id!, {
-          status: 'completed',
-          date: now,
-          notes: notes.trim() || undefined
-        });
-
-        // 2. Adjust stocks in products table & insert into stock movements
-        for (const item of draftItems) {
-          const diff = item.realStock - item.systemStock;
-
-          // Update product stock
-          await db.products.update(item.productId, {
-            stock: item.realStock,
-            updatedAt: now
-          });
-
-          // Insert stock movements if difference is non-zero
-          if (diff > 0) {
-            // positive adjustment = Stock In
-            const prod = await db.products.get(item.productId);
-            await db.stockIns.add({
-              productId: item.productId,
-              supplierId: 0, // 0 = adjustment / no supplier
-              quantity: diff,
-              buyPrice: prod?.hpp ?? 0,
-              totalPrice: (prod?.hpp ?? 0) * diff,
-              date: now,
-              notes: `Adjustment Stock Opname (Sesi #${activeOpname.id})`,
-              createdBy: currentUser?.id
-            });
-          } else if (diff < 0) {
-            // negative adjustment = Stock Out
-            await db.stockOuts.add({
-              productId: item.productId,
-              quantity: Math.abs(diff),
-              reason: 'opname',
-              date: now,
-              notes: `Adjustment Stock Opname (Sesi #${activeOpname.id})`,
-              createdBy: currentUser?.id
-            });
-          }
-        }
-      });
+      await completeStockOpname(activeOpname.id, notes, currentUser?.id);
 
       toast.success(t('stockOpname.toast.saved'));
       setActiveOpname(null);
@@ -406,7 +362,7 @@ export default function StockOpnamePage() {
       setConfirmOpen(false);
     } catch (err) {
       console.error(err);
-      toast.error(t('stockOpname.toast.saveFailed'));
+      toast.error(err instanceof Error ? err.message : t('stockOpname.toast.saveFailed'));
     } finally {
       setSubmitting(false);
     }

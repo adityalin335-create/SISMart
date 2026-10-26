@@ -42,12 +42,10 @@ import StockOpname from "./pages/settings/StockOpname";
 import PurchaseOrdersPage from "./pages/PurchaseOrders";
 import PurchaseOrderFormPage from "./pages/PurchaseOrderForm";
 import PurchaseOrderDetailPage from "./pages/PurchaseOrderDetail";
+import ReceivingsPage from "./pages/Receivings";
+import ReceivingFormPage from "./pages/ReceivingForm";
+import StockCardPage from "./pages/StockCard";
 import BackupRestoreSettings from "./pages/settings/BackupRestoreSettings";
-import CloudBackupSettings from "./pages/settings/CloudBackupSettings";
-import CloudAutoBackupSettings from "./pages/settings/CloudAutoBackupSettings";
-import CloudHistorySettings from "./pages/settings/CloudHistorySettings";
-import CloudStoreSettings from "./pages/settings/CloudStoreSettings";
-import CloudOnlineStoreSettings from "./pages/settings/CloudOnlineStoreSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -121,6 +119,14 @@ const App = () => {
                     element={
                       <ErrorBoundary>
                         <Products />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/products/:id/stock-card"
+                    element={
+                      <ErrorBoundary>
+                        <StockCardPage />
                       </ErrorBoundary>
                     }
                   />
@@ -221,6 +227,30 @@ const App = () => {
                     }
                   />
                   <Route
+                    path="/receivings"
+                    element={
+                      <ErrorBoundary>
+                        <ReceivingsPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/receivings/new"
+                    element={
+                      <ErrorBoundary>
+                        <ReceivingFormPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/receivings/:id"
+                    element={
+                      <ErrorBoundary>
+                        <ReceivingFormPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
                     path="/users"
                     element={
                       <ErrorBoundary>
@@ -313,46 +343,6 @@ const App = () => {
                     element={
                       <ErrorBoundary>
                         <BackupRestoreSettings />
-                      </ErrorBoundary>
-                    }
-                  />
-                  <Route
-                    path="/settings/cloud-backup"
-                    element={
-                      <ErrorBoundary>
-                        <CloudBackupSettings />
-                      </ErrorBoundary>
-                    }
-                  />
-                  <Route
-                    path="/settings/cloud-backup/auto"
-                    element={
-                      <ErrorBoundary>
-                        <CloudAutoBackupSettings />
-                      </ErrorBoundary>
-                    }
-                  />
-                  <Route
-                    path="/settings/cloud-backup/history"
-                    element={
-                      <ErrorBoundary>
-                        <CloudHistorySettings />
-                      </ErrorBoundary>
-                    }
-                  />
-                  <Route
-                    path="/settings/cloud-backup/stores"
-                    element={
-                      <ErrorBoundary>
-                        <CloudStoreSettings />
-                      </ErrorBoundary>
-                    }
-                  />
-                  <Route
-                    path="/settings/cloud-backup/online-store"
-                    element={
-                      <ErrorBoundary>
-                        <CloudOnlineStoreSettings />
                       </ErrorBoundary>
                     }
                   />

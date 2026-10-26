@@ -2,33 +2,11 @@
   "title": "Tetapan",
   "storeFallback": "Kedai Saya",
   "notSet": "Belum ditetapkan",
-  "playStoreAlert": {
-    "title": "Gunakan Aplikasi Android Rasmi!",
-    "description": "Untuk prestasi terbaik, sokongan pencetak Bluetooth, dan ciri luar talian yang lebih stabil, sila muat turun aplikasi FreeKasir di Google Play Store.",
-    "migrationInstructions": "Pindahkan data anda dengan mudah: 1. Eksport fail sandaran anda melalui menu Sandaran & Pulihkan di bawah. 2. Muat turun dan pasang aplikasi dari Play Store. 3. Import fail sandaran tersebut dalam aplikasi baru anda.",
-    "downloadButton": "Muat Turun di Play Store",
-    "backupButton": "Eksport Sandaran Sekarang"
-  },
-  "cloudSync": {
-    "title": "FreeKasir Cloud",
-    "status": {
-      "inactive": "BELUM AKTIF",
-      "selectStore": "PILIH KEDAI",
-      "needsSetup": "PERLU DIATUR",
-      "active": "AKTIF"
-    },
-    "desc": {
-      "inactive": "Data selamat di cloud, akses dashboard.freekasir.com, dan hubungkan kedai ke market.freekasir.com!",
-      "selectStore": "Langganan aktif, tetapi peranti belum disambungkan ke kedai. Pilih kedai untuk menyelaraskan data.",
-      "needsSetup": "Kedai telah disambungkan, tetapi penyelarasan automatik belum diaktifkan. Tetapkan jadual untuk menyelaraskan data secara berkala.",
-      "active": "Penyelarasan aktif. Pantau laporan kedai secara real-time di dashboard.freekasir.com dari mana-mana peranti."
-    }
-  },
   "installApp": {
     "title": "Pasang sebagai Aplikasi",
     "hint": "Buka terus dari skrin utama, tanpa pelayar",
     "installButton": "Pasang",
-    "installSuccess": "Berjaya pasang FreeKasir!",
+    "installSuccess": "Berjaya pasang SISMart!",
     "helpButton": "Cara Pasang"
   },
   "installHelp": {
@@ -99,6 +77,10 @@
     "purchaseOrders": {
       "title": "Pesanan Pembelian",
       "description": "Buat dan pantau pesanan kepada pembekal"
+    },
+    "receivings": {
+      "title": "Penerimaan",
+      "description": "Rekod barang diterima daripada Pesanan Pembelian"
     }
   },
   "purchaseOrders": {
@@ -115,7 +97,9 @@
     "status": {
       "all": "Semua status",
       "draft": "Draf",
-      "submitted": "Dihantar"
+      "submitted": "Dihantar",
+      "partially_received": "Diterima sebahagian",
+      "received": "Diterima penuh"
     },
     "locked": {
       "title": "Akses Pesanan Pembelian dihadkan",
@@ -157,7 +141,7 @@
     "createdBy": "Dibuat oleh {{name}}",
     "submittedAt": "Dihantar {{date}}",
     "itemsTitle": "Barang ({{count}})",
-    "receivingPhaseNote": "PO telah dihantar. Penerimaan barang dan kemas kini stok akan tersedia dalam fasa Receiving.",
+    "receivingPhaseNote": "PO telah dihantar dan boleh menerima barang.",
     "print": {
       "button": "Cetak PO",
       "title": "Pesanan Pembelian",
@@ -172,6 +156,47 @@
       "grandTotal": "Jumlah Keseluruhan",
       "notes": "Catatan",
       "noNotes": "-"
+    }
+  },
+  "receivings": {
+    "title": "Penerimaan",
+    "create": "Buat Penerimaan",
+    "createTitle": "Buat Penerimaan daripada PO",
+    "detailTitle": "Butiran Penerimaan",
+    "searchPlaceholder": "Cari penerimaan, PO, pembekal atau nota penghantaran...",
+    "loading": "Memuatkan data...",
+    "empty": "Belum ada sejarah penerimaan.",
+    "noResults": "Rekod penerimaan tidak ditemui.",
+    "noDeliveryNote": "Nota penghantaran belum diisi",
+    "status": { "draft": "Draf", "confirmed": "Disahkan" },
+    "locked": { "title": "Akses penerimaan dihadkan", "permission": "Kebenaran mengurus stok" },
+    "notFound": "Rekod penerimaan tidak ditemui.",
+    "backToList": "Kembali ke senarai penerimaan",
+    "purchaseOrder": "Pesanan Pembelian",
+    "selectPo": "Pilih PO yang masih boleh diterima",
+    "noOpenPo": "Tiada PO yang masih boleh menerima barang.",
+    "createFromPo": "Buat Penerimaan",
+    "createFromPoHint": "PO ini boleh menerima barang melalui menu Penerimaan.",
+    "deliveryNote": "Nombor nota penghantaran pembekal",
+    "receivedDate": "Tarikh penerimaan",
+    "notes": "Catatan",
+    "itemsTitle": "Barang diterima",
+    "ordered": "Dipesan",
+    "receivedToDate": "Telah diterima",
+    "remaining": "Baki",
+    "quantityReceived": "Kuantiti diterima",
+    "quantityDamaged": "Kuantiti rosak",
+    "actualUnitCost": "Kos beli sebenar seunit",
+    "quantityAccepted": "Ditambah ke stok",
+    "saveDraft": "Simpan Draf",
+    "confirm": "Sahkan Penerimaan",
+    "saving": "Menyimpan...",
+    "confirmedBy": "Disahkan oleh {{name}} · {{date}}",
+    "toast": {
+      "selectPo": "Pilih Pesanan Pembelian terlebih dahulu.",
+      "saved": "Draf penerimaan berjaya disimpan.",
+      "confirmed": "Penerimaan disahkan dan stok dikemas kini.",
+      "saveFailed": "Penerimaan gagal disimpan."
     }
   },
   "masterData": {
@@ -194,7 +219,7 @@
     },
     "units": {
       "title": "Unit",
-      "description": "{{count}} unit · pcs, kg, hidangan, dll"
+      "description": "{{count}} unit · pcs, botol, sachet, pack, kotak"
     },
     "receiptFooter": {
       "title": "Tetapan Resit",
@@ -224,10 +249,6 @@
     "reportIssue": {
       "title": "Laporkan Kendala",
       "description": "Laporkan ralat atau kendala teknikal aplikasi kepada pembangun"
-    },
-    "telegramSupport": {
-      "title": "Sokongan Telegram",
-      "description": "Hubungi pasukan sokongan FreeKasir melalui Telegram"
     }
   },
   "bluetoothPrinter": {
@@ -251,13 +272,11 @@
     "title": "Bahasa / Language"
   },
   "about": {
-    "appName": "FreeKasir",
+    "appName": "SISMart",
     "tagline": "POS Percuma untuk UMK Indonesia 🇮🇩",
     "version": "v{{version}} • Data tersimpan dalam peranti",
-    "whatsNew": "Apa Yang Baru di FreeKasir",
-    "requestFeature": "💡 Minta Fitur",
+    "whatsNew": "Apa Yang Baru di SISMart",
     "donate": "☕ Belanja Kopi untuk Pembangun",
-    "telegram": "💬 Sertai Grup Telegram",
     "storageUsed": "Storan Digunakan"
   },
   "storeDialog": {
@@ -293,19 +312,19 @@
   },
   "cloudBackup": {
     "locked": {
-      "title": "FreeKasir Cloud",
+      "title": "SISMart Cloud",
       "permissionLabel": "Urus Backup"
     },
     "promo": {
       "title": "Jangkau Lebih Ramai Pelanggan!",
       "description": "Aktifkan Kedai Online supaya kedai anda boleh diakses secara terbuka dengan pelbagai kelebihan:",
-      "benefit1": "Tampil di market.freekasir.com untuk menjangkau pembeli baru",
+      "benefit1": "Tampil di marketplace kedai untuk menjangkau pembeli baru",
       "benefit2": "Pelanggan boleh melihat menu dalam talian secara real-time dari telefon",
       "benefit3": "Pautan kedai dalam talian yang unik untuk anda sendiri",
       "button": "Lengkapkan Butiran Kedai"
     },
     "hero": {
-      "title": "Naik Taraf ke FreeKasir Cloud",
+      "title": "Naik Taraf ke SISMart Cloud",
       "description": "Pantau laporan secara real-time lewat {{dashboard}} dan promosikan kedai anda secara online di {{market}}!",
       "startFrom": "Mulai",
       "perMonth": "/bulan"
@@ -418,7 +437,7 @@
       "permissionLabel": "Urus Backup"
     },
     "title": "Penyelarasan Otomatis",
-    "requiresSubscription": "Aktifkan langganan FreeKasir Cloud dulu untuk mengatur penyelarasan automatik.",
+    "requiresSubscription": "Aktifkan langganan SISMart Cloud dahulu untuk mengatur penyelarasan automatik.",
     "scheduleLabel": "Jadual Penyelarasan Automatik",
     "interval": {
       "off": "Nonaktif",
@@ -467,7 +486,7 @@
     },
     "title": "Urus Kedai",
     "loading": "Memuat…",
-    "requiresSubscription": "Langganan FreeKasir Cloud diperlukan untuk mengurus kedai.",
+    "requiresSubscription": "Langganan SISMart Cloud diperlukan untuk mengurus kedai.",
     "activeDevice": "Peranti ini disambungkan ke:",
     "disconnect": "Putuskan",
     "storeList": "Senarai Kedai",
@@ -476,7 +495,7 @@
     "addButton": "Tambah",
     "atLimit": {
       "title": "Had kedai pakej anda sudah penuh",
-      "description": "Pakej semasa hanya membenarkan {{max}} kedai. Naik taraf pakej FreeKasir Cloud untuk menambah kedai.",
+      "description": "Pakej semasa hanya membenarkan {{max}} kedai. Naik taraf pakej SISMart Cloud untuk menambah kedai.",
       "upgrade": "Naik Taraf Pakej"
     },
     "noStore": "Belum ada kedai. Buat kedai pertama anda.",
@@ -599,7 +618,7 @@
       "addTitle": "Tambah Unit",
       "editTitle": "Edit Unit",
       "nameLabel": "Nama Unit",
-      "namePlaceholder": "Contoh: pak, lusin, mangkuk",
+      "namePlaceholder": "Contoh: pack, dozen, unit",
       "save": "Simpan",
       "renameHint": "Semua produk yang menggunakan \"{{old}}\" akan otomatis di-rename ke \"{{new}}\"."
     },
@@ -625,8 +644,8 @@
     },
     "title": "Kasir",
     "defaultCashier": "Juruwang",
-    "editingBill": "Editing Bill",
-    "openBill": "Open Bill",
+    "editingBill": "Mengedit Transaksi Tertunda",
+    "openBill": "Transaksi Tertunda",
     "searchPlaceholder": "Cari produk...",
     "scanPlaceholder": "Scan / taip SKU atau Barcode kemudian Enter...",
     "productList": {
@@ -652,7 +671,7 @@
       "title": "Troli ({{count}} item)",
       "empty": "Troli kosong",
       "editLabel": "— edit",
-      "editOpenBillLabel": "— edit open bill"
+      "editOpenBillLabel": "— edit transaksi tertunda"
     },
     "cartTable": {
       "item": "Barang",
@@ -677,13 +696,10 @@
       "total": "Jumlah"
     },
     "buttons": {
-      "saveBill": "Simpan Bil",
-      "saveAndPrintKitchen": "Simpan & Cetak Tiket Dapur",
-      "saveOnly": "Simpan Sahaja",
-      "printKitchen": "Cetak Tiket Dapur",
+      "saveBill": "Simpan Transaksi",
       "continuePayment": "Teruskan Pembayaran",
       "pay": "Bayar",
-      "cancelBill": "Batalkan Bil Ini",
+      "cancelBill": "Batalkan Transaksi Tertunda Ini",
       "ok": "OK",
       "cancel": "Batal"
     },
@@ -700,7 +716,6 @@
       "amountPlaceholder": "Masukkan jumlah bayar...",
       "exactMoney": "Wang Pas",
       "reset": "Reset",
-      "table": "Meja",
       "notes": "Nota tambahan (pilihan)",
       "remainingDebt": "Baki Hutang",
       "remainingDebtHint": "Pelanggan mesti dipilih dari senarai",
@@ -750,21 +765,16 @@
       "save": "Simpan Diskaun"
     },
     "openBillsSheet": {
-      "title": "Open Bills ({{count}})",
-      "empty": "Tiada bil terbuka",
-      "continue": "Teruskan",
-      "cancel": "Batal",
-      "tablePrefix": "Meja {{number}}"
-    },
-    "saveConfirmDialog": {
-      "title": "Simpan Bil",
-      "description": "Adakah anda ingin mencetak Tiket Dapur selepas menyimpan bil ini?"
+      "title": "Transaksi Tertunda ({{count}})",
+      "empty": "Tiada transaksi tertunda",
+      "continue": "Teruskan Transaksi",
+      "cancel": "Batal"
     },
     "cancelDialog": {
-      "title": "Batalkan Bil?",
-      "description": "Bil ini akan dipadam dan stok produk akan dikembalikan.",
+      "title": "Batalkan Transaksi Tertunda?",
+      "description": "Transaksi tertunda ini akan dipadam dan stok produk akan dikembalikan.",
       "no": "Tidak",
-      "yes": "Batalkan Bil"
+      "yes": "Batalkan Transaksi Tertunda"
     },
     "paymentMethod": {
       "cash": "Tunai",
@@ -777,19 +787,19 @@
       "addedToCart": "Ditambah: {{name}}",
       "productNotFound": "Produk dengan SKU/Barcode \"{{code}}\" tidak ditemui",
       "productOutOfStock": "Stok {{name}} habis",
-      "billUpdated": "Bil {{receiptNumber}} dikemas kini!",
-      "billSaved": "Bil {{receiptNumber}} disimpan!",
-      "billCancelled": "Bil {{receiptNumber}} dibatalkan",
+      "billUpdated": "Transaksi tertunda {{receiptNumber}} dikemas kini!",
+      "billSaved": "Transaksi tertunda {{receiptNumber}} disimpan!",
+      "billCancelled": "Transaksi tertunda {{receiptNumber}} dibatalkan",
       "transactionSuccess": "Transaksi berjaya! {{receiptNumber}}",
       "cartEmpty": "Troli kosong",
       "selectCustomerForDebt": "Pilih pelanggan dari senarai untuk transaksi hutang",
       "paymentAmountRange": "Jumlah bayar mesti antara {{symbol}}0 dan jumlah transaksi",
       "selectPaymentMethod": "Pilih kaedah untuk bayaran awal",
-      "productNotFoundLoadBill": "Produk \"{{name}}\" tidak ditemui"
+      "productNotFoundLoadBill": "Produk \"{{name}}\" tidak ditemui untuk transaksi tertunda"
     }
   },
   "loginScreen": {
-    "storeFallback": "FreeKasir",
+    "storeFallback": "SISMart",
     "continuePrompt": "Log masuk untuk teruskan",
     "usernameLabel": "Username",
     "usernamePlaceholder": "Cth: budi",
@@ -811,7 +821,6 @@
     "cashierLabel": "Kasir",
     "dateTime": "Tarikh/Masa",
     "customerLabel": "Pelanggan",
-    "tableLabel": "Meja",
     "notesLabel": "Nota",
     "discountLabel": "Diskaun",
     "subtotal": "Subtotal",
@@ -824,9 +833,8 @@
     "download": "Muat Turun",
     "share": "Kongsi",
     "print": "Cetak",
-    "printKitchen": "Cetak Dapur",
     "watermarkLine1": "Dicetak Daripada Aplikasi",
-    "watermarkLine2": "FreeKasir.com",
+    "watermarkLine2": "SISMart",
     "done": "Selesai",
     "toast": {
       "captureError": "Gagal membuat gambar resit",
@@ -918,8 +926,8 @@
     "lastBackup": "Backup terakhir: {{time}}",
     "neverBackedUp": "Anda belum pernah backup data",
     "backupNow": "Backup Sekarang",
-    "shareTitle": "Backup FreeKasir",
-    "shareText": "Fail backup data FreeKasir (JSON)",
+    "shareTitle": "Backup SISMart",
+    "shareText": "Fail backup data SISMart (JSON)",
     "shareDialogTitle": "Simpan / Kongsi Backup",
     "successCreated": "Backup berjaya dibuat!",
     "successDownloaded": "Backup berjaya dimuat turun",
@@ -931,7 +939,7 @@
     "benefits": {
       "cloudBackup": "Status backup cloud: berjaya, gagal, atau kuota hampir penuh.",
       "payment": "Pengesahan pembayaran & peringatan sebelum langganan tamat.",
-      "announcement": "Info penyelenggaraan & pengumuman penting daripada FreeKasir."
+      "announcement": "Info penyelenggaraan & pengumuman penting daripada SISMart."
     },
     "enable": "Aktifkan Notifikasi",
     "later": "Nanti",
@@ -993,14 +1001,14 @@
     "printLogoDescription": "Cetak logo kedai di bahagian paling atas resit fizikal. Pastikan pencetak thermal anda menyokong pencetakan imej/bitmap.",
     "footerLabel": "Teks Footer Resit",
     "hideWatermarkLabel": "Sembunyikan Watermark Aplikasi",
-    "hideWatermarkDescActive": "Sembunyikan tulisan \"Dicetak Daripada Aplikasi FreeKasir.com\" di bahagian bawah resit.",
-    "hideWatermarkDescRequired": "Watermark hanya boleh dinyahaktifkan jika FreeKasir Cloud aktif.",
+    "hideWatermarkDescActive": "Sembunyikan tulisan \"Dicetak Daripada Aplikasi SISMart\" di bahagian bawah resit.",
+    "hideWatermarkDescRequired": "Watermark hanya boleh dinyahaktifkan jika SISMart Cloud aktif.",
     "saveSuccess": "Tetapan resit berjaya disimpan",
     "saveFailed": "Gagal menyimpan tetapan resit"
   },
   "cloudOnlineStore": {
     "title": "Kedai Online & Market",
-    "linkedStoreRequired": "Peranti ini belum disambungkan ke kedai cloud. Sila sambungkannya terlebih dahulu di halaman tetapan FreeKasir Cloud.",
+    "linkedStoreRequired": "Peranti ini belum disambungkan ke kedai cloud. Sila sambungkannya terlebih dahulu di halaman tetapan SISMart Cloud.",
     "identifier": {
       "label": "URL Kedai (Identifier)",
       "placeholder": "nama-kedai-anda",
@@ -1014,7 +1022,7 @@
     },
     "visibility": {
       "title": "Pamerkan Kedai di Market",
-      "description": "Aktifkan untuk membolehkan katalog produk kedai anda dilihat secara umum di market.freekasir.com.",
+      "description": "Aktifkan untuk membolehkan katalog produk kedai anda dilihat secara umum di marketplace kedai.",
       "requiresIdentifier": "URL Kedai mesti disimpan terlebih dahulu sebelum membolehkan kedai diakses secara umum.",
       "unsavedIdentifier": "Terdapat perubahan URL Kedai yang belum disimpan. Sila simpan URL Kedai terlebih dahulu.",
       "unsavedDetails": "Terdapat perubahan maklumat kedai yang belum disimpan. Sila simpan maklumat kedai terlebih dahulu.",
@@ -1050,7 +1058,7 @@
     "operationalHours": {
       "title": "Waktu Operasi",
       "closed": "Tutup",
-      "open": "Buka",
+      "open": "Tertunda",
       "addTimeSlot": "Tambah Slot Waktu",
       "days": {
         "monday": "Isnin",
@@ -1076,10 +1084,6 @@
       "tooLarge": "Saiz fail melebihi had 2 MB.",
       "invalidType": "Jenis fail tidak sah. Sila gunakan imej JPG, PNG, atau WebP."
     }
-  },
-  "kitchenTicket": {
-    "title": "Tiket Dapur",
-    "done": "Selesai"
   },
   "issueReport": {
     "title": "Laporkan Kendala",

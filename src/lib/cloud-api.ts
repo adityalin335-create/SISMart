@@ -1,5 +1,5 @@
 /**
- * Thin client untuk FreeKasir Cloud API (backup + subscription).
+ * Thin client untuk SISMart Cloud API (backup + subscription).
  *
  * Token Google ID (JWT) di-inject lewat getter yang didaftarkan oleh
  * use-cloud-auth, supaya call site tidak perlu mengoper token manual.

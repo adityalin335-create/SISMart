@@ -113,11 +113,10 @@
     "bluetoothUnavailable": "Bluetooth is not available in this browser. Use Chrome on Android.",
     "searchingPrinter": "Searching for Bluetooth printer...",
     "printSuccess": "Report printed successfully!",
-    "printFailed": "Failed to print. Make sure the Bluetooth printer is on.",
-    "reviewPromptWeb": "Please rate our app on Play Store!"
+    "printFailed": "Failed to print. Make sure the Bluetooth printer is on."
   },
   "survey": {
-    "title": "What type of business do you run with FreeKasir?",
+    "title": "What type of business do you run with SISMart?",
     "description": "Help us understand your needs by choosing one.",
     "otherPlaceholder": "Write your business type…",
     "submit": "Send",

@@ -29,11 +29,11 @@ export type { PermissionKey };
 export const PERMISSION_LABELS: Record<PermissionKey, { title: string; desc: string }> = {
   create_transaction: {
     title: 'Buat Transaksi',
-    desc: 'Akses Kasir, simpan open bill, dan checkout pembayaran',
+    desc: 'Akses Kasir, simpan transaksi ditunda, dan selesaikan pembayaran',
   },
   delete_transaction: {
     title: 'Hapus / Batalkan Transaksi',
-    desc: 'Hapus transaksi di Riwayat dan batalkan open bill',
+    desc: 'Hapus transaksi di Riwayat dan batalkan transaksi ditunda',
   },
   manage_products: {
     title: 'Kelola Produk',

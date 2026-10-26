@@ -21,6 +21,7 @@ import ReceiptDialog from '@/components/Receipt';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useTranslation } from 'react-i18next';
+import { applySaleStockDelta } from '@/lib/stock-movements';
 
 const LOCALES: Record<string, Locale> = { id: idLocale, en: enUS, ms };
 const NUMBER_LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
@@ -164,7 +165,15 @@ export default function TransactionHistory() {
         for (const item of items) {
           const product = await db.products.get(item.productId);
           if (product) {
-            await db.products.update(item.productId, { stock: product.stock + item.quantity });
+            await applySaleStockDelta({
+              productId: item.productId,
+              delta: -item.quantity,
+              quantity: item.quantity,
+              transactionId: selectedTx.id,
+              referenceNumber: selectedTx.receiptNumber,
+              date: new Date(),
+              createdBy: selectedTx.createdBy,
+            });
           }
         }
       }
@@ -365,7 +374,6 @@ export default function TransactionHistory() {
                             </span>
                           )}
                           {tx.customerName && <span>👤 {tx.customerName}</span>}
-                          {tx.tableNumber && <span>{t('transactionHistory.detail.table', { number: tx.tableNumber })}</span>}
                           {tx.remarks && <span>📝 {tx.remarks}</span>}
                         </div>
                         <p className="text-[10px] text-muted-foreground truncate">
@@ -428,12 +436,6 @@ export default function TransactionHistory() {
                    <div className="flex justify-between text-xs">
                      <span className="text-muted-foreground">{t('transactionHistory.detail.customer')}</span>
                      <span>👤 {selectedTx.customerName}</span>
-                   </div>
-                 )}
-                 {selectedTx.tableNumber && (
-                   <div className="flex justify-between text-xs">
-                     <span className="text-muted-foreground">{t('transactionHistory.detail.table', { number: selectedTx.tableNumber })}</span>
-                     <span />
                    </div>
                  )}
                   {selectedTx.remarks && (

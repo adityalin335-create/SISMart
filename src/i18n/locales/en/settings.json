@@ -2,35 +2,11 @@
   "title": "Settings",
   "storeFallback": "My Store",
   "notSet": "Not set",
-  "playStoreAlert": {
-    "title": "Use the Official Android App!",
-    "description": "For the best performance, Bluetooth printer support, and more stable offline features, please download the FreeKasir app on the Google Play Store.",
-    "migrationInstructions": "Easily migrate your data: 1. Export your backup file via the Backup & Restore menu below. 2. Download and install the app from Google Play Store. 3. Import the backup file in your new app.",
-    "downloadButton": "Download on Play Store",
-    "backupButton": "Export Backup Now"
-  },
-  "cloudSync": {
-    "title": "FreeKasir Cloud",
-    "status": {
-      "inactive": "INACTIVE",
-      "selectStore": "SELECT STORE",
-      "needsSetup": "NEEDS SETUP",
-      "active": "ACTIVE"
-    },
-    "desc": {
-      "inactive": "Secure cloud data, access dashboard.freekasir.com, and list your store on market.freekasir.com!",
-      "selectStore": "Subscription is active, but the device hasn't been linked to a store. Select a store to sync data.",
-      "needsSetup": "Store is linked, but automatic sync isn't enabled yet. Set up a schedule so data syncs regularly.",
-      "active": "Sync is active. Monitor store reports in real-time on dashboard.freekasir.com from any device."
-    },
-    "lastSync": "Last sync: {{time}}",
-    "neverSynced": "Never synced"
-  },
   "installApp": {
     "title": "Install as App",
     "hint": "Open directly from home screen, no browser needed",
     "installButton": "Install",
-    "installSuccess": "FreeKasir installed successfully!",
+    "installSuccess": "SISMart installed successfully!",
     "helpButton": "How to Install"
   },
   "installHelp": {
@@ -87,7 +63,7 @@
     },
     "logoutDialog": {
       "title": "Log Out?",
-      "description": "You will be directed to the login page. Make sure there are no open bills unsaved.",
+      "description": "You will be directed to the login page. Make sure there are no unsaved pending transactions.",
       "confirm": "Logout"
     }
   },
@@ -128,6 +104,10 @@
     "purchaseOrders": {
       "title": "Purchase Orders",
       "description": "Create and track supplier orders"
+    },
+    "receivings": {
+      "title": "Receiving",
+      "description": "Record goods received against Purchase Orders"
     }
   },
   "purchaseOrders": {
@@ -144,7 +124,9 @@
     "status": {
       "all": "All statuses",
       "draft": "Draft",
-      "submitted": "Submitted"
+      "submitted": "Submitted",
+      "partially_received": "Partially received",
+      "received": "Fully received"
     },
     "locked": {
       "title": "Purchase Order access is restricted",
@@ -186,7 +168,7 @@
     "createdBy": "Created by {{name}}",
     "submittedAt": "Submitted {{date}}",
     "itemsTitle": "Items ({{count}})",
-    "receivingPhaseNote": "This PO has been submitted. Receiving goods and updating stock will be available in the Receiving phase.",
+    "receivingPhaseNote": "This PO has been submitted and can receive goods.",
     "print": {
       "button": "Print PO",
       "title": "Purchase Order",
@@ -201,6 +183,47 @@
       "grandTotal": "Grand Total",
       "notes": "Notes",
       "noNotes": "-"
+    }
+  },
+  "receivings": {
+    "title": "Receiving",
+    "create": "Create Receiving",
+    "createTitle": "Create Receiving from PO",
+    "detailTitle": "Receiving Details",
+    "searchPlaceholder": "Search receiving, PO, supplier, or delivery note...",
+    "loading": "Loading...",
+    "empty": "No receiving history yet.",
+    "noResults": "No receiving records found.",
+    "noDeliveryNote": "No delivery note",
+    "status": { "draft": "Draft", "confirmed": "Confirmed" },
+    "locked": { "title": "Receiving access is restricted", "permission": "Stock management permission" },
+    "notFound": "Receiving record not found.",
+    "backToList": "Back to Receiving",
+    "purchaseOrder": "Purchase Order",
+    "selectPo": "Select an open Purchase Order",
+    "noOpenPo": "No Purchase Orders can receive goods.",
+    "createFromPo": "Create Receiving",
+    "createFromPoHint": "This PO can receive goods from the Receiving menu.",
+    "deliveryNote": "Supplier delivery note number",
+    "receivedDate": "Received date",
+    "notes": "Notes",
+    "itemsTitle": "Items received",
+    "ordered": "Ordered",
+    "receivedToDate": "Received to date",
+    "remaining": "Remaining",
+    "quantityReceived": "Quantity received",
+    "quantityDamaged": "Quantity damaged",
+    "actualUnitCost": "Actual unit cost",
+    "quantityAccepted": "Added to stock",
+    "saveDraft": "Save Draft",
+    "confirm": "Confirm Receiving",
+    "saving": "Saving...",
+    "confirmedBy": "Confirmed by {{name}} · {{date}}",
+    "toast": {
+      "selectPo": "Select a Purchase Order first.",
+      "saved": "Receiving draft saved.",
+      "confirmed": "Receiving confirmed and stock updated.",
+      "saveFailed": "Could not save receiving."
     }
   },
   "masterData": {
@@ -223,7 +246,7 @@
     },
     "units": {
       "title": "Units",
-      "description": "{{count}} units · pcs, kg, serving, etc."
+      "description": "{{count}} units · pcs, bottle, sachet, pack, carton"
     },
     "receiptFooter": {
       "title": "Receipt Settings",
@@ -253,10 +276,6 @@
     "reportIssue": {
       "title": "Report Issue",
       "description": "Report application errors or technical issues to the developer"
-    },
-    "telegramSupport": {
-      "title": "Telegram Support",
-      "description": "Contact FreeKasir support team via Telegram"
     }
   },
   "bluetoothPrinter": {
@@ -280,13 +299,11 @@
     "title": "Language / Bahasa"
   },
   "about": {
-    "appName": "FreeKasir",
+    "appName": "SISMart",
     "tagline": "Free POS for Indonesian MSMEs 🇮🇩",
     "version": "v{{version}} • Data stored on device",
-    "whatsNew": "What's New in FreeKasir",
-    "requestFeature": "💡 Request Feature",
+    "whatsNew": "What's New in SISMart",
     "donate": "☕ Buy Developer a Coffee",
-    "telegram": "💬 Join Telegram Group",
     "storageUsed": "Storage Used"
   },
   "storeDialog": {
@@ -322,19 +339,19 @@
   },
   "cloudBackup": {
     "locked": {
-      "title": "FreeKasir Cloud",
+      "title": "SISMart Cloud",
       "permissionLabel": "Manage Backup"
     },
     "promo": {
       "title": "Reach More Customers!",
       "description": "Activate your Online Store to make your store publicly accessible with various benefits:",
-      "benefit1": "Showcase on market.freekasir.com to reach new buyers",
+      "benefit1": "Showcase on the store marketplace to reach new buyers",
       "benefit2": "Customers can view your online menu in real-time from mobile",
       "benefit3": "Your own unique online store link/identifier",
       "button": "Fill Store Details"
     },
     "hero": {
-      "title": "Upgrade to FreeKasir Cloud",
+      "title": "Upgrade to SISMart Cloud",
       "description": "Monitor reports in real-time at {{dashboard}} and promote your store online at {{market}}!",
       "startFrom": "From",
       "perMonth": "/month"
@@ -447,7 +464,7 @@
       "permissionLabel": "Manage Backup"
     },
     "title": "Automatic Sync",
-    "requiresSubscription": "Enable FreeKasir Cloud subscription first to set up automatic sync.",
+    "requiresSubscription": "Enable the SISMart Cloud subscription first to set up automatic sync.",
     "scheduleLabel": "Automatic Sync Schedule",
     "interval": {
       "off": "Off",
@@ -496,7 +513,7 @@
     },
     "title": "Manage Stores",
     "loading": "Loading…",
-    "requiresSubscription": "FreeKasir Cloud subscription is required to manage stores.",
+    "requiresSubscription": "A SISMart Cloud subscription is required to manage stores.",
     "activeDevice": "This device is connected to:",
     "syncActive": "Automatic background sync active",
     "disconnect": "Disconnect",
@@ -506,7 +523,7 @@
     "addButton": "Add",
     "atLimit": {
       "title": "Your plan's store limit is full",
-      "description": "Current plan only allows {{max}} stores. Upgrade FreeKasir Cloud plan to add more.",
+      "description": "Current plan only allows {{max}} stores. Upgrade the SISMart Cloud plan to add more.",
       "upgrade": "Upgrade Plan"
     },
     "noStore": "No stores yet. Create your first store.",
@@ -549,7 +566,7 @@
     "dateTo": "To date",
     "status": {
       "all": "All",
-      "open": "Open Bill",
+      "open": "Pending Transaction",
       "completed": "Paid"
     },
     "cashierFilter": {
@@ -570,7 +587,7 @@
     "groupHeader_one": "{{date}} · {{count}} transaction",
     "groupHeader_other": "{{date}} · {{count}} transactions",
     "badges": {
-      "open": "Open",
+      "open": "Pending",
       "debt": "Debt",
       "paid": "Paid"
     },
@@ -579,7 +596,7 @@
       "title": "Transaction Detail",
       "status": {
         "label": "Status",
-        "open": "Open Bill",
+        "open": "Pending Transaction",
         "paid": "Paid"
       },
       "receiptNumber": "Receipt No.",
@@ -587,7 +604,6 @@
       "payment": "Payment",
       "cashier": "Cashier",
       "customer": "Customer",
-      "table": "Table {{number}}",
       "notes": "Notes",
       "items": "Items",
       "quantityFormat": "{{qty}} × {{price}}",
@@ -599,7 +615,7 @@
       "paid": "Paid",
       "change": "Change",
       "profit": "Profit",
-      "unpaidBill": "Bill not paid yet",
+      "unpaidBill": "Transaction not paid yet",
       "continueInCashier": "Continue at Cashier",
       "viewReceipt": "View & Print Receipt",
       "delete": "Delete Transaction",
@@ -1072,8 +1088,8 @@
     },
     "title": "Cashier",
     "defaultCashier": "Cashier",
-    "editingBill": "Editing Bill",
-    "openBill": "Open Bill",
+    "editingBill": "Editing Pending Transaction",
+    "openBill": "Pending Transaction",
     "searchPlaceholder": "Search products...",
     "scanPlaceholder": "Scan / type SKU or Barcode then press Enter...",
     "productList": {
@@ -1100,7 +1116,7 @@
       "title_other": "Cart ({{count}} items)",
       "empty": "Cart is empty",
       "editLabel": "— edit",
-      "editOpenBillLabel": "— edit open bill"
+      "editOpenBillLabel": "— edit pending transaction"
     },
     "cartTable": {
       "item": "Item",
@@ -1125,13 +1141,10 @@
       "total": "Total"
     },
     "buttons": {
-      "saveBill": "Save Bill",
-      "saveAndPrintKitchen": "Save & Print Kitchen Ticket",
-      "saveOnly": "Save Only",
-      "printKitchen": "Print Kitchen Ticket",
+      "saveBill": "Save Transaction",
       "continuePayment": "Continue to Payment",
       "pay": "Pay",
-      "cancelBill": "Cancel This Bill",
+      "cancelBill": "Cancel This Pending Transaction",
       "ok": "OK",
       "cancel": "Cancel"
     },
@@ -1148,7 +1161,6 @@
       "amountPlaceholder": "Enter payment amount...",
       "exactMoney": "Exact Amount",
       "reset": "Reset",
-      "table": "Table",
       "notes": "Additional notes (optional)",
       "remainingDebt": "Remaining Debt",
       "remainingDebtHint": "Customer must be selected from the list",
@@ -1198,21 +1210,16 @@
       "save": "Save Discount"
     },
     "openBillsSheet": {
-      "title": "Open Bills ({{count}})",
-      "empty": "No open bills",
-      "continue": "Continue",
-      "cancel": "Cancel",
-      "tablePrefix": "Table {{number}}"
-    },
-    "saveConfirmDialog": {
-      "title": "Save Bill",
-      "description": "Would you like to print a Kitchen Ticket after saving this bill?"
+      "title": "Pending Transactions ({{count}})",
+      "empty": "No pending transactions",
+      "continue": "Continue Transaction",
+      "cancel": "Cancel"
     },
     "cancelDialog": {
-      "title": "Cancel Bill?",
-      "description": "This bill will be deleted and product stock will be restored.",
+      "title": "Cancel Pending Transaction?",
+      "description": "This pending transaction will be deleted and product stock will be restored.",
       "no": "No",
-      "yes": "Cancel Bill"
+      "yes": "Cancel Pending Transaction"
     },
     "paymentMethod": {
       "cash": "Cash",
@@ -1225,19 +1232,19 @@
       "addedToCart": "Added: {{name}}",
       "productNotFound": "Product with SKU/Barcode \"{{code}}\" not found",
       "productOutOfStock": "{{name}} out of stock",
-      "billUpdated": "Bill {{receiptNumber}} updated!",
-      "billSaved": "Bill {{receiptNumber}} saved!",
-      "billCancelled": "Bill {{receiptNumber}} cancelled",
+      "billUpdated": "Pending transaction {{receiptNumber}} updated!",
+      "billSaved": "Pending transaction {{receiptNumber}} saved!",
+      "billCancelled": "Pending transaction {{receiptNumber}} cancelled",
       "transactionSuccess": "Transaction successful! {{receiptNumber}}",
       "cartEmpty": "Cart is empty",
       "selectCustomerForDebt": "Select a customer from the list for debt transactions",
       "paymentAmountRange": "Payment amount must be between {{symbol}}0 and the transaction total",
       "selectPaymentMethod": "Select a method for the initial payment",
-      "productNotFoundLoadBill": "Product \"{{name}}\" not found"
+      "productNotFoundLoadBill": "Product \"{{name}}\" not found for this pending transaction"
     }
   },
   "loginScreen": {
-    "storeFallback": "FreeKasir",
+    "storeFallback": "SISMart",
     "continuePrompt": "Sign in to continue",
     "usernameLabel": "Username",
     "usernamePlaceholder": "e.g. budi",
@@ -1259,7 +1266,6 @@
     "cashierLabel": "Cashier",
     "dateTime": "Date/Time",
     "customerLabel": "Customer",
-    "tableLabel": "Table",
     "notesLabel": "Notes",
     "discountLabel": "Discount",
     "subtotal": "Subtotal",
@@ -1272,9 +1278,8 @@
     "download": "Download",
     "share": "Share",
     "print": "Print",
-    "printKitchen": "Print Kitchen",
     "watermarkLine1": "Printed From",
-    "watermarkLine2": "FreeKasir.com App",
+    "watermarkLine2": "SISMart",
     "done": "Done",
     "toast": {
       "captureError": "Failed to create receipt image",
@@ -1366,8 +1371,8 @@
     "lastBackup": "Last backup: {{time}}",
     "neverBackedUp": "You have not backed up data yet",
     "backupNow": "Backup Now",
-    "shareTitle": "Backup FreeKasir",
-    "shareText": "FreeKasir backup data file (JSON)",
+    "shareTitle": "SISMart Backup",
+    "shareText": "SISMart backup data file (JSON)",
     "shareDialogTitle": "Save / Share Backup",
     "successCreated": "Backup created successfully!",
     "successDownloaded": "Backup downloaded successfully",
@@ -1379,7 +1384,7 @@
     "benefits": {
       "cloudBackup": "Cloud backup status: success, failure, or quota almost full.",
       "payment": "Payment confirmation & reminders before subscription ends.",
-      "announcement": "Maintenance info & important announcements from FreeKasir."
+      "announcement": "Maintenance info & important announcements from SISMart."
     },
     "enable": "Enable Notifications",
     "later": "Maybe Later",
@@ -1441,14 +1446,14 @@
     "printLogoDescription": "Print the store logo at the very top of the physical receipt. Ensure your thermal printer supports image/bitmap printing.",
     "footerLabel": "Receipt Footer Text",
     "hideWatermarkLabel": "Hide Application Watermark",
-    "hideWatermarkDescActive": "Hide the \"Printed From FreeKasir.com App\" watermark at the bottom of the receipt.",
-    "hideWatermarkDescRequired": "Watermark can only be disabled if FreeKasir Cloud is active.",
+    "hideWatermarkDescActive": "Hide the \"Printed From SISMart\" watermark at the bottom of the receipt.",
+    "hideWatermarkDescRequired": "Watermark can only be disabled if SISMart Cloud is active.",
     "saveSuccess": "Receipt settings saved successfully",
     "saveFailed": "Failed to save receipt settings"
   },
   "cloudOnlineStore": {
     "title": "Online Store & Market",
-    "linkedStoreRequired": "This device is not linked to a cloud store. Please link it first on the FreeKasir Cloud settings page.",
+    "linkedStoreRequired": "This device is not linked to a cloud store. Please link it first on the SISMart Cloud settings page.",
     "identifier": {
       "label": "Store URL (Identifier)",
       "placeholder": "your-store-name",
@@ -1462,7 +1467,7 @@
     },
     "visibility": {
       "title": "Show Store in Market",
-      "description": "Enable to make your store product catalog publicly viewable at market.freekasir.com.",
+      "description": "Enable to make your store product catalog publicly viewable on the store marketplace.",
       "requiresIdentifier": "Store URL must be saved before making the store public.",
       "unsavedIdentifier": "There are unsaved Store URL changes. Please save the Store URL first.",
       "unsavedDetails": "There are unsaved store detail changes. Please save the store details first.",
@@ -1524,10 +1529,6 @@
       "tooLarge": "File size exceeds the 2 MB limit.",
       "invalidType": "Invalid file type. Please use JPG, PNG, or WebP images."
     }
-  },
-  "kitchenTicket": {
-    "title": "Kitchen Ticket",
-    "done": "Done"
   },
   "issueReport": {
     "title": "Report Issue",

@@ -66,41 +66,49 @@ export default function StockInPage() {
       return;
     }
 
-    const product = products?.find(p => p.id === Number(productId));
-    if (!product) return;
+    try {
+      const product = products?.find(p => p.id === Number(productId));
+      if (!product?.id) return;
+      const movementDate = new Date();
+      const referenceNumber = `STOCK-IN-${movementDate.getTime()}-${crypto.randomUUID().slice(0, 6)}`;
+      let resultingHpp = product.hpp;
+      await db.transaction('rw', [db.stockIns, db.products, db.hppHistory], async () => {
+        const current = await db.products.get(product.id!);
+        if (!current) throw new Error('Produk tidak ditemukan.');
+        const newStock = Math.round((current.stock + qty) * 1e6) / 1e6;
+        const newHpp = newStock > 0 ? ((current.stock * current.hpp) + (qty * price)) / newStock : price;
+        resultingHpp = Math.round(newHpp);
+        await db.stockIns.add({
+          productId: current.id!,
+          supplierId: Number(supplierId),
+          movementType: 'stock_adjustment',
+          referenceNumber,
+          quantity: qty,
+          buyPrice: price,
+          totalPrice: qty * price,
+          date: movementDate,
+          notes: notes.trim(),
+          createdBy: currentUser?.id,
+        });
+        await db.hppHistory.add({
+          productId: current.id!,
+          oldHpp: current.hpp,
+          newHpp: resultingHpp,
+          source: 'stock_in',
+          date: movementDate,
+        });
+        await db.products.update(current.id!, {
+          stock: newStock,
+          hpp: resultingHpp,
+          updatedAt: movementDate,
+        });
+      });
 
-    await db.stockIns.add({
-      productId: Number(productId),
-      supplierId: Number(supplierId),
-      quantity: qty,
-      buyPrice: price,
-      totalPrice: qty * price,
-      date: new Date(),
-      notes: notes.trim(),
-      createdBy: currentUser?.id,
-    });
-
-    const oldStock = product.stock;
-    const oldHpp = product.hpp;
-    const newStock = Math.round((oldStock + qty) * 1e6) / 1e6;
-    const newHpp = newStock > 0 ? ((oldStock * oldHpp) + (qty * price)) / newStock : price;
-
-    await db.hppHistory.add({
-      productId: product.id!,
-      oldHpp,
-      newHpp,
-      source: 'stock_in',
-      date: new Date(),
-    });
-
-    await db.products.update(product.id!, {
-      stock: newStock,
-      hpp: Math.round(newHpp),
-      updatedAt: new Date(),
-    });
-
-    toast.success(t('stockIn.toast.success', { product: product.name, qty, hpp: Math.round(newHpp).toLocaleString(numberLocale) }));
-    setDialogOpen(false);
+      toast.success(t('stockIn.toast.success', { product: product.name, qty, hpp: resultingHpp.toLocaleString(numberLocale) }));
+      setDialogOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('stockIn.toast.saveFailed'));
+    }
   };
 
   return (

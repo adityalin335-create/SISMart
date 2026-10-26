@@ -93,7 +93,7 @@ export interface Supplier {
   syncedAt?: Date | null;
 }
 
-export type PurchaseOrderStatus = 'draft' | 'submitted';
+export type PurchaseOrderStatus = 'draft' | 'submitted' | 'partially_received' | 'received';
 
 export interface PurchaseOrder {
   id?: number;
@@ -125,6 +125,40 @@ export interface PurchaseOrderItem {
   lineTotal: number;
 }
 
+export type ReceivingStatus = 'draft' | 'confirmed';
+
+export interface Receiving {
+  id?: number;
+  receivingNumber: string;
+  purchaseOrderId: number;
+  supplierId: number;
+  supplierName: string;
+  supplierDeliveryNoteNumber: string;
+  receivedAt: Date;
+  status: ReceivingStatus;
+  notes: string;
+  createdBy?: number;
+  createdByName: string;
+  confirmedBy?: number;
+  confirmedByName?: string;
+  confirmedAt?: Date;
+  updatedAt: Date;
+  syncedAt?: Date | null;
+}
+
+export interface ReceivingItem {
+  id?: number;
+  receivingId: number;
+  purchaseOrderItemId: number;
+  productId: number;
+  productName: string;
+  sku: string;
+  unit: string;
+  quantityReceived: number;
+  quantityDamaged: number;
+  actualUnitCost: number;
+}
+
 export interface Customer {
   id?: number;
   name: string;
@@ -143,6 +177,10 @@ export interface StockIn {
   id?: number;
   productId: number;
   supplierId: number;
+  receivingId?: number;
+  movementType?: 'opening_stock' | 'receiving' | 'sale' | 'stock_adjustment' | 'stock_opname' | 'return';
+  referenceNumber?: string;
+  transactionId?: number;
   quantity: number;
   buyPrice: number; // harga beli per unit
   totalPrice: number;
@@ -156,6 +194,9 @@ export interface StockIn {
 export interface StockOut {
   id?: number;
   productId: number;
+  movementType?: 'opening_stock' | 'receiving' | 'sale' | 'stock_adjustment' | 'stock_opname' | 'return';
+  referenceNumber?: string;
+  transactionId?: number;
   quantity: number;
   reason: string; // rusak, hilang, retur, opname, dll
   date: Date;
@@ -180,6 +221,7 @@ export interface StockOpnameItem {
   opnameId: number;
   productId: number;
   systemStock: number;
+  systemStockUpdatedAt?: Date;
   realStock: number;
   difference: number;
 }
@@ -189,7 +231,7 @@ export interface HppHistory {
   productId: number;
   oldHpp: number;
   newHpp: number;
-  source: 'stock_in' | 'manual';
+  source: 'stock_in' | 'receiving' | 'manual';
   date: Date;
   updatedAt?: Date;
   syncedAt?: Date | null;
@@ -341,7 +383,7 @@ export interface StoreSettings {
   allowDebt?: boolean; // opt-in pembayaran sebagian/seluruhnya sebagai hutang
   cloudStoreId?: string | null; // cloud store ID yang di-bind ke device ini untuk sync
   printLogo?: boolean; // toggle to print store logo on ESC/POS receipt
-  hideWatermark?: boolean; // toggle to hide FreeKasir.com credit/watermark on ESC/POS receipt
+  hideWatermark?: boolean; // toggle to hide the SISMart credit/watermark on ESC/POS receipt
 }
 
 // === Database ===
@@ -352,6 +394,8 @@ class PosDatabase extends Dexie {
   suppliers!: Table<Supplier>;
   purchaseOrders!: Table<PurchaseOrder>;
   purchaseOrderItems!: Table<PurchaseOrderItem>;
+  receivings!: Table<Receiving>;
+  receivingItems!: Table<ReceivingItem>;
   customers!: Table<Customer>;
   stockIns!: Table<StockIn>;
   stockOuts!: Table<StockOut>;
@@ -528,7 +572,7 @@ class PosDatabase extends Dexie {
       const prodTable = tx.table('products');
       const now = new Date();
 
-      const defaults = ['pcs', 'kg', 'gram', 'liter', 'ml', 'porsi', 'cup', 'botol', 'bungkus'];
+      const defaults = ['pcs', 'botol', 'sachet', 'pack', 'dus'];
       const seen = new Set<string>();
 
       for (const name of defaults) {
@@ -542,7 +586,7 @@ class PosDatabase extends Dexie {
         });
       }
 
-      // Harvest custom units already used by existing products (e.g. 'mangkok', 'gelas')
+      // Preserve any unit values already used by existing products.
       const allProducts = await prodTable.toArray();
       for (const p of allProducts) {
         const u = ((p as any).unit as string | undefined)?.trim();
@@ -858,6 +902,212 @@ class PosDatabase extends Dexie {
       stockOpnameItems:  '++id, opnameId, productId, [opnameId+productId]',
       deletedRecords:    '++id, tableName, recordId, deletedAt, syncedAt',
     });
+
+    // Version 16 — Receiving
+    this.version(16).stores({
+      categories:        '++id, name, isDeleted, updatedAt, syncedAt',
+      products:          '++id, name, &sku, categoryId, barcode, isDeleted, createdBy, updatedBy, unit, updatedAt, syncedAt',
+      suppliers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      purchaseOrders:    '++id, &poNumber, supplierId, status, orderDate, createdBy, updatedAt, syncedAt',
+      purchaseOrderItems:'++id, purchaseOrderId, productId, [purchaseOrderId+productId]',
+      receivings:        '++id, &receivingNumber, purchaseOrderId, supplierId, status, receivedAt, updatedAt, syncedAt',
+      receivingItems:    '++id, receivingId, purchaseOrderItemId, productId, [receivingId+purchaseOrderItemId]',
+      customers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      stockIns:          '++id, productId, supplierId, receivingId, date, createdBy, updatedAt, syncedAt',
+      stockOuts:         '++id, productId, date, createdBy, updatedAt, syncedAt',
+      hppHistory:        '++id, productId, date, syncedAt',
+      paymentMethods:    '++id, name, category, updatedAt, syncedAt',
+      transactions:      '++id, date, &receiptNumber, paymentMethodId, status, orderNumber, createdBy, updatedAt, syncedAt',
+      transactionItems:  '++id, transactionId, productId',
+      storeSettings:     '++id',
+      units:             '++id, &name, isDeleted, updatedAt, syncedAt',
+      users:             '++id, &username, role, isActive, updatedAt, syncedAt',
+      expenseCategories: '++id, name, isDeleted, updatedAt, syncedAt',
+      expenses:          '++id, date, categoryId, paymentMethodId, createdBy, isDeleted, updatedAt, syncedAt',
+      debts:             '++id, &transactionId, customerId, status, createdAt, updatedAt, syncedAt',
+      debtPayments:      '++id, debtId, date, paymentMethodId, createdBy, updatedAt, syncedAt',
+      stockOpnames:      '++id, date, status, createdBy, updatedAt, syncedAt',
+      stockOpnameItems:  '++id, opnameId, productId, [opnameId+productId]',
+      deletedRecords:    '++id, tableName, recordId, deletedAt, syncedAt',
+    });
+
+    // Version 17 — Explicit stock movement sources and opening balances.
+    this.version(17).stores({
+      categories:        '++id, name, isDeleted, updatedAt, syncedAt',
+      products:          '++id, name, &sku, categoryId, barcode, isDeleted, createdBy, updatedBy, unit, updatedAt, syncedAt',
+      suppliers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      purchaseOrders:    '++id, &poNumber, supplierId, status, orderDate, createdBy, updatedAt, syncedAt',
+      purchaseOrderItems:'++id, purchaseOrderId, productId, [purchaseOrderId+productId]',
+      receivings:        '++id, &receivingNumber, purchaseOrderId, supplierId, status, receivedAt, updatedAt, syncedAt',
+      receivingItems:    '++id, receivingId, purchaseOrderItemId, productId, [receivingId+purchaseOrderItemId]',
+      customers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      stockIns:          '++id, productId, supplierId, receivingId, movementType, referenceNumber, transactionId, date, createdBy, updatedAt, syncedAt',
+      stockOuts:         '++id, productId, movementType, referenceNumber, transactionId, date, createdBy, updatedAt, syncedAt',
+      hppHistory:        '++id, productId, date, syncedAt',
+      paymentMethods:    '++id, name, category, updatedAt, syncedAt',
+      transactions:      '++id, date, &receiptNumber, paymentMethodId, status, orderNumber, createdBy, updatedAt, syncedAt',
+      transactionItems:  '++id, transactionId, productId',
+      storeSettings:     '++id',
+      units:             '++id, &name, isDeleted, updatedAt, syncedAt',
+      users:             '++id, &username, role, isActive, updatedAt, syncedAt',
+      expenseCategories: '++id, name, isDeleted, updatedAt, syncedAt',
+      expenses:          '++id, date, categoryId, paymentMethodId, createdBy, isDeleted, updatedAt, syncedAt',
+      debts:             '++id, &transactionId, customerId, status, createdAt, updatedAt, syncedAt',
+      debtPayments:      '++id, debtId, date, paymentMethodId, createdBy, updatedAt, syncedAt',
+      stockOpnames:      '++id, date, status, createdBy, updatedAt, syncedAt',
+      stockOpnameItems:  '++id, opnameId, productId, [opnameId+productId]',
+      deletedRecords:    '++id, tableName, recordId, deletedAt, syncedAt',
+    }).upgrade(async tx => {
+      const stockIns = tx.table('stockIns');
+      const stockOuts = tx.table('stockOuts');
+      const products = await tx.table('products').toArray();
+      const transactions = await tx.table('transactions').toArray();
+      const transactionItems = await tx.table('transactionItems').toArray();
+      const transactionsById = new Map(transactions.map(transaction => [transaction.id, transaction]));
+      const productsById = new Map(products.map(product => [product.id, product]));
+
+      for (const stockIn of await stockIns.toArray()) {
+        if (stockIn.movementType) continue;
+        const type = stockIn.receivingId !== undefined
+          ? 'receiving'
+          : /opname/i.test(stockIn.notes ?? '')
+            ? 'stock_opname'
+            : /retur|return/i.test(stockIn.notes ?? '')
+              ? 'return'
+              : 'stock_adjustment';
+        await stockIns.update(stockIn.id, {
+          movementType: type,
+          referenceNumber: stockIn.referenceNumber ?? (
+            type === 'receiving' ? `RECEIVING-${stockIn.receivingId}` : `STOCK-IN-${stockIn.id}`
+          ),
+        });
+      }
+
+      for (const stockOut of await stockOuts.toArray()) {
+        if (stockOut.movementType) continue;
+        const type = stockOut.reason === 'opname' || /opname/i.test(stockOut.notes ?? '')
+          ? 'stock_opname'
+          : /retur|return/i.test(stockOut.reason ?? '')
+            ? 'return'
+            : 'stock_adjustment';
+        await stockOuts.update(stockOut.id, {
+          movementType: type,
+          referenceNumber: `STOCK-OUT-${stockOut.id}`,
+        });
+      }
+
+      const allStockIns = await stockIns.toArray();
+      const allStockOuts = await stockOuts.toArray();
+      const stockInNet = new Map<number, number>();
+      const stockOutNet = new Map<number, number>();
+      for (const movement of allStockIns) {
+        stockInNet.set(movement.productId, (stockInNet.get(movement.productId) ?? 0) + movement.quantity);
+      }
+      for (const movement of allStockOuts) {
+        stockOutNet.set(movement.productId, (stockOutNet.get(movement.productId) ?? 0) + movement.quantity);
+      }
+
+      const salesByProduct = new Map<number, number>();
+      for (const item of transactionItems) {
+        if (!transactionsById.has(item.transactionId) || productsById.get(item.productId)?.trackStock === false) continue;
+        salesByProduct.set(item.productId, (salesByProduct.get(item.productId) ?? 0) + item.quantity);
+        await stockOuts.add({
+          productId: item.productId,
+          movementType: 'sale',
+          referenceNumber: transactionsById.get(item.transactionId)?.orderNumber ??
+            transactionsById.get(item.transactionId)?.receiptNumber,
+          transactionId: item.transactionId,
+          quantity: item.quantity,
+          reason: 'sales',
+          date: transactionsById.get(item.transactionId)?.date ?? new Date(),
+          notes: 'Migrated sales movement',
+          createdBy: transactionsById.get(item.transactionId)?.createdBy,
+        });
+      }
+
+      for (const product of products) {
+        if (!product.id || product.trackStock === false) continue;
+        const historicalNet =
+          (stockInNet.get(product.id) ?? 0) -
+          (stockOutNet.get(product.id) ?? 0) -
+          (salesByProduct.get(product.id) ?? 0);
+        const openingBalance = Math.round((product.stock - historicalNet) * 1e6) / 1e6;
+        const baseMovement = {
+          productId: product.id,
+          movementType: 'opening_stock',
+          referenceNumber: `OPENING-${product.sku || product.id}`,
+          quantity: Math.abs(openingBalance),
+          date: product.createdAt ?? new Date(),
+          notes: 'Opening stock balance at ledger migration',
+        };
+        if (openingBalance < 0) {
+          await stockOuts.add({ ...baseMovement, reason: 'opening_stock' });
+        } else {
+          await stockIns.add({
+            ...baseMovement,
+            supplierId: 0,
+            buyPrice: product.hpp ?? 0,
+            totalPrice: openingBalance * (product.hpp ?? 0),
+          });
+        }
+      }
+    });
+
+    // Version 18 — Retail-oriented default categories and units.
+    this.version(18).stores({
+      categories:        '++id, name, isDeleted, updatedAt, syncedAt',
+      products:          '++id, name, &sku, categoryId, barcode, isDeleted, createdBy, updatedBy, unit, updatedAt, syncedAt',
+      suppliers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      purchaseOrders:    '++id, &poNumber, supplierId, status, orderDate, createdBy, updatedAt, syncedAt',
+      purchaseOrderItems:'++id, purchaseOrderId, productId, [purchaseOrderId+productId]',
+      receivings:        '++id, &receivingNumber, purchaseOrderId, supplierId, status, receivedAt, updatedAt, syncedAt',
+      receivingItems:    '++id, receivingId, purchaseOrderItemId, productId, [receivingId+purchaseOrderItemId]',
+      customers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      stockIns:          '++id, productId, supplierId, receivingId, movementType, referenceNumber, transactionId, date, createdBy, updatedAt, syncedAt',
+      stockOuts:         '++id, productId, movementType, referenceNumber, transactionId, date, createdBy, updatedAt, syncedAt',
+      hppHistory:        '++id, productId, date, syncedAt',
+      paymentMethods:    '++id, name, category, updatedAt, syncedAt',
+      transactions:      '++id, date, &receiptNumber, paymentMethodId, status, orderNumber, createdBy, updatedAt, syncedAt',
+      transactionItems:  '++id, transactionId, productId',
+      storeSettings:     '++id',
+      units:             '++id, &name, isDeleted, updatedAt, syncedAt',
+      users:             '++id, &username, role, isActive, updatedAt, syncedAt',
+      expenseCategories: '++id, name, isDeleted, updatedAt, syncedAt',
+      expenses:          '++id, date, categoryId, paymentMethodId, createdBy, isDeleted, updatedAt, syncedAt',
+      debts:             '++id, &transactionId, customerId, status, createdAt, updatedAt, syncedAt',
+      debtPayments:      '++id, debtId, date, paymentMethodId, createdBy, updatedAt, syncedAt',
+      stockOpnames:      '++id, date, status, createdBy, updatedAt, syncedAt',
+      stockOpnameItems:  '++id, opnameId, productId, [opnameId+productId]',
+      deletedRecords:    '++id, tableName, recordId, deletedAt, syncedAt',
+    }).upgrade(async tx => {
+      const categories = tx.table('categories');
+      const categoryRenames: Record<string, string> = {
+        Makanan: 'Sembako',
+        Minuman: 'Makanan & Minuman Kemasan',
+        Lainnya: 'Perawatan & Rumah Tangga',
+      };
+      for (const category of await categories.toArray()) {
+        const name = categoryRenames[category.name];
+        if (name) await categories.update(category.id, { name, updatedAt: new Date() });
+      }
+
+      const units = tx.table('units');
+      const now = new Date();
+      for (const name of ['pcs', 'botol', 'sachet', 'pack', 'dus']) {
+        if (await units.where('name').equals(name).first()) continue;
+        await units.add({ name, isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null });
+      }
+
+      const legacyPortionUnit = await units.where('name').equals('porsi').first();
+      if (legacyPortionUnit && legacyPortionUnit.isDeleted !== 1) {
+        await units.update(legacyPortionUnit.id, {
+          isDefault: 0,
+          isDeleted: 1,
+          deletedAt: now,
+          updatedAt: now,
+        });
+      }
+    });
   }
 }
 
@@ -894,6 +1144,7 @@ export async function sanitizeDatabaseDates() {
   await sanitizeTableDates(db.products, ['createdAt', 'updatedAt', 'deletedAt', 'syncedAt']);
   await sanitizeTableDates(db.suppliers, ['createdAt', 'deletedAt', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.purchaseOrders, ['orderDate', 'expectedDate', 'submittedAt', 'updatedAt', 'syncedAt']);
+  await sanitizeTableDates(db.receivings, ['receivedAt', 'confirmedAt', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.customers, ['createdAt', 'deletedAt', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.stockIns, ['date', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.stockOuts, ['date', 'updatedAt', 'syncedAt']);
@@ -907,6 +1158,7 @@ export async function sanitizeDatabaseDates() {
   await sanitizeTableDates(db.debts, ['createdAt', 'settledAt', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.debtPayments, ['date', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.stockOpnames, ['date', 'updatedAt', 'syncedAt']);
+  await sanitizeTableDates(db.stockOpnameItems, ['systemStockUpdatedAt']);
   await sanitizeTableDates(db.deletedRecords, ['deletedAt', 'syncedAt']);
   await sanitizeTableDates(db.storeSettings, ['lastBackupAt', 'lastCloudBackupAt']);
 }
@@ -993,9 +1245,9 @@ export async function seedDefaultData() {
   const categoryCount = await db.categories.count();
   if (categoryCount === 0) {
     await db.categories.bulkAdd([
-      { name: 'Makanan', color: '#FF6B35', icon: '🍕', createdAt: new Date(), isDeleted: 0, deletedAt: null },
-      { name: 'Minuman', color: '#4ECDC4', icon: '🥤', createdAt: new Date(), isDeleted: 0, deletedAt: null },
-      { name: 'Lainnya', color: '#95A5A6', icon: '📦', createdAt: new Date(), isDeleted: 0, deletedAt: null },
+      { name: 'Sembako', color: '#E8A838', icon: '🛒', createdAt: new Date(), isDeleted: 0, deletedAt: null },
+      { name: 'Makanan & Minuman Kemasan', color: '#4ECDC4', icon: '🥫', createdAt: new Date(), isDeleted: 0, deletedAt: null },
+      { name: 'Perawatan & Rumah Tangga', color: '#5B8DEF', icon: '🧴', createdAt: new Date(), isDeleted: 0, deletedAt: null },
     ]);
   }
 
@@ -1012,15 +1264,11 @@ export async function seedDefaultData() {
   if (unitCount === 0) {
     const now = new Date();
     await db.units.bulkAdd([
-      { name: 'pcs',     isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'kg',      isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'gram',    isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'liter',   isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'ml',      isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'porsi',   isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'cup',     isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'botol',   isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'bungkus', isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'pcs',    isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'botol',  isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'sachet', isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'pack',   isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'dus',    isDefault: 1, createdAt: now, isDeleted: 0, deletedAt: null },
     ]);
   }
 

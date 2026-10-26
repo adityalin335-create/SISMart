@@ -14,7 +14,7 @@ import type { Transaction, TransactionItemRecord, Expense } from '@/lib/db';
  * ter-code-split dan tidak membebani load awal aplikasi.
  *
  * Aturan yang dijaga konsisten dengan tampilan Laporan:
- *  - hanya transaksi `status === 'completed'` (open bill dikecualikan),
+ *  - hanya transaksi `status === 'completed'` (transaksi ditunda dikecualikan),
  *  - hanya pengeluaran `isDeleted === 0`.
  */
 
@@ -324,7 +324,6 @@ function buildTransactionsSheet(
     { header: 'Tanggal', key: 'date', width: 12 },
     { header: 'Waktu', key: 'time', width: 8 },
     { header: 'Pelanggan', key: 'customer', width: 20 },
-    { header: 'Meja', key: 'table', width: 8 },
     { header: 'Metode Bayar', key: 'payment', width: 16 },
     { header: 'Dibayar', key: 'paid', width: 14, money: true },
     { header: 'Hutang Awal', key: 'debt', width: 14, money: true },
@@ -343,7 +342,6 @@ function buildTransactionsSheet(
       date: format(new Date(t.date), 'dd/MM/yyyy'),
       time: format(new Date(t.date), 'HH:mm'),
       customer: t.customerName ?? '-',
-      table: t.tableNumber ?? '-',
       payment: t.debtAmount
         ? `${t.paymentAmount > 0 ? `${helpers.paymentName(t.paymentMethodId)} + ` : ''}Hutang`
         : helpers.paymentName(t.paymentMethodId),

@@ -23,7 +23,7 @@ describe('getESCPOSData formatting', () => {
       {
         transactionId: 1,
         productId: 101,
-        productName: 'Nasi Goreng Spesial',
+        productName: 'Beras Premium 5 kg',
         quantity: 1,
         price: 15000,
         hpp: 10000,
@@ -134,7 +134,7 @@ describe('getESCPOSData formatting', () => {
     });
 
     expect(output).toContain('Dicetak Dari Aplikasi');
-    expect(output).toContain('FreeKasir.com');
+    expect(output).toContain('SISMart');
   });
 
   it('should hide the watermark when cloudStoreId is set and hideWatermark is true', () => {
@@ -158,7 +158,7 @@ describe('getESCPOSData formatting', () => {
     });
 
     expect(output).not.toContain('Dicetak Dari Aplikasi');
-    expect(output).not.toContain('FreeKasir.com');
+    expect(output).not.toContain('SISMart');
   });
 
   it('should still print the watermark if hideWatermark is true but cloudStoreId is not set', () => {
@@ -182,6 +182,26 @@ describe('getESCPOSData formatting', () => {
     });
 
     expect(output).toContain('Dicetak Dari Aplikasi');
-    expect(output).toContain('FreeKasir.com');
+    expect(output).toContain('SISMart');
+  });
+
+  it('does not print legacy table numbers on retail receipts', () => {
+    const output = getESCPOSData({
+      transaction: { ...baseTransaction, tableNumber: 'TABLE-ONLY-9876' },
+      items: baseItems,
+      storeSettings: {
+        storeName: 'Toko Test',
+        address: 'Alamat',
+        phone: '123',
+        receiptFooter: 'Terima kasih!',
+        onboardingDone: true,
+        lastBackupAt: null,
+        deviceId: 'test-device',
+      },
+      paymentMethodName: 'Tunai',
+    });
+
+    expect(output).not.toContain('Meja:');
+    expect(output).not.toContain('TABLE-ONLY-9876');
   });
 });

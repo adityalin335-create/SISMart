@@ -1,4 +1,5 @@
 import { db, type Product, sanitizeDatabaseDates } from '@/lib/db';
+import { ensureStockCardHistory } from '@/lib/stock-movements';
 
 /**
  * Shared backup/restore core, dipakai oleh:
@@ -8,7 +9,7 @@ import { db, type Product, sanitizeDatabaseDates } from '@/lib/db';
  * Dipisah dari komponen UI supaya logika yang sama tidak terduplikasi.
  */
 
-export const BACKUP_VERSION = 8;
+export const BACKUP_VERSION = 9;
 
 // Bentuk longgar — file backup bisa berasal dari versi lama (v1–v6).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +25,8 @@ export async function buildBackupData() {
     suppliers: await db.suppliers.toArray(),
     purchaseOrders: await db.purchaseOrders.toArray(),
     purchaseOrderItems: await db.purchaseOrderItems.toArray(),
+    receivings: await db.receivings.toArray(),
+    receivingItems: await db.receivingItems.toArray(),
     customers: await db.customers.toArray(),
     stockIns: await db.stockIns.toArray(),
     stockOuts: await db.stockOuts.toArray(),
@@ -44,9 +47,9 @@ export async function buildBackupData() {
   };
 }
 
-/** Nama file backup standar, mis. freekasir-backup-2026-06-11.json */
+/** Nama file backup standar, mis. sismart-backup-2026-06-11.json */
 export function backupFileName(date = new Date()): string {
-  return `freekasir-backup-${date.toISOString().slice(0, 10)}.json`;
+  return `sismart-backup-${date.toISOString().slice(0, 10)}.json`;
 }
 
 /** Bangun JSON string siap simpan/upload. */
@@ -74,6 +77,10 @@ async function clearAllTables(includeConditional: BackupData) {
   if (Array.isArray(includeConditional.purchaseOrders) || Array.isArray(includeConditional.purchaseOrderItems)) {
     await db.purchaseOrders.clear();
     await db.purchaseOrderItems.clear();
+  }
+  if (Array.isArray(includeConditional.receivings) || Array.isArray(includeConditional.receivingItems)) {
+    await db.receivings.clear();
+    await db.receivingItems.clear();
   }
   await db.stockIns.clear();
   await db.stockOuts.clear();
@@ -113,6 +120,8 @@ export async function restoreFromBackupData(data: unknown): Promise<void> {
     suppliers: await db.suppliers.toArray(),
     purchaseOrders: await db.purchaseOrders.toArray(),
     purchaseOrderItems: await db.purchaseOrderItems.toArray(),
+    receivings: await db.receivings.toArray(),
+    receivingItems: await db.receivingItems.toArray(),
     customers: await db.customers.toArray(),
     stockIns: await db.stockIns.toArray(),
     stockOuts: await db.stockOuts.toArray(),
@@ -145,6 +154,8 @@ export async function restoreFromBackupData(data: unknown): Promise<void> {
     if (data.suppliers?.length) await db.suppliers.bulkAdd(data.suppliers);
     if (data.purchaseOrders?.length) await db.purchaseOrders.bulkAdd(data.purchaseOrders);
     if (data.purchaseOrderItems?.length) await db.purchaseOrderItems.bulkAdd(data.purchaseOrderItems);
+    if (data.receivings?.length) await db.receivings.bulkAdd(data.receivings);
+    if (data.receivingItems?.length) await db.receivingItems.bulkAdd(data.receivingItems);
     if (data.customers?.length) await db.customers.bulkAdd(data.customers);
     if (data.stockIns?.length) await db.stockIns.bulkAdd(data.stockIns);
     if (data.stockOuts?.length) await db.stockOuts.bulkAdd(data.stockOuts);
@@ -166,7 +177,7 @@ export async function restoreFromBackupData(data: unknown): Promise<void> {
       await db.units.bulkAdd(data.units);
     } else {
       const now = new Date();
-      const defaults = ['pcs', 'kg', 'gram', 'liter', 'ml', 'porsi', 'cup', 'botol', 'bungkus'];
+      const defaults = ['pcs', 'botol', 'sachet', 'pack', 'dus'];
       const seen = new Set<string>();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const toAdd: any[] = [];
@@ -218,11 +229,13 @@ export async function restoreFromBackupData(data: unknown): Promise<void> {
 
     // Convert string-serialized dates to native Date objects
     await sanitizeDatabaseDates();
+    await ensureStockCardHistory();
   } catch (importErr) {
     // Rollback ke snapshot.
     try {
       await db.categories.clear(); await db.products.clear(); await db.suppliers.clear();
       await db.purchaseOrders.clear(); await db.purchaseOrderItems.clear();
+      await db.receivings.clear(); await db.receivingItems.clear();
       await db.stockIns.clear(); await db.stockOuts.clear(); await db.hppHistory.clear();
       await db.paymentMethods.clear(); await db.transactions.clear(); await db.transactionItems.clear();
       await db.storeSettings.clear();
@@ -242,6 +255,8 @@ export async function restoreFromBackupData(data: unknown): Promise<void> {
       if (snapshot.suppliers.length) await db.suppliers.bulkAdd(snapshot.suppliers);
       if (snapshot.purchaseOrders.length) await db.purchaseOrders.bulkAdd(snapshot.purchaseOrders);
       if (snapshot.purchaseOrderItems.length) await db.purchaseOrderItems.bulkAdd(snapshot.purchaseOrderItems);
+      if (snapshot.receivings.length) await db.receivings.bulkAdd(snapshot.receivings);
+      if (snapshot.receivingItems.length) await db.receivingItems.bulkAdd(snapshot.receivingItems);
       if (snapshot.customers.length) await db.customers.bulkAdd(snapshot.customers);
       if (snapshot.stockIns.length) await db.stockIns.bulkAdd(snapshot.stockIns);
       if (snapshot.stockOuts.length) await db.stockOuts.bulkAdd(snapshot.stockOuts);

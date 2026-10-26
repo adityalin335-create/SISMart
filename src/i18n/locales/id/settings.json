@@ -2,35 +2,11 @@
   "title": "Pengaturan",
   "storeFallback": "Toko Saya",
   "notSet": "Belum diatur",
-  "playStoreAlert": {
-    "title": "Gunakan Aplikasi Android Resmi!",
-    "description": "Untuk performa terbaik, dukungan printer Bluetooth, dan fitur offline yang lebih stabil, silakan unduh aplikasi FreeKasir di Google Play Store.",
-    "migrationInstructions": "Pindahkan data Anda dengan mengekspor backup di menu Backup & Restore, lalu impor file backup tersebut di aplikasi Play Store Anda.",
-    "downloadButton": "Unduh di Play Store",
-    "backupButton": "Ekspor Backup Sekarang"
-  },
-  "cloudSync": {
-    "title": "FreeKasir Cloud",
-    "status": {
-      "inactive": "BELUM AKTIF",
-      "selectStore": "PILIH TOKO",
-      "needsSetup": "PERLU DIATUR",
-      "active": "AKTIF"
-    },
-    "desc": {
-      "inactive": "Data aman di cloud, akses dashboard.freekasir.com, dan hubungkan tokomu ke market.freekasir.com!",
-      "selectStore": "Langganan aktif, tapi perangkat belum terhubung ke toko. Pilih toko agar data bisa disinkronkan.",
-      "needsSetup": "Toko sudah terhubung, tapi sinkronisasi otomatis belum dinyalakan. Atur jadwalnya agar data tersinkron rutin.",
-      "active": "Sinkronisasi aktif. Pantau laporan toko real-time di dashboard.freekasir.com dari perangkat mana saja."
-    },
-    "lastSync": "Terakhir sync: {{time}}",
-    "neverSynced": "Belum pernah disinkronkan"
-  },
   "installApp": {
     "title": "Install sebagai Aplikasi",
     "hint": "Buka langsung dari home screen, tanpa browser",
     "installButton": "Install",
-    "installSuccess": "Berhasil install FreeKasir!",
+    "installSuccess": "Berhasil install SISMart!",
     "helpButton": "Cara Install"
   },
   "installHelp": {
@@ -87,7 +63,7 @@
     },
     "logoutDialog": {
       "title": "Keluar dari Akun?",
-      "description": "Anda akan diarahkan ke halaman login. Pastikan tidak ada open bill yang belum disimpan.",
+      "description": "Anda akan diarahkan ke halaman login. Pastikan tidak ada transaksi ditunda yang belum disimpan.",
       "confirm": "Keluar"
     }
   },
@@ -128,6 +104,10 @@
     "purchaseOrders": {
       "title": "Purchase Order",
       "description": "Buat dan pantau pesanan ke supplier"
+    },
+    "receivings": {
+      "title": "Receiving",
+      "description": "Catat penerimaan barang dari Purchase Order"
     }
   },
   "purchaseOrders": {
@@ -144,7 +124,9 @@
     "status": {
       "all": "Semua status",
       "draft": "Draft",
-      "submitted": "Diajukan"
+      "submitted": "Diajukan",
+      "partially_received": "Diterima sebagian",
+      "received": "Diterima penuh"
     },
     "locked": {
       "title": "Akses Purchase Order dibatasi",
@@ -186,7 +168,7 @@
     "createdBy": "Dibuat oleh {{name}}",
     "submittedAt": "Diajukan {{date}}",
     "itemsTitle": "Barang ({{count}})",
-    "receivingPhaseNote": "PO diajukan. Penerimaan barang dan pembaruan stok akan tersedia pada fase Receiving.",
+    "receivingPhaseNote": "PO diajukan dan dapat menerima barang.",
     "print": {
       "button": "Cetak PO",
       "title": "Purchase Order",
@@ -201,6 +183,47 @@
       "grandTotal": "Grand Total",
       "notes": "Catatan",
       "noNotes": "-"
+    }
+  },
+  "receivings": {
+    "title": "Receiving",
+    "create": "Buat Receiving",
+    "createTitle": "Buat Receiving dari PO",
+    "detailTitle": "Detail Receiving",
+    "searchPlaceholder": "Cari nomor receiving, PO, supplier, atau surat jalan...",
+    "loading": "Memuat data...",
+    "empty": "Belum ada riwayat receiving.",
+    "noResults": "Receiving tidak ditemukan.",
+    "noDeliveryNote": "Surat jalan belum diisi",
+    "status": { "draft": "Draft", "confirmed": "Dikonfirmasi" },
+    "locked": { "title": "Akses Receiving dibatasi", "permission": "Izin mengelola stok" },
+    "notFound": "Receiving tidak ditemukan.",
+    "backToList": "Kembali ke daftar Receiving",
+    "purchaseOrder": "Purchase Order",
+    "selectPo": "Pilih PO yang masih dapat diterima",
+    "noOpenPo": "Tidak ada PO yang masih dapat menerima barang.",
+    "createFromPo": "Buat Receiving",
+    "createFromPoHint": "PO ini dapat menerima barang melalui menu Receiving.",
+    "deliveryNote": "Nomor surat jalan supplier",
+    "receivedDate": "Tanggal penerimaan",
+    "notes": "Catatan",
+    "itemsTitle": "Barang yang diterima",
+    "ordered": "Dipesan",
+    "receivedToDate": "Sudah diterima",
+    "remaining": "Sisa",
+    "quantityReceived": "Kuantitas diterima",
+    "quantityDamaged": "Kuantitas rusak",
+    "actualUnitCost": "Biaya beli aktual per unit",
+    "quantityAccepted": "Masuk stok",
+    "saveDraft": "Simpan Draft",
+    "confirm": "Konfirmasi Receiving",
+    "saving": "Menyimpan...",
+    "confirmedBy": "Dikonfirmasi oleh {{name}} · {{date}}",
+    "toast": {
+      "selectPo": "Pilih Purchase Order terlebih dahulu.",
+      "saved": "Draft receiving berhasil disimpan.",
+      "confirmed": "Receiving dikonfirmasi dan stok diperbarui.",
+      "saveFailed": "Receiving gagal disimpan."
     }
   },
   "masterData": {
@@ -223,7 +246,7 @@
     },
     "units": {
       "title": "Satuan",
-      "description": "{{count}} satuan · pcs, kg, porsi, dll"
+      "description": "{{count}} satuan · pcs, botol, sachet, pack, dus"
     },
     "receiptFooter": {
       "title": "Pengaturan Struk",
@@ -253,10 +276,6 @@
     "reportIssue": {
       "title": "Laporkan Kendala",
       "description": "Laporkan error atau kendala teknis aplikasi ke developer"
-    },
-    "telegramSupport": {
-      "title": "Support Telegram",
-      "description": "Hubungi tim support FreeKasir via Telegram"
     }
   },
   "bluetoothPrinter": {
@@ -280,13 +299,11 @@
     "title": "Bahasa / Language"
   },
   "about": {
-    "appName": "FreeKasir",
+    "appName": "SISMart",
     "tagline": "POS Gratis untuk UMKM Indonesia 🇮🇩",
     "version": "v{{version}} • Data tersimpan di perangkat",
-    "whatsNew": "Yang Baru di FreeKasir",
-    "requestFeature": "💡 Request Fitur",
+    "whatsNew": "Yang Baru di SISMart",
     "donate": "☕ Traktir Kopi untuk Developer",
-    "telegram": "💬 Gabung Grup Telegram",
     "storageUsed": "Penyimpanan Terpakai"
   },
   "storeDialog": {
@@ -322,19 +339,19 @@
   },
   "cloudBackup": {
     "locked": {
-      "title": "FreeKasir Cloud",
+      "title": "SISMart Cloud",
       "permissionLabel": "Kelola Backup"
     },
     "promo": {
       "title": "Jangkau Lebih Banyak Pelanggan!",
       "description": "Aktifkan Toko Online agar tokomu dapat diakses secara publik dengan berbagai keuntungan:",
-      "benefit1": "Tampil di market.freekasir.com untuk menjangkau pembeli baru",
+      "benefit1": "Tampil di market toko untuk menjangkau pembeli baru",
       "benefit2": "Pelanggan bisa lihat menu online secara real-time dari HP",
       "benefit3": "Link toko online unik milikmu sendiri",
       "button": "Lengkapi Detail Toko"
     },
     "hero": {
-      "title": "Upgrade ke FreeKasir Cloud",
+      "title": "Upgrade ke SISMart Cloud",
       "description": "Pantau laporan secara real-time lewat {{dashboard}} dan promosikan tokomu secara online di {{market}}!",
       "startFrom": "Mulai",
       "perMonth": "/bulan"
@@ -447,7 +464,7 @@
       "permissionLabel": "Kelola Backup"
     },
     "title": "Sinkronisasi Otomatis",
-    "requiresSubscription": "Aktifkan langganan FreeKasir Cloud dulu untuk mengatur sinkronisasi otomatis.",
+    "requiresSubscription": "Aktifkan langganan SISMart Cloud dulu untuk mengatur sinkronisasi otomatis.",
     "scheduleLabel": "Jadwal Sinkronisasi Otomatis",
     "interval": {
       "off": "Nonaktif",
@@ -496,7 +513,7 @@
     },
     "title": "Kelola Toko",
     "loading": "Memuat…",
-    "requiresSubscription": "Langganan FreeKasir Cloud diperlukan untuk mengelola toko.",
+    "requiresSubscription": "Langganan SISMart Cloud diperlukan untuk mengelola toko.",
     "activeDevice": "Device ini terhubung ke:",
     "syncActive": "Sinkronisasi otomatis latar belakang aktif",
     "disconnect": "Putuskan",
@@ -506,7 +523,7 @@
     "addButton": "Tambah",
     "atLimit": {
       "title": "Batas toko paketmu sudah penuh",
-      "description": "Paket saat ini hanya mengizinkan {{max}} toko. Upgrade paket FreeKasir Cloud untuk menambah toko.",
+      "description": "Paket saat ini hanya mengizinkan {{max}} toko. Upgrade paket SISMart Cloud untuk menambah toko.",
       "upgrade": "Upgrade Paket"
     },
     "noStore": "Belum ada toko. Buat toko pertamamu.",
@@ -549,7 +566,7 @@
     "dateTo": "Sampai tanggal",
     "status": {
       "all": "Semua",
-      "open": "Open Bill",
+      "open": "Transaksi Ditunda",
       "completed": "Lunas"
     },
     "cashierFilter": {
@@ -570,7 +587,7 @@
     "groupHeader_one": "{{date}} · {{count}} transaksi",
     "groupHeader_other": "{{date}} · {{count}} transaksi",
     "badges": {
-      "open": "Open",
+      "open": "Ditunda",
       "debt": "Hutang",
       "paid": "Lunas"
     },
@@ -579,7 +596,7 @@
       "title": "Detail Transaksi",
       "status": {
         "label": "Status",
-        "open": "Open Bill",
+        "open": "Transaksi Ditunda",
         "paid": "Lunas"
       },
       "receiptNumber": "No. Struk",
@@ -587,7 +604,6 @@
       "payment": "Pembayaran",
       "cashier": "Kasir",
       "customer": "Pelanggan",
-      "table": "Meja {{number}}",
       "notes": "Catatan",
       "items": "Item",
       "quantityFormat": "{{qty}} × {{price}}",
@@ -599,7 +615,7 @@
       "paid": "Bayar",
       "change": "Kembali",
       "profit": "Profit",
-      "unpaidBill": "Bill belum dibayar",
+      "unpaidBill": "Transaksi belum dibayar",
       "continueInCashier": "Lanjutkan di Kasir",
       "viewReceipt": "Lihat & Cetak Struk",
       "delete": "Hapus Transaksi",
@@ -1046,7 +1062,7 @@
       "addTitle": "Tambah Satuan",
       "editTitle": "Edit Satuan",
       "nameLabel": "Nama Satuan",
-      "namePlaceholder": "Contoh: pak, lusin, mangkok",
+      "namePlaceholder": "Contoh: pack, lusin, kodi",
       "save": "Simpan",
       "renameHint": "Semua produk yang memakai \"{{old}}\" akan otomatis di-rename ke \"{{new}}\"."
     },
@@ -1072,8 +1088,8 @@
     },
     "title": "Kasir",
     "defaultCashier": "Kasir",
-    "editingBill": "Editing Bill",
-    "openBill": "Open Bill",
+    "editingBill": "Mengedit Transaksi Ditunda",
+    "openBill": "Transaksi Ditunda",
     "searchPlaceholder": "Cari produk...",
     "scanPlaceholder": "Scan / ketik SKU atau Barcode lalu Enter...",
     "productList": {
@@ -1099,7 +1115,7 @@
       "title": "Keranjang ({{count}} item)",
       "empty": "Keranjang kosong",
       "editLabel": "— edit",
-      "editOpenBillLabel": "— edit open bill"
+      "editOpenBillLabel": "— edit transaksi ditunda"
     },
     "cartTable": {
       "item": "Barang",
@@ -1124,13 +1140,10 @@
       "total": "Total"
     },
     "buttons": {
-      "saveBill": "Simpan Bill",
-      "saveAndPrintKitchen": "Simpan & Cetak Kitchen Ticket",
-      "saveOnly": "Simpan Saja",
-      "printKitchen": "Cetak Kitchen Ticket",
+      "saveBill": "Simpan Transaksi",
       "continuePayment": "Lanjut Pembayaran",
       "pay": "Bayar",
-      "cancelBill": "Batalkan Bill Ini",
+      "cancelBill": "Batalkan Transaksi Ditunda Ini",
       "ok": "OK",
       "cancel": "Batal"
     },
@@ -1147,7 +1160,6 @@
       "amountPlaceholder": "Masukkan jumlah bayar...",
       "exactMoney": "Uang Pas",
       "reset": "Reset",
-      "table": "Meja",
       "notes": "Catatan tambahan (opsional)",
       "remainingDebt": "Sisa Hutang",
       "remainingDebtHint": "Pelanggan wajib dipilih dari daftar",
@@ -1197,21 +1209,16 @@
       "save": "Simpan Diskon"
     },
     "openBillsSheet": {
-      "title": "Open Bills ({{count}})",
-      "empty": "Tidak ada open bill",
-      "continue": "Lanjutkan",
-      "cancel": "Batal",
-      "tablePrefix": "Meja {{number}}"
-    },
-    "saveConfirmDialog": {
-      "title": "Simpan Bill",
-      "description": "Apakah Anda ingin mencetak Kitchen Ticket setelah menyimpan bill ini?"
+      "title": "Transaksi Ditunda ({{count}})",
+      "empty": "Tidak ada transaksi ditunda",
+      "continue": "Lanjutkan Transaksi",
+      "cancel": "Batal"
     },
     "cancelDialog": {
-      "title": "Batalkan Bill?",
-      "description": "Bill ini akan dihapus dan stok produk akan dikembalikan.",
+      "title": "Batalkan Transaksi Ditunda?",
+      "description": "Transaksi ditunda ini akan dihapus dan stok produk akan dikembalikan.",
       "no": "Tidak",
-      "yes": "Batalkan Bill"
+      "yes": "Batalkan Transaksi Ditunda"
     },
     "paymentMethod": {
       "cash": "Tunai",
@@ -1224,19 +1231,19 @@
       "addedToCart": "Ditambahkan: {{name}}",
       "productNotFound": "Produk dengan SKU/Barcode \"{{code}}\" tidak ditemukan",
       "productOutOfStock": "Stok {{name}} habis",
-      "billUpdated": "Bill {{receiptNumber}} diperbarui!",
-      "billSaved": "Bill {{receiptNumber}} disimpan!",
-      "billCancelled": "Bill {{receiptNumber}} dibatalkan",
+      "billUpdated": "Transaksi ditunda {{receiptNumber}} diperbarui!",
+      "billSaved": "Transaksi ditunda {{receiptNumber}} disimpan!",
+      "billCancelled": "Transaksi ditunda {{receiptNumber}} dibatalkan",
       "transactionSuccess": "Transaksi berhasil! {{receiptNumber}}",
       "cartEmpty": "Keranjang kosong",
       "selectCustomerForDebt": "Pilih pelanggan dari daftar untuk transaksi hutang",
       "paymentAmountRange": "Jumlah bayar harus antara {{symbol}}0 dan total transaksi",
       "selectPaymentMethod": "Pilih metode untuk pembayaran awal",
-      "productNotFoundLoadBill": "Produk \"{{name}}\" tidak ditemukan"
+      "productNotFoundLoadBill": "Produk \"{{name}}\" tidak ditemukan untuk transaksi ditunda"
     }
   },
   "loginScreen": {
-    "storeFallback": "FreeKasir",
+    "storeFallback": "SISMart",
     "continuePrompt": "Masuk untuk melanjutkan",
     "usernameLabel": "Username",
     "usernamePlaceholder": "Contoh: budi",
@@ -1258,7 +1265,6 @@
     "cashierLabel": "Kasir",
     "dateTime": "Tanggal/Jam",
     "customerLabel": "Pelanggan",
-    "tableLabel": "Meja",
     "notesLabel": "Catatan",
     "discountLabel": "Diskon",
     "subtotal": "Subtotal",
@@ -1271,9 +1277,8 @@
     "download": "Unduh",
     "share": "Bagikan",
     "print": "Cetak",
-    "printKitchen": "Cetak Dapur",
     "watermarkLine1": "Dicetak Dari Aplikasi",
-    "watermarkLine2": "FreeKasir.com",
+    "watermarkLine2": "SISMart",
     "done": "Selesai",
     "toast": {
       "captureError": "Gagal membuat gambar struk",
@@ -1365,8 +1370,8 @@
     "lastBackup": "Terakhir backup {{time}}",
     "neverBackedUp": "Kamu belum pernah backup data",
     "backupNow": "Backup Sekarang",
-    "shareTitle": "Backup FreeKasir",
-    "shareText": "File backup data FreeKasir (JSON)",
+    "shareTitle": "Backup SISMart",
+    "shareText": "File backup data SISMart (JSON)",
     "shareDialogTitle": "Simpan / Bagikan Backup",
     "successCreated": "Backup berhasil dibuat!",
     "successDownloaded": "Backup berhasil diunduh",
@@ -1378,7 +1383,7 @@
     "benefits": {
       "cloudBackup": "Status backup cloud: berhasil, gagal, atau kuota hampir penuh.",
       "payment": "Konfirmasi pembayaran & pengingat sebelum langganan berakhir.",
-      "announcement": "Info maintenance & pengumuman penting dari FreeKasir."
+      "announcement": "Info maintenance & pengumuman penting dari SISMart."
     },
     "enable": "Aktifkan Notifikasi",
     "later": "Nanti saja",
@@ -1440,14 +1445,14 @@
     "printLogoDescription": "Cetak logo toko di bagian paling atas struk belanja fisik. Pastikan printer thermal Anda mendukung pencetakan gambar/bitmap.",
     "footerLabel": "Teks Footer Struk",
     "hideWatermarkLabel": "Sembunyikan Watermark Aplikasi",
-    "hideWatermarkDescActive": "Sembunyikan tulisan \"Dicetak Dari Aplikasi FreeKasir.com\" di bagian bawah struk.",
-    "hideWatermarkDescRequired": "Watermark hanya dapat dinonaktifkan jika FreeKasir Cloud aktif.",
+    "hideWatermarkDescActive": "Sembunyikan tulisan \"Dicetak Dari Aplikasi SISMart\" di bagian bawah struk.",
+    "hideWatermarkDescRequired": "Watermark hanya dapat dinonaktifkan jika SISMart Cloud aktif.",
     "saveSuccess": "Pengaturan struk berhasil disimpan",
     "saveFailed": "Gagal menyimpan pengaturan struk"
   },
   "cloudOnlineStore": {
     "title": "Toko Online & Market",
-    "linkedStoreRequired": "Device ini belum terhubung ke toko cloud. Hubungkan dulu di halaman utama FreeKasir Cloud.",
+    "linkedStoreRequired": "Device ini belum terhubung ke toko cloud. Hubungkan dulu di halaman utama SISMart Cloud.",
     "identifier": {
       "label": "URL Toko (Identifier)",
       "placeholder": "nama-tokomu",
@@ -1461,7 +1466,7 @@
     },
     "visibility": {
       "title": "Tampilkan Toko di Market",
-      "description": "Aktifkan agar katalog produk toko Anda dapat dilihat secara publik di market.freekasir.com.",
+      "description": "Aktifkan agar katalog produk toko Anda dapat dilihat secara publik di market toko.",
       "requiresIdentifier": "URL Toko harus disimpan terlebih dahulu sebelum mengaktifkan toko di market.",
       "unsavedIdentifier": "Ada perubahan URL Toko yang belum disimpan. Silakan simpan URL Toko terlebih dahulu.",
       "unsavedDetails": "Ada perubahan detail informasi toko yang belum disimpan. Silakan simpan detail toko terlebih dahulu.",
@@ -1523,10 +1528,6 @@
       "tooLarge": "Ukuran berkas melebihi batas 2 MB.",
       "invalidType": "Jenis berkas tidak didukung. Harap gunakan format JPG, PNG, atau WebP."
     }
-  },
-  "kitchenTicket": {
-    "title": "Kitchen Ticket",
-    "done": "Selesai"
   },
   "issueReport": {
     "title": "Laporkan Kendala",

@@ -1,6 +1,6 @@
 {
   "title": {
-    "storeNameFallback": "FreeKasir"
+    "storeNameFallback": "SISMart"
   },
   "stats": {
     "salesToday": "Penjualan Hari Ini",
@@ -10,8 +10,8 @@
     "expenseNotes": "{{count}} catatan"
   },
   "openBills": {
-    "title": "Open Bills",
-    "description": "{{count}} bill menunggu pembayaran"
+    "title": "Transaksi Ditunda",
+    "description": "{{count}} transaksi menunggu pembayaran"
   },
   "quickActions": {
     "title": "Akses Cepat",

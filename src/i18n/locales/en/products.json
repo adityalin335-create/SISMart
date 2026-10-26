@@ -17,6 +17,44 @@
     "stock": "Stock",
     "stockUnmanaged": "Stock not managed"
   },
+  "stockCard": {
+    "title": "Stock Card",
+    "openAction": "View Stock Card",
+    "openForProduct": "View stock card for {{product}}",
+    "permission": "Stock viewing permission",
+    "loading": "Loading stock card...",
+    "notFound": "Product not found.",
+    "backToProducts": "Back to products",
+    "currentStock": "Current stock",
+    "empty": "No stock movements yet.",
+    "balanceMismatch": "The latest ledger balance ({{ledger}}) does not match product stock ({{stock}}). Check the stock movement history.",
+    "columns": {
+      "date": "Date",
+      "opening": "Opening Stock",
+      "receiving": "Receiving",
+      "sales": "Sales",
+      "returns": "Returns",
+      "stockOpname": "SO Adjustment",
+      "otherAdjustment": "Other Adjustment",
+      "closing": "Closing Stock"
+    },
+    "detail": {
+      "time": "Time",
+      "type": "Type",
+      "reference": "Reference Number",
+      "in": "Stock In",
+      "out": "Stock Out",
+      "balance": "Running Balance"
+    },
+    "types": {
+      "opening_stock": "Opening Stock",
+      "receiving": "Receiving",
+      "sale": "Sales",
+      "stock_adjustment": "Stock Adjustment",
+      "stock_opname": "Stock Opname",
+      "return": "Return"
+    }
+  },
   "dialog": {
     "titleEdit": "Edit Product",
     "titleAdd": "Add Product",
@@ -26,7 +64,7 @@
     "photoSelect": "Select Photo",
     "photoRemove": "Remove Photo",
     "nameLabel": "Product Name",
-    "namePlaceholder": "e.g. Fried Rice",
+    "namePlaceholder": "e.g. Premium Rice 5 kg",
     "skuLabel": "SKU",
     "scanCamera": "Scan via camera",
     "categoryLabel": "Category",
@@ -40,7 +78,7 @@
     "stockPlaceholder": "0",
     "manageStockLabel": "Manage Stock",
     "stockEnabledHint": "Stock is tracked automatically & limited during checkout.",
-    "stockDisabledHint": "Product always available, stock is not tracked (e.g. services, made-to-order items).",
+    "stockDisabledHint": "Product is always available and stock is not tracked (e.g. services or digital products).",
     "unitLabel": "Unit",
     "barcodeLabel": "Barcode",
     "barcodePlaceholder": "Optional",
@@ -76,7 +114,7 @@
     "flashUnsupported": "Flash is not supported on this device",
     "httpsRequired": "The app must be accessed via HTTPS to use the camera.",
     "browserUnsupported": "Browser does not support camera access. Try updating the app or use another browser.",
-    "permissionDeniedNative": "Camera permission denied. Go to device Settings > Apps > FreeKasir > Permissions, then enable Camera.",
+    "permissionDeniedNative": "Camera permission denied. Go to device Settings > Apps > SISMart > Permissions, then enable Camera.",
     "permissionDeniedWeb": "Camera permission denied. Click the lock icon in the address bar and allow camera access.",
     "permissionDeniedGeneric": "Camera permission denied. Please allow camera access and try again.",
     "noCamera": "No camera found on this device.",

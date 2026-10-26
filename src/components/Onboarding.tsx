@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Store, MapPin, Phone, ChevronRight, ChevronLeft, ShoppingCart, Package, BarChart3, Shield, Database, Palette, Download, CheckCircle2, Globe, Upload, Cloud, Loader2, DownloadCloud, LogOut, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Store, MapPin, Phone, ChevronRight, ChevronLeft, ShoppingCart, Package, BarChart3, Shield, Database, Palette, Download, CheckCircle2, Globe, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,10 +13,6 @@ import ThemeColorPicker from '@/components/ThemeColorPicker';
 import { applyThemeColor } from '@/hooks/use-theme-color';
 import { usePWAInstall } from '@/hooks/use-pwa-install';
 import { isNativePlatform } from '@/lib/printer';
-import { useCloudAuth } from '@/hooks/use-cloud-auth';
-import { GoogleLogin } from '@react-oauth/google';
-import { listBackups, downloadBackup, type CloudBackup } from '@/lib/cloud-api';
-import { nativeGoogleSignIn } from '@/lib/google-auth';
 import { restoreFromBackupData } from '@/lib/backup';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
@@ -74,24 +70,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [saving, setSaving] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [themeColor, setThemeColorState] = useState('215');
-  const { isLoggedIn: cloudLoggedIn, login: cloudLogin, googleUser: cloudUser, logout: cloudLogout } = useCloudAuth();
-  const [showCloud, setShowCloud] = useState(false);
-  const [cloudBackups, setCloudBackups] = useState<CloudBackup[]>([]);
-  const [cloudLoading, setCloudLoading] = useState(false);
-  const [cloudRestoringId, setCloudRestoringId] = useState<string | null>(null);
-  const [cloudLoginBusy, setCloudLoginBusy] = useState(false);
-
-  const handleNativeCloudLogin = async () => {
-    setCloudLoginBusy(true);
-    try {
-      const idToken = await nativeGoogleSignIn();
-      await cloudLogin(idToken);
-    } catch {
-      toast.error(t('toast.googleLoginFailed'));
-    } finally {
-      setCloudLoginBusy(false);
-    }
-  };
   const [installDone, setInstallDone] = useState(false);
   const { canInstall, isInstalled, install } = usePWAInstall();
 
@@ -105,27 +83,26 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const seedDummyData = async () => {
     const now = new Date();
     const dummyProducts = [
-      { name: 'Nasi Goreng Spesial', sku: 'NG001', categoryId: 1, price: 15000, hpp: 8000, stock: 50, unit: 'porsi', description: 'Nasi goreng dengan telur mata sapi, ayam suwir, dan kerupuk', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Mie Goreng', sku: 'MG001', categoryId: 1, price: 12000, hpp: 6000, stock: 40, unit: 'porsi', description: 'Mie goreng dengan sayur dan telur', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Ayam Bakar', sku: 'AB001', categoryId: 1, price: 20000, hpp: 12000, stock: 30, unit: 'porsi', description: 'Ayam bakar bumbu kecap, sambal, dan lalapan', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Sate Ayam (10 tusuk)', sku: 'SA001', categoryId: 1, price: 18000, hpp: 10000, stock: 25, unit: 'porsi', description: 'Isi 10 tusuk + bumbu kacang + lontong', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Bakso Urat', sku: 'BU001', categoryId: 1, price: 15000, hpp: 7000, stock: 35, unit: 'mangkok', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Es Teh Manis', sku: 'ET001', categoryId: 2, price: 5000, hpp: 1500, stock: 100, unit: 'gelas', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Es Jeruk', sku: 'EJ001', categoryId: 2, price: 7000, hpp: 2500, stock: 80, unit: 'gelas', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Kopi Susu', sku: 'KS001', categoryId: 2, price: 10000, hpp: 4000, stock: 60, unit: 'gelas', description: 'Kopi susu gula aren', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Air Mineral', sku: 'AM001', categoryId: 2, price: 4000, hpp: 2000, stock: 120, unit: 'botol', description: '600ml', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Tisu', sku: 'TS001', categoryId: 3, price: 2000, hpp: 1000, stock: 200, unit: 'pcs', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'Kerupuk', sku: 'KR001', categoryId: 3, price: 3000, hpp: 1500, stock: 150, unit: 'bungkus', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Beras Premium 5 kg', sku: 'BR001', categoryId: 1, price: 75000, hpp: 65000, stock: 50, unit: 'pack', description: 'Beras kemasan 5 kg', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Gula Pasir 1 kg', sku: 'GP001', categoryId: 1, price: 18000, hpp: 15000, stock: 40, unit: 'pack', description: 'Gula pasir kemasan 1 kg', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Minyak Goreng 1 L', sku: 'MG001', categoryId: 1, price: 20000, hpp: 16000, stock: 30, unit: 'botol', description: 'Minyak goreng kemasan 1 liter', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Mi Instan Goreng', sku: 'MI001', categoryId: 2, price: 3500, hpp: 2800, stock: 100, unit: 'pcs', description: 'Mi instan goreng kemasan', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Kopi Instan Sachet', sku: 'KP001', categoryId: 2, price: 2000, hpp: 1300, stock: 150, unit: 'sachet', description: 'Kopi instan satu sajian', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Air Mineral 600 ml', sku: 'AM001', categoryId: 2, price: 5000, hpp: 3000, stock: 120, unit: 'botol', description: 'Air mineral botol 600 ml', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Sabun Mandi', sku: 'SM001', categoryId: 3, price: 7000, hpp: 4500, stock: 80, unit: 'pcs', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Detergen 800 g', sku: 'DT001', categoryId: 3, price: 12000, hpp: 9000, stock: 35, unit: 'pack', description: 'Detergen bubuk kemasan 800 gram', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Tisu Wajah', sku: 'TW001', categoryId: 3, price: 10000, hpp: 7000, stock: 60, unit: 'pack', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Pasta Gigi', sku: 'PG001', categoryId: 3, price: 9000, hpp: 6500, stock: 45, unit: 'pcs', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'Biskuit Cokelat', sku: 'BK001', categoryId: 2, price: 10000, hpp: 7000, stock: 55, unit: 'pack', createdAt: now, updatedAt: now, isDeleted: 0, deletedAt: null },
     ];
 
     const dummySuppliers = [
-      { name: 'PT Bahan Segar', phone: '08111222333', address: 'Jl. Pasar Baru No. 15', notes: 'Supplier sayur & daging', createdAt: now, isDeleted: 0, deletedAt: null },
-      { name: 'UD Minuman Jaya', phone: '08222333444', address: 'Jl. Raya Industri No. 8', notes: 'Supplier minuman', createdAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'PT Sumber Pangan', phone: '08111222333', address: 'Jl. Pasar Baru No. 15', notes: 'Supplier sembako dan kebutuhan toko', createdAt: now, isDeleted: 0, deletedAt: null },
+      { name: 'CV Niaga Sejahtera', phone: '08222333444', address: 'Jl. Raya Industri No. 8', notes: 'Supplier produk kemasan dan rumah tangga', createdAt: now, isDeleted: 0, deletedAt: null },
     ];
 
     // Ensure all units used by sample products exist in master units table.
-    // seedDefaultData() already adds the 9 default units; here we only add
-    // the extras that the sample data uses (e.g. 'mangkok', 'gelas').
+    // Ensure all units used by sample products exist in the master units table.
     const sampleUnits = Array.from(new Set(dummyProducts.map(p => p.unit).filter(Boolean)));
     const existingUnits = await db.units.toArray();
     const existingNames = new Set(existingUnits.map(u => u.name));
@@ -146,40 +123,57 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       }
     }
 
-    await db.products.bulkAdd(dummyProducts);
+    await db.transaction('rw', [db.products, db.stockIns], async () => {
+      for (const product of dummyProducts) {
+        const productId = await db.products.add(product);
+        await db.stockIns.add({
+          productId,
+          supplierId: 0,
+          movementType: 'opening_stock',
+          referenceNumber: `OPENING-${product.sku}`,
+          quantity: product.stock,
+          buyPrice: product.hpp,
+          totalPrice: product.stock * product.hpp,
+          date: now,
+          notes: 'Opening stock for sample product',
+        });
+      }
+    });
     await db.suppliers.bulkAdd(dummySuppliers);
 
     const discNull: 'percentage' | 'nominal' | null = null;
 
     const tx1Id = await db.transactions.add({
-      subtotal: 40000, discountType: discNull, discountValue: 0, discountAmount: 0, total: 40000,
-      paymentMethodId: 1, paymentAmount: 50000, change: 10000, profit: 21000,
+      subtotal: 160000, discountType: discNull, discountValue: 0, discountAmount: 0, total: 160000,
+      paymentMethodId: 1, paymentAmount: 200000, change: 40000, profit: 24000,
       date: new Date(now.getTime() - 3600000), receiptNumber: 'TX-DEMO-001',
     });
     await db.transactionItems.bulkAdd([
-      { transactionId: tx1Id as number, productId: 1, productName: 'Nasi Goreng Spesial', quantity: 2, price: 15000, hpp: 8000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 30000 },
-      { transactionId: tx1Id as number, productId: 6, productName: 'Es Teh Manis', quantity: 2, price: 5000, hpp: 1500, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 10000 },
+      { transactionId: tx1Id as number, productId: 1, productName: 'Beras Premium 5 kg', quantity: 2, price: 75000, hpp: 65000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 150000 },
+      { transactionId: tx1Id as number, productId: 6, productName: 'Air Mineral 600 ml', quantity: 2, price: 5000, hpp: 3000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 10000 },
     ]);
 
     const tx2Id = await db.transactions.add({
-      subtotal: 30000, discountType: discNull, discountValue: 0, discountAmount: 0, total: 30000,
-      paymentMethodId: 3, paymentAmount: 30000, change: 0, profit: 14000,
+      subtotal: 32000, discountType: discNull, discountValue: 0, discountAmount: 0, total: 32000,
+      paymentMethodId: 3, paymentAmount: 32000, change: 0, profit: 7000,
       date: new Date(now.getTime() - 1800000), receiptNumber: 'TX-DEMO-002',
     });
     await db.transactionItems.bulkAdd([
-      { transactionId: tx2Id as number, productId: 3, productName: 'Ayam Bakar', quantity: 1, price: 20000, hpp: 12000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 20000 },
-      { transactionId: tx2Id as number, productId: 8, productName: 'Kopi Susu', quantity: 1, price: 10000, hpp: 4000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 10000 },
+      { transactionId: tx2Id as number, productId: 3, productName: 'Minyak Goreng 1 L', quantity: 1, price: 20000, hpp: 16000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 20000 },
+      { transactionId: tx2Id as number, productId: 8, productName: 'Detergen 800 g', quantity: 1, price: 12000, hpp: 9000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 12000 },
     ]);
 
     const tx3Id = await db.transactions.add({
       subtotal: 40000, discountType: discNull, discountValue: 0, discountAmount: 0, total: 40000,
-      paymentMethodId: 1, paymentAmount: 50000, change: 10000, profit: 18500,
+      paymentMethodId: 1, paymentAmount: 50000, change: 10000, profit: 9700,
       date: new Date(now.getTime() - 900000), receiptNumber: 'TX-DEMO-003',
     });
     await db.transactionItems.bulkAdd([
-      { transactionId: tx3Id as number, productId: 1, productName: 'Nasi Goreng Spesial', quantity: 1, price: 15000, hpp: 8000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 15000 },
-      { transactionId: tx3Id as number, productId: 4, productName: 'Sate Ayam (10 tusuk)', quantity: 1, price: 18000, hpp: 10000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 18000 },
-      { transactionId: tx3Id as number, productId: 7, productName: 'Es Jeruk', quantity: 1, price: 7000, hpp: 2500, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 7000 },
+      { transactionId: tx3Id as number, productId: 2, productName: 'Gula Pasir 1 kg', quantity: 1, price: 18000, hpp: 15000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 18000 },
+      { transactionId: tx3Id as number, productId: 4, productName: 'Mi Instan Goreng', quantity: 1, price: 3500, hpp: 2800, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 3500 },
+      { transactionId: tx3Id as number, productId: 7, productName: 'Sabun Mandi', quantity: 1, price: 7000, hpp: 4500, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 7000 },
+      { transactionId: tx3Id as number, productId: 9, productName: 'Tisu Wajah', quantity: 1, price: 10000, hpp: 7000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 10000 },
+      { transactionId: tx3Id as number, productId: 5, productName: 'Kopi Instan Sachet', quantity: 1, price: 1500, hpp: 1000, discountType: discNull, discountValue: 0, discountAmount: 0, subtotal: 1500 },
     ]);
   };
 
@@ -226,47 +220,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     await markAllFeaturesSeen();
     toast.success(successMsg);
     onComplete();
-  };
-
-  const loadCloudBackups = async () => {
-    setCloudLoading(true);
-    try {
-      const { items } = await listBackups({ page: 1, limit: 50 });
-      setCloudBackups(items);
-    } catch {
-      toast.error(t('toast.cloudLoadError'));
-    } finally {
-      setCloudLoading(false);
-    }
-  };
-
-  // Saat login cloud berhasil & panel terbuka, ambil daftar backup.
-  useEffect(() => {
-    if (showCloud && cloudLoggedIn) loadCloudBackups();
-  }, [showCloud, cloudLoggedIn]);
-
-  const handleCloudRestore = async (backup: CloudBackup) => {
-    if (cloudRestoringId) return;
-    // Tutup modal LEBIH DULU. Restore akan menulis onboardingDone=true yang
-    // memicu AppLayout melepas Onboarding; jika modal masih terbuka saat itu,
-    // Radix meninggalkan `pointer-events:none` di body → layar freeze.
-    setShowCloud(false);
-    setCloudRestoringId(backup.id);
-    setRestoring(true);
-    const toastId = toast.loading(t('restore.restoring'));
-    try {
-      const data = await downloadBackup(backup.id);
-      await restoreFromBackupData(data);
-      toast.dismiss(toastId);
-      await finishAfterRestore(t('toast.cloudRestoreSuccess'));
-    } catch (err) {
-      toast.dismiss(toastId);
-      toast.error(err instanceof Error ? err.message : t('toast.cloudRestoreError'));
-      setShowCloud(true); // buka lagi agar user bisa coba lagi
-    } finally {
-      setCloudRestoringId(null);
-      setRestoring(false);
-    }
   };
 
   const handleFinish = async () => {
@@ -338,7 +291,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     <>
                       <img
                         src="/header-icon.png"
-                        alt="FreeKasir"
+                        alt="SISMart"
                         className="w-28 h-28 object-contain"
                       />
                       <div className="space-y-3">
@@ -416,7 +369,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       const ok = await install();
                       if (ok) {
                         setInstallDone(true);
-                        toast.success('Berhasil install FreeKasir!');
+                        toast.success('Berhasil install SISMart!');
                       }
                     }}
                   >
@@ -469,135 +422,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 {restoring ? t('restore.restoring') : t('restore.backupButton')}
               </Button>
 
-              <Button
-                variant="outline"
-                className="w-full h-10 text-sm gap-2"
-                onClick={() => setShowCloud(true)}
-                disabled={restoring}
-              >
-                <Cloud className="w-4 h-4" />
-                {t('restore.cloudTitle')}
-              </Button>
             </div>
-
-            {showCloud && (
-              <div
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                onClick={() => !cloudRestoringId && setShowCloud(false)}
-              >
-              <div
-                className="w-full max-w-md rounded-xl bg-background p-4 shadow-lg max-h-[85vh] overflow-y-auto space-y-3"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h2 className="text-base font-bold flex items-center gap-2">
-                      <Cloud className="w-5 h-5 text-primary" />
-                      {t('restore.cloudTitle')}
-                    </h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t('restore.cloudSubtitle')}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0 -mr-1 -mt-1"
-                    disabled={!!cloudRestoringId}
-                    onClick={() => setShowCloud(false)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                {!cloudLoggedIn ? (
-                  <div className="space-y-3 py-2 text-center">
-                    <p className="text-xs text-muted-foreground">{t('restore.cloudLogin')}</p>
-                    <div className="flex justify-center">
-                      {isNative ? (
-                        <Button className="h-11 gap-2" disabled={cloudLoginBusy} onClick={handleNativeCloudLogin}>
-                          {cloudLoginBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cloud className="w-4 h-4" />}
-                          {t('restore.googleContinue')}
-                        </Button>
-                      ) : (
-                        <GoogleLogin
-                          onSuccess={(cr) => {
-                            if (cr.credential) cloudLogin(cr.credential).catch(() => toast.error(t('toast.googleLoginFailed')));
-                            else toast.error(t('toast.googleLoginFailed'));
-                          }}
-                          onError={() => toast.error(t('toast.googleLoginFailed'))}
-                        />
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {/* Account info + logout */}
-                    <div className="flex items-center gap-3 rounded-xl border p-3">
-                      {cloudUser?.picture ? (
-                        <img src={cloudUser.picture} alt="" className="w-9 h-9 rounded-full" referrerPolicy="no-referrer" />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                          {cloudUser?.name?.charAt(0) ?? '?'}
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{cloudUser?.name ?? t('restore.account')}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">{cloudUser?.email}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 gap-1 text-muted-foreground shrink-0"
-                        disabled={!!cloudRestoringId}
-                        onClick={() => { cloudLogout(); setCloudBackups([]); }}
-                      >
-                        <LogOut className="w-4 h-4" /> {t('restore.switchAccount')}
-                      </Button>
-                    </div>
-
-                    {/* Backup list */}
-                    <div className="space-y-2">
-                      {cloudLoading ? (
-                        <div className="flex items-center justify-center py-6 text-muted-foreground">
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        </div>
-                      ) : cloudBackups.length === 0 ? (
-                        <p className="text-xs text-muted-foreground text-center py-6">
-                          {t('restore.noBackups')}
-                        </p>
-                      ) : (
-                        cloudBackups.map((b) => (
-                          <button
-                            key={b.id}
-                            type="button"
-                            disabled={!!cloudRestoringId}
-                            onClick={() => handleCloudRestore(b)}
-                            className="flex w-full items-center gap-2 rounded-lg border p-2.5 text-left hover:bg-muted/60 disabled:opacity-60"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{b.fileName}</p>
-                              <p className="text-[10px] text-muted-foreground">
-                                {(b.fileSize / (1024 * 1024)).toFixed(2)} MB · {format(new Date(b.createdAt), 'dd MMM yyyy HH:mm')}
-                              </p>
-                            </div>
-                            {cloudRestoringId === b.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                            ) : (
-                              <DownloadCloud className="w-4 h-4 text-primary shrink-0" />
-                            )}
-                          </button>
-                        ))
-                      )}
-                    </div>
-                    {cloudRestoringId && (
-                      <p className="text-[10px] text-muted-foreground text-center">{t('restore.restoringInProgress')}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-              </div>
-            )}
 
             <div className="space-y-4">
               <div className="space-y-2">

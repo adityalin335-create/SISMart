@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, isStockManaged, type Product, type Transaction, type TransactionItemRecord } from '@/lib/db';
+import { applySaleStockDelta } from '@/lib/stock-movements';
 import { useState, useRef, useEffect } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -97,7 +98,6 @@ export default function Kasir() {
   const [scanInput, setScanInput] = useState('');
   const scanInputRef = useRef<HTMLInputElement>(null);
 
-  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
 
   const products = useLiveQuery(() => db.products.where('isDeleted').equals(0).toArray());
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
@@ -292,17 +292,30 @@ export default function Kasir() {
         const newQty = cartItem.qty;
         const delta = newQty - oldQty;
         if (delta !== 0) {
-          await db.products.update(cartItem.product.id!, { stock: cartItem.product.stock - delta, updatedAt: new Date() });
+          await applySaleStockDelta({
+            productId: cartItem.product.id!,
+            delta,
+            quantity: Math.abs(delta),
+            transactionId: editingTxId,
+            referenceNumber: (await db.transactions.get(editingTxId))?.receiptNumber ?? `TX-${editingTxId}`,
+            date: now,
+            createdBy: currentUser?.id,
+          });
         }
       }
       // Restore stock for removed items that were in old bill
       for (const oldItem of oldItems) {
         const stillInCart = cart.find(c => c.product.id === oldItem.productId);
         if (!stillInCart) {
-          const product = await db.products.get(oldItem.productId);
-          if (product && isStockManaged(product)) {
-            await db.products.update(oldItem.productId, { stock: product.stock + oldItem.quantity });
-          }
+          await applySaleStockDelta({
+            productId: oldItem.productId,
+            delta: -oldItem.quantity,
+            quantity: oldItem.quantity,
+            transactionId: editingTxId,
+            referenceNumber: (await db.transactions.get(editingTxId))?.receiptNumber ?? `TX-${editingTxId}`,
+            date: now,
+            createdBy: currentUser?.id,
+          });
         }
       }
 
@@ -351,7 +364,15 @@ export default function Kasir() {
 
       for (const item of cart) {
         if (!isStockManaged(item.product)) continue;
-        await db.products.update(item.product.id!, { stock: item.product.stock - item.qty, updatedAt: new Date() });
+        await applySaleStockDelta({
+          productId: item.product.id!,
+          delta: item.qty,
+          quantity: item.qty,
+          transactionId: txId as number,
+          referenceNumber: receiptNumber,
+          date: now,
+          createdBy: currentUser?.id,
+        });
       }
 
       toast.success(t('cashier.toast.billSaved', { receiptNumber }));
@@ -394,7 +415,15 @@ export default function Kasir() {
     for (const item of items) {
       const product = await db.products.get(item.productId);
       if (product && isStockManaged(product)) {
-        await db.products.update(item.productId, { stock: product.stock + item.quantity });
+        await applySaleStockDelta({
+          productId: item.productId,
+          delta: -item.quantity,
+          quantity: item.quantity,
+          transactionId: tx.id,
+          referenceNumber: tx.receiptNumber,
+          date: new Date(),
+          createdBy: currentUser?.id,
+        });
       }
     }
     await db.transactionItems.where('transactionId').equals(tx.id).delete();
@@ -502,16 +531,29 @@ export default function Kasir() {
         const newQty = cartItem.qty;
         const delta = newQty - oldQty;
         if (delta !== 0) {
-          await db.products.update(cartItem.product.id!, { stock: cartItem.product.stock - delta, updatedAt: new Date() });
+          await applySaleStockDelta({
+            productId: cartItem.product.id!,
+            delta,
+            quantity: Math.abs(delta),
+            transactionId: editingTxId,
+            referenceNumber: (await db.transactions.get(editingTxId))?.receiptNumber ?? `TX-${editingTxId}`,
+            date: completedAt,
+            createdBy: currentUser?.id,
+          });
         }
       }
       for (const oldItem of oldItems) {
         const stillInCart = cart.find(c => c.product.id === oldItem.productId);
         if (!stillInCart) {
-          const product = await db.products.get(oldItem.productId);
-          if (product && isStockManaged(product)) {
-            await db.products.update(oldItem.productId, { stock: product.stock + oldItem.quantity });
-          }
+          await applySaleStockDelta({
+            productId: oldItem.productId,
+            delta: -oldItem.quantity,
+            quantity: oldItem.quantity,
+            transactionId: editingTxId,
+            referenceNumber: (await db.transactions.get(editingTxId))?.receiptNumber ?? `TX-${editingTxId}`,
+            date: completedAt,
+            createdBy: currentUser?.id,
+          });
         }
       }
 
@@ -576,7 +618,15 @@ export default function Kasir() {
 
       for (const item of cart) {
         if (!isStockManaged(item.product)) continue;
-        await db.products.update(item.product.id!, { stock: item.product.stock - item.qty, updatedAt: new Date() });
+        await applySaleStockDelta({
+          productId: item.product.id!,
+          delta: item.qty,
+          quantity: item.qty,
+          transactionId: txId as number,
+          referenceNumber: receiptNumber,
+          date: completedAt,
+          createdBy: currentUser?.id,
+        });
       }
 
       toast.success(t('cashier.toast.transactionSuccess', { receiptNumber }));
@@ -805,7 +855,7 @@ export default function Kasir() {
               </button>
             )}
 
-            <Button variant="outline" className="w-full h-11 text-sm font-semibold" onClick={() => setSaveConfirmOpen(true)} disabled={cart.length === 0}>
+            <Button variant="outline" className="w-full h-11 text-sm font-semibold" onClick={() => void saveOpenBill()} disabled={cart.length === 0}>
               <Save className="w-4 h-4 mr-2" />
               {t('cashier.buttons.saveBill')}
             </Button>
@@ -1300,40 +1350,6 @@ export default function Kasir() {
           cashierName={lastTransaction.cashierName || (lastTransaction.createdBy ? allUsers?.find(u => u.id === lastTransaction.createdBy)?.name : undefined) || activeCashierName}
         />
       )}
-
-      {/* Save Bill Confirm Dialog */}
-      <Dialog open={saveConfirmOpen} onOpenChange={setSaveConfirmOpen}>
-        <DialogContent className="max-w-[95vw] md:max-w-md rounded-xl p-6">
-          <DialogHeader>
-            <DialogTitle>{t('cashier.saveConfirmDialog.title')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <p className="text-sm text-muted-foreground">
-              {t('cashier.saveConfirmDialog.description')}
-            </p>
-            <div className="flex flex-col gap-2">
-              <Button
-                variant="outline"
-                className="w-full h-11 font-semibold"
-                onClick={async () => {
-                  setSaveConfirmOpen(false);
-                  await saveOpenBill();
-                }}
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {t('cashier.buttons.saveOnly')}
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full h-11 text-muted-foreground"
-                onClick={() => setSaveConfirmOpen(false)}
-              >
-                {t('cashier.buttons.cancel')}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Cancel Open Bill Confirmation */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>

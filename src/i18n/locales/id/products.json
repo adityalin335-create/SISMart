@@ -17,6 +17,44 @@
     "stock": "Stok",
     "stockUnmanaged": "Stok tidak dikelola"
   },
+  "stockCard": {
+    "title": "Kartu Stok",
+    "openAction": "Lihat Kartu Stok",
+    "openForProduct": "Lihat Kartu Stok {{product}}",
+    "permission": "Izin melihat stok",
+    "loading": "Memuat kartu stok...",
+    "notFound": "Produk tidak ditemukan.",
+    "backToProducts": "Kembali ke produk",
+    "currentStock": "Stok saat ini",
+    "empty": "Belum ada pergerakan stok.",
+    "balanceMismatch": "Saldo ledger terakhir ({{ledger}}) tidak sama dengan stok produk ({{stock}}). Periksa riwayat pergerakan stok.",
+    "columns": {
+      "date": "Tanggal",
+      "opening": "Stok Awal",
+      "receiving": "Penerimaan",
+      "sales": "Penjualan",
+      "returns": "Retur",
+      "stockOpname": "Penyesuaian SO",
+      "otherAdjustment": "Penyesuaian Lain",
+      "closing": "Stok Akhir"
+    },
+    "detail": {
+      "time": "Waktu",
+      "type": "Jenis",
+      "reference": "Nomor Referensi",
+      "in": "Masuk",
+      "out": "Keluar",
+      "balance": "Saldo Berjalan"
+    },
+    "types": {
+      "opening_stock": "Stok Awal",
+      "receiving": "Receiving",
+      "sale": "Penjualan",
+      "stock_adjustment": "Penyesuaian Stok",
+      "stock_opname": "Stock Opname",
+      "return": "Retur"
+    }
+  },
   "dialog": {
     "titleEdit": "Edit Produk",
     "titleAdd": "Tambah Produk",
@@ -26,7 +64,7 @@
     "photoSelect": "Pilih Foto",
     "photoRemove": "Hapus Foto",
     "nameLabel": "Nama Produk",
-    "namePlaceholder": "Contoh: Nasi Goreng",
+    "namePlaceholder": "Contoh: Beras Premium 5 kg",
     "skuLabel": "SKU",
     "scanCamera": "Scan dengan kamera",
     "categoryLabel": "Kategori",
@@ -40,7 +78,7 @@
     "stockPlaceholder": "0",
     "manageStockLabel": "Kelola Stok",
     "stockEnabledHint": "Stok dihitung otomatis & dibatasi saat jualan.",
-    "stockDisabledHint": "Produk selalu tersedia, stok tidak dihitung (mis. jasa, makanan dadakan).",
+    "stockDisabledHint": "Produk selalu tersedia, stok tidak dihitung (mis. jasa atau produk digital).",
     "unitLabel": "Satuan",
     "barcodeLabel": "Barcode",
     "barcodePlaceholder": "Opsional",
@@ -76,7 +114,7 @@
     "flashUnsupported": "Flash tidak didukung di perangkat ini",
     "httpsRequired": "Aplikasi harus diakses melalui HTTPS untuk mengakses kamera.",
     "browserUnsupported": "Browser tidak mendukung akses kamera. Coba update aplikasi atau gunakan browser lain.",
-    "permissionDeniedNative": "Izin kamera ditolak. Buka Settings perangkat > Apps > FreeKasir > Permissions, lalu aktifkan Camera.",
+    "permissionDeniedNative": "Izin kamera ditolak. Buka Settings perangkat > Apps > SISMart > Permissions, lalu aktifkan Camera.",
     "permissionDeniedWeb": "Izin kamera ditolak. Klik ikon gembok di address bar dan izinkan akses kamera.",
     "permissionDeniedGeneric": "Izin kamera ditolak. Mohon izinkan akses kamera lalu coba lagi.",
     "noCamera": "Kamera tidak ditemukan di perangkat ini.",

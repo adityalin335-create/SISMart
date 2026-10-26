@@ -113,11 +113,10 @@
     "bluetoothUnavailable": "Bluetooth tidak tersedia di browser ini. Gunakan Chrome di Android.",
     "searchingPrinter": "Mencari printer Bluetooth...",
     "printSuccess": "Laporan berhasil dicetak!",
-    "printFailed": "Gagal mencetak. Pastikan printer Bluetooth menyala.",
-    "reviewPromptWeb": "Beri rating aplikasi kami di Play Store!"
+    "printFailed": "Gagal mencetak. Pastikan printer Bluetooth menyala."
   },
   "survey": {
-    "title": "Jenis usaha yang Anda jalankan menggunakan aplikasi FreeKasir ini",
+    "title": "Jenis usaha yang Anda jalankan menggunakan aplikasi SISMart ini",
     "description": "Bantu kami memahami kebutuhanmu dengan memilih salah satu.",
     "otherPlaceholder": "Tulis jenis usaha Anda…",
     "submit": "Kirim",

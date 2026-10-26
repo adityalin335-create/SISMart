@@ -21,6 +21,7 @@ import BarcodeScanner from '@/components/BarcodeScanner';
 import { useTranslation } from 'react-i18next';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { downloadOrShareFile } from '@/lib/file-utils';
+import { Link } from 'react-router-dom';
 
 const CURRENCY_SYMBOL: Record<string, string> = { id: 'Rp', en: 'Rp', ms: 'Rp' };
 const NUMBER_LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
@@ -168,16 +169,81 @@ export default function Produk() {
     };
 
     if (editProduct?.id) {
-      await db.products.update(editProduct.id, data);
+      await db.transaction('rw', [db.products, db.stockIns, db.stockOuts], async () => {
+        const previous = await db.products.get(editProduct.id!);
+        if (!previous) throw new Error('Produk tidak ditemukan.');
+        const difference = data.stock - previous.stock;
+        await db.products.update(editProduct.id!, data);
+        if (!isStockManaged(previous) && trackStock) {
+          await db.stockIns.add({
+            productId: editProduct.id!,
+            supplierId: 0,
+            movementType: 'opening_stock',
+            referenceNumber: `OPENING-${sku.trim()}`,
+            quantity: data.stock,
+            buyPrice: data.hpp,
+            totalPrice: data.stock * data.hpp,
+            date: new Date(),
+            notes: 'Opening stock when stock tracking was enabled',
+            createdBy: currentUser?.id,
+          });
+          return;
+        }
+        if (!isStockManaged(previous) || !trackStock || difference === 0) return;
+
+        const movementDate = new Date();
+        if (difference > 0) {
+          await db.stockIns.add({
+            productId: editProduct.id!,
+            supplierId: 0,
+            movementType: 'stock_adjustment',
+            referenceNumber: `ADJ-${movementDate.getTime()}-${crypto.randomUUID().slice(0, 6)}`,
+            quantity: difference,
+            buyPrice: data.hpp,
+            totalPrice: difference * data.hpp,
+            date: movementDate,
+            notes: 'Penyesuaian stok dari edit produk',
+            createdBy: currentUser?.id,
+          });
+        } else {
+          await db.stockOuts.add({
+            productId: editProduct.id!,
+            movementType: 'stock_adjustment',
+            referenceNumber: `ADJ-${movementDate.getTime()}-${crypto.randomUUID().slice(0, 6)}`,
+            quantity: Math.abs(difference),
+            reason: 'adjustment',
+            date: movementDate,
+            notes: 'Penyesuaian stok dari edit produk',
+            createdBy: currentUser?.id,
+          });
+        }
+      });
       trackEvent('edit_product');
     } else {
-      await db.products.add({
-        ...data,
-        createdAt: new Date(),
-        createdBy: currentUser?.id,
-        isDeleted: 0,
-        deletedAt: null,
-      } as Product);
+      await db.transaction('rw', [db.products, db.stockIns], async () => {
+        const createdAt = new Date();
+        const productId = await db.products.add({
+          ...data,
+          createdAt,
+          createdBy: currentUser?.id,
+          isDeleted: 0,
+          deletedAt: null,
+        } as Product);
+        if (trackStock) {
+          await db.stockIns.add({
+            productId,
+            supplierId: 0,
+            movementType: 'opening_stock',
+            referenceNumber: `OPENING-${sku.trim()}`,
+            quantity: Number(stock) || 0,
+            buyPrice: Number(hpp) || 0,
+            totalPrice: (Number(stock) || 0) * (Number(hpp) || 0),
+            date: createdAt,
+            notes: 'Opening stock at product creation',
+            createdBy: currentUser?.id,
+          });
+        }
+      });
       trackEvent('create_product');
     }
     setDialogOpen(false);
@@ -230,29 +296,29 @@ export default function Produk() {
 
       // Add a couple of examples
       worksheet.addRow({
-        name: 'Kopi Susu Gula Aren',
-        sku: 'KOPI-001',
-        category: 'Minuman',
-        price: 15000,
-        hpp: 8000,
+        name: 'Air Mineral 600 ml',
+        sku: 'AM001',
+        category: 'Makanan & Minuman Kemasan',
+        price: 5000,
+        hpp: 3000,
         trackStock: 'Ya',
         stock: 50,
-        unit: 'pcs',
+        unit: 'botol',
         barcode: '8991234567890',
-        description: 'Kopi susu segar dengan gula aren murni'
+        description: 'Air mineral botol 600 ml'
       });
 
       worksheet.addRow({
-        name: 'Nasi Goreng Spesial',
-        sku: 'NASGOR-001',
-        category: 'Makanan',
-        price: 22000,
-        hpp: 10000,
-        trackStock: 'Tidak',
-        stock: 0,
-        unit: 'porsi',
-        barcode: '',
-        description: 'Nasi goreng dengan topping telur dadar dan ayam suwir'
+        name: 'Mi Instan Goreng',
+        sku: 'MI001',
+        category: 'Makanan & Minuman Kemasan',
+        price: 3500,
+        hpp: 2800,
+        trackStock: 'Ya',
+        stock: 100,
+        unit: 'pcs',
+        barcode: '8991234567891',
+        description: 'Mi instan goreng kemasan'
       });
 
       // Add a secondary sheet for referencing active categories and units
@@ -550,7 +616,25 @@ export default function Produk() {
         };
       });
 
-      await db.products.bulkAdd(newProducts);
+      await db.transaction('rw', [db.products, db.stockIns], async () => {
+        for (const product of newProducts) {
+          const productId = await db.products.add(product);
+          if (product.trackStock !== false) {
+            await db.stockIns.add({
+              productId,
+              supplierId: 0,
+              movementType: 'opening_stock',
+              referenceNumber: `OPENING-${product.sku}`,
+              quantity: product.stock,
+              buyPrice: product.hpp,
+              totalPrice: product.stock * product.hpp,
+              date: now,
+              notes: 'Opening stock at product import',
+              createdBy: currentUser?.id,
+            });
+          }
+        }
+      });
       trackEvent('import_products_excel');
 
       toast.success(t('excel.toastSuccess', { count: newProducts.length }));
@@ -656,9 +740,14 @@ export default function Produk() {
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       {isStockManaged(p) ? (
-                        <span className={cn('text-xs font-medium px-1.5 py-0.5 rounded', p.stock <= 5 ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success')}>
+                        <Link
+                          to={`/products/${p.id}/stock-card`}
+                          aria-label={t('stockCard.openForProduct', { product: p.name })}
+                          className={cn('text-xs font-medium px-1.5 py-0.5 rounded hover:underline', p.stock <= 5 ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success')}
+                        >
                           {t('card.stock')}: {p.stock} {p.unit}
-                        </span>
+                          <span className="ml-1 underline">{t('stockCard.openAction')}</span>
+                        </Link>
                       ) : (
                         <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary flex items-center gap-1">
                           <InfinityIcon className="w-3 h-3" />
