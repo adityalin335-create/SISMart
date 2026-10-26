@@ -139,3 +139,158 @@
     display: none;
   }
 }
+
+.po-print-document {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 16mm;
+  }
+
+  html,
+  body {
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  html {
+    padding: 0 !important;
+  }
+
+  body {
+    margin: 0 !important;
+  }
+
+  body > *:not(.po-print-document) {
+    display: none !important;
+  }
+
+  .po-print-document {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    color: #111 !important;
+    background: #fff !important;
+    font: 10pt Arial, sans-serif !important;
+  }
+
+  .po-print-header {
+    padding-bottom: 12pt;
+    border-bottom: 1px solid #444;
+    text-align: center;
+  }
+
+  .po-print-header h1 {
+    margin: 0 0 4pt;
+    font-size: 18pt;
+    font-weight: 700;
+  }
+
+  .po-print-header p {
+    margin: 2pt 0;
+  }
+
+  .po-print-title {
+    margin: 20pt 0 14pt;
+    text-align: center;
+  }
+
+  .po-print-title h2 {
+    margin: 0 0 5pt;
+    font-size: 16pt;
+    text-transform: uppercase;
+  }
+
+  .po-print-title p {
+    margin: 0;
+    font-size: 12pt;
+    font-weight: 700;
+  }
+
+  .po-print-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12pt;
+    margin-bottom: 18pt;
+  }
+
+  .po-print-meta div {
+    display: grid;
+    gap: 4pt;
+  }
+
+  .po-print-meta span {
+    color: #555;
+    font-size: 9pt;
+  }
+
+  .po-print-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .po-print-table thead {
+    display: table-header-group;
+  }
+
+  .po-print-table th,
+  .po-print-table td {
+    padding: 7pt 5pt;
+    border: 1px solid #bbb;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .po-print-table th {
+    background: #f1f1f1 !important;
+    font-weight: 700;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .po-print-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .po-print-number {
+    text-align: right !important;
+    white-space: nowrap;
+  }
+
+  .po-print-table tfoot th {
+    border: 0;
+    padding-top: 8pt;
+  }
+
+  .po-print-table tfoot th:first-child {
+    text-align: right;
+  }
+
+  .po-print-grand-total th {
+    border-top: 1px solid #444 !important;
+    font-size: 12pt;
+  }
+
+  .po-print-notes {
+    margin-top: 22pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .po-print-notes h3 {
+    margin: 0 0 6pt;
+    font-size: 10pt;
+  }
+
+  .po-print-notes p {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+}

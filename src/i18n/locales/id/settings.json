@@ -124,6 +124,83 @@
     "stockReport": {
       "title": "Laporan Stok",
       "description": "Lihat pergerakan stok per periode"
+    },
+    "purchaseOrders": {
+      "title": "Purchase Order",
+      "description": "Buat dan pantau pesanan ke supplier"
+    }
+  },
+  "purchaseOrders": {
+    "title": "Purchase Order",
+    "create": "Buat PO",
+    "createTitle": "Buat Purchase Order",
+    "editTitle": "Ubah Draft PO",
+    "detailTitle": "Detail Purchase Order",
+    "searchPlaceholder": "Cari nomor PO atau supplier...",
+    "filterStatus": "Filter status",
+    "loading": "Memuat data...",
+    "empty": "Belum ada Purchase Order.",
+    "noResults": "Purchase Order tidak ditemukan.",
+    "status": {
+      "all": "Semua status",
+      "draft": "Draft",
+      "submitted": "Diajukan"
+    },
+    "locked": {
+      "title": "Akses Purchase Order dibatasi",
+      "permission": "Izin mengelola stok"
+    },
+    "form": {
+      "supplier": "Supplier",
+      "selectSupplier": "Pilih supplier",
+      "noSupplierPhone": "Nomor telepon tidak tersedia",
+      "orderDate": "Tanggal PO",
+      "expectedDate": "Perkiraan barang datang",
+      "addProduct": "Tambah barang",
+      "searchProduct": "Cari nama, SKU, atau barcode barang...",
+      "removeItem": "Hapus {{product}} dari PO",
+      "quantity": "Kuantitas",
+      "unitCost": "Harga beli per satuan",
+      "notes": "Catatan",
+      "estimatedTotal": "Total perkiraan"
+    },
+    "toast": {
+      "duplicateProduct": "Barang ini sudah ada di PO.",
+      "selectSupplier": "Pilih supplier terlebih dahulu.",
+      "addItem": "Tambahkan minimal satu barang.",
+      "expectedDateBeforeOrderDate": "Perkiraan barang datang tidak boleh sebelum tanggal PO.",
+      "saved": "Draft PO berhasil disimpan.",
+      "submitted": "PO berhasil diajukan.",
+      "saveFailed": "Purchase Order gagal disimpan."
+    },
+    "ownerName": "Pemilik",
+    "saving": "Menyimpan...",
+    "saveDraft": "Simpan Draft",
+    "submit": "Ajukan PO",
+    "editDraftOnly": "Hanya PO berstatus draft yang dapat diubah.",
+    "backToDetail": "Kembali ke detail",
+    "notFound": "Purchase Order tidak ditemukan.",
+    "back": "Kembali",
+    "backToList": "Kembali ke daftar PO",
+    "editDraft": "Ubah Draft",
+    "createdBy": "Dibuat oleh {{name}}",
+    "submittedAt": "Diajukan {{date}}",
+    "itemsTitle": "Barang ({{count}})",
+    "receivingPhaseNote": "PO diajukan. Penerimaan barang dan pembaruan stok akan tersedia pada fase Receiving.",
+    "print": {
+      "button": "Cetak PO",
+      "title": "Purchase Order",
+      "storeFallback": "Toko",
+      "poDate": "Tanggal PO",
+      "supplier": "Supplier",
+      "number": "SKU",
+      "item": "Barang",
+      "quantity": "Kuantitas",
+      "unitPrice": "Harga Satuan",
+      "subtotal": "Subtotal",
+      "grandTotal": "Grand Total",
+      "notes": "Catatan",
+      "noNotes": "-"
     }
   },
   "masterData": {
@@ -994,10 +1071,21 @@
       "permissionLabel": "Buat Transaksi"
     },
     "title": "Kasir",
+    "defaultCashier": "Kasir",
     "editingBill": "Editing Bill",
     "openBill": "Open Bill",
     "searchPlaceholder": "Cari produk...",
     "scanPlaceholder": "Scan / ketik SKU atau Barcode lalu Enter...",
+    "productList": {
+      "title": "Pilih Barang",
+      "search": "Cari nama, SKU, atau barcode...",
+      "empty": "Barang tidak ditemukan",
+      "noCode": "Tanpa kode",
+      "inCart": "Di keranjang: {{count}}",
+      "stock": "Stok: {{stock}} {{unit}}",
+      "unmanagedStock": "Stok tidak dikelola",
+      "outOfStock": "Stok habis"
+    },
     "categoryAll": "Semua",
     "empty": {
       "outOfStock": "Semua produk stoknya habis. Tambah stok dulu di menu Stok Masuk.",
@@ -1012,6 +1100,12 @@
       "empty": "Keranjang kosong",
       "editLabel": "— edit",
       "editOpenBillLabel": "— edit open bill"
+    },
+    "cartTable": {
+      "item": "Barang",
+      "quantity": "Jumlah",
+      "unitPrice": "Harga Satuan",
+      "subtotal": "Subtotal"
     },
     "itemNotes": {
       "add": "Tambah catatan",
@@ -1034,6 +1128,7 @@
       "saveAndPrintKitchen": "Simpan & Cetak Kitchen Ticket",
       "saveOnly": "Simpan Saja",
       "printKitchen": "Cetak Kitchen Ticket",
+      "continuePayment": "Lanjut Pembayaran",
       "pay": "Bayar",
       "cancelBill": "Batalkan Bill Ini",
       "ok": "OK",
@@ -1057,7 +1152,7 @@
       "remainingDebt": "Sisa Hutang",
       "remainingDebtHint": "Pelanggan wajib dipilih dari daftar",
       "changeLabel": "Kembalian",
-      "confirmButton": "Konfirmasi Transaksi"
+      "confirmButton": "Cetak Struk / Selesaikan Transaksi"
     },
     "discountDialog": {
       "title": "Diskon Transaksi",
@@ -1161,6 +1256,7 @@
     "storeFallback": "Toko",
     "no": "No",
     "cashierLabel": "Kasir",
+    "dateTime": "Tanggal/Jam",
     "customerLabel": "Pelanggan",
     "tableLabel": "Meja",
     "notesLabel": "Catatan",

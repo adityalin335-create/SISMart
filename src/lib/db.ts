@@ -93,6 +93,38 @@ export interface Supplier {
   syncedAt?: Date | null;
 }
 
+export type PurchaseOrderStatus = 'draft' | 'submitted';
+
+export interface PurchaseOrder {
+  id?: number;
+  poNumber: string;
+  supplierId: number;
+  supplierName: string;
+  supplierPhone: string;
+  status: PurchaseOrderStatus;
+  orderDate: Date;
+  expectedDate?: Date;
+  notes: string;
+  subtotal: number;
+  createdBy?: number;
+  createdByName: string;
+  submittedAt?: Date;
+  updatedAt: Date;
+  syncedAt?: Date | null;
+}
+
+export interface PurchaseOrderItem {
+  id?: number;
+  purchaseOrderId: number;
+  productId: number;
+  productName: string;
+  sku: string;
+  unit: string;
+  quantity: number;
+  unitCost: number;
+  lineTotal: number;
+}
+
 export interface Customer {
   id?: number;
   name: string;
@@ -195,6 +227,7 @@ export interface Transaction {
   openedAt?: Date;
   closedAt?: Date;
   createdBy?: number; // userId — kasir pembuat transaksi
+  cashierName?: string; // snapshot name of cashier completing the transaction
   debtAmount?: number; // snapshot hutang awal; 0/undefined = lunas saat checkout
   updatedAt?: Date;
   syncedAt?: Date | null;
@@ -317,6 +350,8 @@ class PosDatabase extends Dexie {
   categories!: Table<Category>;
   products!: Table<Product>;
   suppliers!: Table<Supplier>;
+  purchaseOrders!: Table<PurchaseOrder>;
+  purchaseOrderItems!: Table<PurchaseOrderItem>;
   customers!: Table<Customer>;
   stockIns!: Table<StockIn>;
   stockOuts!: Table<StockOut>;
@@ -797,6 +832,32 @@ class PosDatabase extends Dexie {
       await backfillTable('debtPayments', ['date']);
       await backfillTable('stockOpnames', ['date']);
     });
+
+    // Version 15 — Purchase Orders
+    this.version(15).stores({
+      categories:        '++id, name, isDeleted, updatedAt, syncedAt',
+      products:          '++id, name, &sku, categoryId, barcode, isDeleted, createdBy, updatedBy, unit, updatedAt, syncedAt',
+      suppliers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      purchaseOrders:    '++id, &poNumber, supplierId, status, orderDate, createdBy, updatedAt, syncedAt',
+      purchaseOrderItems:'++id, purchaseOrderId, productId, [purchaseOrderId+productId]',
+      customers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      stockIns:          '++id, productId, supplierId, date, createdBy, updatedAt, syncedAt',
+      stockOuts:         '++id, productId, date, createdBy, updatedAt, syncedAt',
+      hppHistory:        '++id, productId, date, syncedAt',
+      paymentMethods:    '++id, name, category, updatedAt, syncedAt',
+      transactions:      '++id, date, &receiptNumber, paymentMethodId, status, orderNumber, createdBy, updatedAt, syncedAt',
+      transactionItems:  '++id, transactionId, productId',
+      storeSettings:     '++id',
+      units:             '++id, &name, isDeleted, updatedAt, syncedAt',
+      users:             '++id, &username, role, isActive, updatedAt, syncedAt',
+      expenseCategories: '++id, name, isDeleted, updatedAt, syncedAt',
+      expenses:          '++id, date, categoryId, paymentMethodId, createdBy, isDeleted, updatedAt, syncedAt',
+      debts:             '++id, &transactionId, customerId, status, createdAt, updatedAt, syncedAt',
+      debtPayments:      '++id, debtId, date, paymentMethodId, createdBy, updatedAt, syncedAt',
+      stockOpnames:      '++id, date, status, createdBy, updatedAt, syncedAt',
+      stockOpnameItems:  '++id, opnameId, productId, [opnameId+productId]',
+      deletedRecords:    '++id, tableName, recordId, deletedAt, syncedAt',
+    });
   }
 }
 
@@ -832,6 +893,7 @@ export async function sanitizeDatabaseDates() {
   await sanitizeTableDates(db.categories, ['createdAt', 'deletedAt', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.products, ['createdAt', 'updatedAt', 'deletedAt', 'syncedAt']);
   await sanitizeTableDates(db.suppliers, ['createdAt', 'deletedAt', 'updatedAt', 'syncedAt']);
+  await sanitizeTableDates(db.purchaseOrders, ['orderDate', 'expectedDate', 'submittedAt', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.customers, ['createdAt', 'deletedAt', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.stockIns, ['date', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.stockOuts, ['date', 'updatedAt', 'syncedAt']);

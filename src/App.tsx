@@ -39,6 +39,9 @@ import ThemeSettings from "./pages/settings/ThemeSettings";
 import ReceiptSettings from "./pages/settings/ReceiptSettings";
 import IssueReport from "./pages/settings/IssueReport";
 import StockOpname from "./pages/settings/StockOpname";
+import PurchaseOrdersPage from "./pages/PurchaseOrders";
+import PurchaseOrderFormPage from "./pages/PurchaseOrderForm";
+import PurchaseOrderDetailPage from "./pages/PurchaseOrderDetail";
 import BackupRestoreSettings from "./pages/settings/BackupRestoreSettings";
 import CloudBackupSettings from "./pages/settings/CloudBackupSettings";
 import CloudAutoBackupSettings from "./pages/settings/CloudAutoBackupSettings";
@@ -182,6 +185,38 @@ const App = () => {
                     element={
                       <ErrorBoundary>
                         <StockReport />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/purchase-orders"
+                    element={
+                      <ErrorBoundary>
+                        <PurchaseOrdersPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/purchase-orders/new"
+                    element={
+                      <ErrorBoundary>
+                        <PurchaseOrderFormPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/purchase-orders/:id/edit"
+                    element={
+                      <ErrorBoundary>
+                        <PurchaseOrderFormPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/purchase-orders/:id"
+                    element={
+                      <ErrorBoundary>
+                        <PurchaseOrderDetailPage />
                       </ErrorBoundary>
                     }
                   />

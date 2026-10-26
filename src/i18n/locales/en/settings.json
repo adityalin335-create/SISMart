@@ -124,6 +124,83 @@
     "stockReport": {
       "title": "Stock Report",
       "description": "View stock movements per period"
+    },
+    "purchaseOrders": {
+      "title": "Purchase Orders",
+      "description": "Create and track supplier orders"
+    }
+  },
+  "purchaseOrders": {
+    "title": "Purchase Orders",
+    "create": "Create PO",
+    "createTitle": "Create Purchase Order",
+    "editTitle": "Edit Draft PO",
+    "detailTitle": "Purchase Order Details",
+    "searchPlaceholder": "Search PO number or supplier...",
+    "filterStatus": "Filter status",
+    "loading": "Loading...",
+    "empty": "No Purchase Orders yet.",
+    "noResults": "No Purchase Orders found.",
+    "status": {
+      "all": "All statuses",
+      "draft": "Draft",
+      "submitted": "Submitted"
+    },
+    "locked": {
+      "title": "Purchase Order access is restricted",
+      "permission": "Stock management permission"
+    },
+    "form": {
+      "supplier": "Supplier",
+      "selectSupplier": "Select supplier",
+      "noSupplierPhone": "Phone number unavailable",
+      "orderDate": "PO date",
+      "expectedDate": "Expected delivery",
+      "addProduct": "Add item",
+      "searchProduct": "Search item name, SKU, or barcode...",
+      "removeItem": "Remove {{product}} from PO",
+      "quantity": "Quantity",
+      "unitCost": "Purchase price per unit",
+      "notes": "Notes",
+      "estimatedTotal": "Estimated total"
+    },
+    "toast": {
+      "duplicateProduct": "This item is already in the PO.",
+      "selectSupplier": "Select a supplier first.",
+      "addItem": "Add at least one item.",
+      "expectedDateBeforeOrderDate": "Expected delivery cannot be earlier than the PO date.",
+      "saved": "PO draft saved.",
+      "submitted": "PO submitted.",
+      "saveFailed": "Could not save Purchase Order."
+    },
+    "ownerName": "Owner",
+    "saving": "Saving...",
+    "saveDraft": "Save Draft",
+    "submit": "Submit PO",
+    "editDraftOnly": "Only draft Purchase Orders can be edited.",
+    "backToDetail": "Back to details",
+    "notFound": "Purchase Order not found.",
+    "back": "Back",
+    "backToList": "Back to Purchase Orders",
+    "editDraft": "Edit Draft",
+    "createdBy": "Created by {{name}}",
+    "submittedAt": "Submitted {{date}}",
+    "itemsTitle": "Items ({{count}})",
+    "receivingPhaseNote": "This PO has been submitted. Receiving goods and updating stock will be available in the Receiving phase.",
+    "print": {
+      "button": "Print PO",
+      "title": "Purchase Order",
+      "storeFallback": "Store",
+      "poDate": "PO Date",
+      "supplier": "Supplier",
+      "number": "SKU",
+      "item": "Item",
+      "quantity": "Quantity",
+      "unitPrice": "Unit Price",
+      "subtotal": "Subtotal",
+      "grandTotal": "Grand Total",
+      "notes": "Notes",
+      "noNotes": "-"
     }
   },
   "masterData": {
@@ -994,10 +1071,21 @@
       "permissionLabel": "Create Transaction"
     },
     "title": "Cashier",
+    "defaultCashier": "Cashier",
     "editingBill": "Editing Bill",
     "openBill": "Open Bill",
     "searchPlaceholder": "Search products...",
     "scanPlaceholder": "Scan / type SKU or Barcode then press Enter...",
+    "productList": {
+      "title": "Select Item",
+      "search": "Search name, SKU, or barcode...",
+      "empty": "No items found",
+      "noCode": "No code",
+      "inCart": "In cart: {{count}}",
+      "stock": "Stock: {{stock}} {{unit}}",
+      "unmanagedStock": "Stock not tracked",
+      "outOfStock": "Out of stock"
+    },
     "categoryAll": "All",
     "empty": {
       "outOfStock": "All products are out of stock. Add stock first in the Stock In menu.",
@@ -1013,6 +1101,12 @@
       "empty": "Cart is empty",
       "editLabel": "— edit",
       "editOpenBillLabel": "— edit open bill"
+    },
+    "cartTable": {
+      "item": "Item",
+      "quantity": "Quantity",
+      "unitPrice": "Unit Price",
+      "subtotal": "Subtotal"
     },
     "itemNotes": {
       "add": "Add note",
@@ -1035,6 +1129,7 @@
       "saveAndPrintKitchen": "Save & Print Kitchen Ticket",
       "saveOnly": "Save Only",
       "printKitchen": "Print Kitchen Ticket",
+      "continuePayment": "Continue to Payment",
       "pay": "Pay",
       "cancelBill": "Cancel This Bill",
       "ok": "OK",
@@ -1058,7 +1153,7 @@
       "remainingDebt": "Remaining Debt",
       "remainingDebtHint": "Customer must be selected from the list",
       "changeLabel": "Change",
-      "confirmButton": "Confirm Transaction"
+      "confirmButton": "Complete & Print Receipt"
     },
     "discountDialog": {
       "title": "Transaction Discount",
@@ -1162,6 +1257,7 @@
     "storeFallback": "Store",
     "no": "No",
     "cashierLabel": "Cashier",
+    "dateTime": "Date/Time",
     "customerLabel": "Customer",
     "tableLabel": "Table",
     "notesLabel": "Notes",

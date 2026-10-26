@@ -15,6 +15,7 @@ A free, offline-first, open source Point of Sale (POS) Progressive Web App built
 - **Product Management** — Complete CRUD with categories, SKU (unique & required), units, optional descriptions (searchable, previewable in cashier), photos, and barcode support
 - **Master Data Satuan (Units)** — Manage units of measurement with CRUD; safe deletion blocked when in use by products
 - **Stock Management** — Stock in (from suppliers) and stock out (damaged, lost, returned, etc.)
+- **Purchase Orders** — Create, edit draft, submit, and track supplier purchase orders
 - **Automatic COGS (HPP)** — Cost of Goods Sold is automatically calculated using the weighted average method on each stock-in
 - **Sales Reports** — 7/30 day sales charts, top products, total revenue & profit
 - **Transaction History** — Browse completed transactions with open bill filter tabs; delete transactions with optional stock restore

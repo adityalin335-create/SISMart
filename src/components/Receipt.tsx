@@ -3,13 +3,13 @@ import { format } from 'date-fns';
 import { id, enUS, ms } from 'date-fns/locale';
 import type { Locale } from 'date-fns';
 import html2canvas from 'html2canvas';
-import { Download, Share2, Printer, Utensils } from 'lucide-react';
+import { Download, Share2, Printer } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type { Transaction, StoreSettings, TransactionItemRecord } from '@/lib/db';
-import { isNativePlatform, printNativeBluetooth, getESCPOSData, printKitchenTicketBluetooth, getKitchenTicketESCPOSData } from '@/lib/printer';
+import { isNativePlatform, printNativeBluetooth, getESCPOSData } from '@/lib/printer';
 import { Capacitor } from '@capacitor/core';
 import { downloadOrShareFile } from '@/lib/file-utils';
 import { useCloudAuth } from '@/hooks/use-cloud-auth';
@@ -175,46 +175,6 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
     }
   };
 
-  const handlePrintKitchenTicket = async () => {
-    const printData = { transaction, items, cashierName };
-
-    if (isNativePlatform()) {
-      await printKitchenTicketBluetooth(printData, toast);
-      return;
-    }
-
-    if (!('bluetooth' in navigator)) {
-      toast.error(t('receipt.toast.bluetoothUnavailable'));
-      return;
-    }
-
-    try {
-      toast.info(t('receipt.toast.searchingPrinter'));
-      // @ts-expect-error Web Bluetooth API is not fully typed in TypeScript
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
-        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'],
-      });
-
-      const server = await device.gatt.connect();
-      const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-      const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
-      const data = new TextEncoder().encode(getKitchenTicketESCPOSData(printData));
-      
-      for (let i = 0; i < data.length; i += 100) {
-        const chunk = data.slice(i, i + 100);
-        await characteristic.writeValue(chunk);
-      }
-
-      toast.success(t('receipt.toast.printSuccess'));
-      await server.disconnect();
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name !== 'NotFoundError') {
-        toast.error(t('receipt.toast.printFailed'));
-      }
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto rounded-xl p-4">
@@ -241,7 +201,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
             <span>{t('receipt.no')}: {transaction.receiptNumber}</span>
           </div>
           <div className="flex justify-between text-[10px] mb-1">
-            <span>{format(new Date(transaction.date), 'dd/MM/yyyy HH:mm', { locale: dateLocale })}</span>
+            <span>{t('receipt.dateTime')}: {format(new Date(transaction.date), 'dd/MM/yyyy HH:mm', { locale: dateLocale })}</span>
             <span>{paymentMethodName}</span>
           </div>
           {cashierName && (
@@ -252,11 +212,6 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
           {transaction.customerName && (
             <div className="flex justify-between text-[10px]">
               <span>{t('receipt.customerLabel')}: {transaction.customerName}</span>
-            </div>
-          )}
-          {transaction.tableNumber && (
-            <div className="flex justify-between text-[10px]">
-              <span>{t('receipt.tableLabel')}: {transaction.tableNumber}</span>
             </div>
           )}
           {transaction.remarks && (
@@ -271,7 +226,6 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
           {items.map((item, i) => (
             <div key={i} className="mb-1">
               <p className="text-[11px] font-medium">{item.productName}</p>
-              {item.notes && <p className="text-[9px] text-gray-500 italic">  {item.notes}</p>}
               <div className="flex justify-between text-[10px]">
                 <span>{item.quantity} x {rp(item.price)}</span>
                 <span>{rp(item.subtotal)}</span>
@@ -337,7 +291,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
         </div>
 
         {/* Action buttons */}
-        <div className="grid grid-cols-4 gap-1 mt-3">
+        <div className="grid grid-cols-3 gap-1 mt-3">
           <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-1" onClick={handleDownload} disabled={generating}>
             <Download className="w-4 h-4" />
             <span className="text-[9px]">{t('receipt.download')}</span>
@@ -349,10 +303,6 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
           <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-1" onClick={handleBluetoothPrint} disabled={generating}>
             <Printer className="w-4 h-4" />
             <span className="text-[9px]">{t('receipt.print')}</span>
-          </Button>
-          <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-1" onClick={handlePrintKitchenTicket} disabled={generating}>
-            <Utensils className="w-4 h-4 text-orange-600" />
-            <span className="text-[9px]">{t('receipt.printKitchen')}</span>
           </Button>
         </div>
 

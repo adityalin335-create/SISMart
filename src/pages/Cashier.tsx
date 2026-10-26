@@ -1,10 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, isStockManaged, type Product, type Category, type Transaction, type TransactionItemRecord } from '@/lib/db';
+import { db, isStockManaged, type Product, type Transaction, type TransactionItemRecord } from '@/lib/db';
 import { useState, useRef, useEffect } from 'react';
-import { Search, Plus, Minus, ShoppingCart, X, Percent, Tag, CreditCard, Banknote, Check, ScanBarcode, Package as PackageIcon, ClipboardList, Save, Pencil, User, Hash, Trash2, Barcode, Printer } from 'lucide-react';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { Plus, Minus, ShoppingCart, Percent, Tag, CreditCard, Banknote, Check, List, ClipboardList, Save, User, Trash2, Barcode } from 'lucide-react';
 import Receipt from '@/components/Receipt';
-import KitchenTicket from '@/components/KitchenTicket';
-import BarcodeScanner from '@/components/BarcodeScanner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +31,6 @@ interface CartItem {
   qty: number;
   discountType: 'percentage' | 'nominal' | null;
   discountValue: number;
-  notes?: string;
 }
 
 const CURRENCY_SYMBOL: Record<string, string> = {
@@ -64,12 +63,12 @@ export default function Kasir() {
   const currencySymbol = CURRENCY_SYMBOL[lang] || 'Rp';
   const rp = (n: number) => `${currencySymbol} ${n.toLocaleString(numberLocale)}`;
 
-  const [search, setSearch] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [editingTxId, setEditingTxId] = useState<number | null>(null);
-  const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const checkoutHistoryEntryRef = useRef(false);
+  const checkoutHistoryStateRef = useRef<unknown>(null);
+  const checkoutHistoryUrlRef = useRef('');
   const [txDiscountType, setTxDiscountType] = useState<'percentage' | 'nominal' | null>(null);
   const [txDiscountValue, setTxDiscountValue] = useState('');
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
@@ -88,51 +87,36 @@ export default function Kasir() {
   const [lastTxItems, setLastTxItems] = useState<TransactionItemRecord[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerId, setCustomerId] = useState<number | undefined>(undefined);
-  const [tableNumber, setTableNumber] = useState('');
   const [remarks, setRemarks] = useState('');
-  const [scannerOpen, setScannerOpen] = useState(false);
+  const [draftReceiptNumber, setDraftReceiptNumber] = useState('');
+  const [productListOpen, setProductListOpen] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
   const [openBillsOpen, setOpenBillsOpen] = useState(false);
-  const [editingItemNotes, setEditingItemNotes] = useState<number | null>(null);
-  const [tempItemNotes, setTempItemNotes] = useState('');
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelTargetTx, setCancelTargetTx] = useState<Transaction | null>(null);
   const [scanInput, setScanInput] = useState('');
   const scanInputRef = useRef<HTMLInputElement>(null);
 
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
-  const [kitchenTicketOpen, setKitchenTicketOpen] = useState(false);
-  const [kitchenTicketTx, setKitchenTicketTx] = useState<Transaction | null>(null);
-  const [kitchenTicketItems, setKitchenTicketItems] = useState<TransactionItemRecord[]>([]);
-
-  // Cashier layout mode settings (default: 'grid')
-  const [layoutMode] = useState<'grid' | 'rows'>(() => {
-    try {
-      return (localStorage.getItem('kg_cashier_layout_mode') as 'grid' | 'rows') || 'grid';
-    } catch {
-      return 'grid';
-    }
-  });
 
   const products = useLiveQuery(() => db.products.where('isDeleted').equals(0).toArray());
-  const categories = useLiveQuery(() => db.categories.where('isDeleted').equals(0).toArray());
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
   const storeSettings = useLiveQuery(() => db.storeSettings.toCollection().first());
   const openBills = useLiveQuery(() => db.transactions.where('status').equals('open').reverse().sortBy('date'));
   const allUsers = useLiveQuery(() => db.users.toArray());
   const customers = useLiveQuery(() => db.customers.where('isDeleted').equals(0).toArray());
+  const activeCashierName = currentUser?.name || allUsers?.find(user => user.isActive === 1)?.name || t('cashier.defaultCashier');
+  const productQuery = productSearch.trim().toLowerCase();
+  const selectableProducts = (products ?? []).filter(product =>
+    !productQuery ||
+    product.name.toLowerCase().includes(productQuery) ||
+    product.sku?.toLowerCase().includes(productQuery) ||
+    product.barcode?.toLowerCase().includes(productQuery)
+  );
 
   // Permission gate — kept render-side (not redirect) so the bottom nav stays
   // intact. All hooks above run unconditionally; we just swap the rendered tree.
   const allowed = can('create_transaction');
-
-  const cartProductIds = new Set(cart.map(c => c.product.id));
-
-  const filtered = products?.filter(p => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchCategory = filterCategory === 'all' || p.categoryId === Number(filterCategory);
-    const available = !isStockManaged(p) || p.stock > 0 || cartProductIds.has(p.id!);
-    return matchSearch && matchCategory && available;
-  }) ?? [];
 
   const doFullReset = () => {
     setCart([]);
@@ -144,14 +128,15 @@ export default function Kasir() {
     setUseDebt(false);
     setCustomerName('');
     setCustomerId(undefined);
-    setTableNumber('');
     setRemarks('');
+    setDraftReceiptNumber('');
     setIsQuickAdding(false);
   };
 
   // === Cart Operations ===
 
   const addToCart = (product: Product) => {
+    setDraftReceiptNumber(current => current || `TX${Date.now()}`);
     setCart(prev => {
       const existing = prev.find(c => c.product.id === product.id);
       if (existing) {
@@ -177,10 +162,6 @@ export default function Kasir() {
 
   const removeFromCart = (productId: number) => {
     setCart(prev => prev.filter(c => c.product.id !== productId));
-  };
-
-  const updateItemNotes = (productId: number, notes: string) => {
-    setCart(prev => prev.map(c => c.product.id === productId ? { ...c, notes: notes.trim() || undefined } : c));
   };
 
   const openItemDiscount = (item: CartItem) => {
@@ -252,15 +233,27 @@ export default function Kasir() {
   const totalItemDiscount = cart.reduce((sum, item) => sum + getItemDiscountAmount(item), 0);
   const totalProfit = cart.reduce((sum, item) => sum + (item.product.price - item.product.hpp) * item.qty, 0) - totalItemDiscount - txDiscountAmount;
 
+  const openCheckout = () => {
+    if (!checkoutHistoryEntryRef.current) {
+      const checkoutPath = `${location.pathname}${location.search}${location.hash}`;
+      navigate(checkoutPath, { state: { ...(location.state ?? {}), checkoutDialog: true } });
+      checkoutHistoryStateRef.current = window.history.state;
+      checkoutHistoryUrlRef.current = window.location.href;
+      checkoutHistoryEntryRef.current = true;
+    }
+    setUseDebt(false);
+    setPaymentMethodId(paymentMethods?.[0]?.id?.toString() ?? '');
+    setPaymentAmount(total.toString());
+    setIsQuickAdding(false);
+    setCheckoutOpen(true);
+  };
+
   // === Open Bill Operations ===
 
-  const saveOpenBill = async (shouldPrintKitchen: boolean = false) => {
+  const saveOpenBill = async () => {
     if (cart.length === 0) { toast.error(t('cashier.toast.cartEmpty')); return; }
 
     const now = new Date();
-    let savedTxObj: Transaction | null = null;
-    let savedItemsObj: TransactionItemRecord[] = [];
-
     if (editingTxId) {
       // Update existing open bill
       const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
@@ -273,7 +266,6 @@ export default function Kasir() {
         total,
         customerId,
         customerName: customerName.trim() || undefined,
-        tableNumber: tableNumber.trim() || undefined,
         remarks: remarks.trim() || undefined,
         date: now,
       });
@@ -289,7 +281,6 @@ export default function Kasir() {
         discountValue: c.discountValue,
         discountAmount: getItemDiscountAmount(c),
         subtotal: getItemSubtotal(c),
-        notes: c.notes,
       }));
       await db.transactionItems.bulkAdd(itemRecords);
 
@@ -318,12 +309,9 @@ export default function Kasir() {
       const updatedTx = await db.transactions.get(editingTxId);
       toast.success(t('cashier.toast.billUpdated', { receiptNumber: updatedTx?.receiptNumber }));
 
-      if (updatedTx) {
-        savedTxObj = updatedTx;
-        savedItemsObj = itemRecords;
-      }
     } else {
-      const receiptNumber = `TX${Date.now()}`;
+      const receiptNumber = draftReceiptNumber || `TX${Date.now()}`;
+      setDraftReceiptNumber(receiptNumber);
 
       const txData: Transaction = {
         subtotal,
@@ -340,7 +328,6 @@ export default function Kasir() {
         status: 'open',
         customerId,
         customerName: customerName.trim() || undefined,
-        tableNumber: tableNumber.trim() || undefined,
         remarks: remarks.trim() || undefined,
         openedAt: now,
         createdBy: currentUser?.id,
@@ -359,7 +346,6 @@ export default function Kasir() {
         discountValue: c.discountValue,
         discountAmount: getItemDiscountAmount(c),
         subtotal: getItemSubtotal(c),
-        notes: c.notes,
       }));
       await db.transactionItems.bulkAdd(itemRecords);
 
@@ -370,18 +356,9 @@ export default function Kasir() {
 
       toast.success(t('cashier.toast.billSaved', { receiptNumber }));
 
-      savedTxObj = { ...txData, id: txId as number };
-      savedItemsObj = itemRecords;
-    }
-
-    if (shouldPrintKitchen && savedTxObj) {
-      setKitchenTicketTx(savedTxObj);
-      setKitchenTicketItems(savedItemsObj);
-      setKitchenTicketOpen(true);
     }
 
     doFullReset();
-    setCartOpen(false);
   };
 
   const loadOpenBill = async (tx: Transaction) => {
@@ -397,20 +374,18 @@ export default function Kasir() {
         qty: item.quantity,
         discountType: item.discountType as 'percentage' | 'nominal' | null,
         discountValue: item.discountValue,
-        notes: item.notes,
       };
     });
 
     setCart(cartItems);
+    setDraftReceiptNumber(tx.receiptNumber);
     setEditingTxId(tx.id);
     setTxDiscountType(tx.discountType);
     setTxDiscountValue(tx.discountType ? String(tx.discountValue) : '');
     setCustomerName(tx.customerName || '');
     setCustomerId(tx.customerId);
-    setTableNumber(tx.tableNumber || '');
     setRemarks(tx.remarks || '');
     setOpenBillsOpen(false);
-    setCartOpen(true);
   };
 
   const cancelOpenBill = async (tx: Transaction) => {
@@ -429,7 +404,6 @@ export default function Kasir() {
     setCancelTargetTx(null);
     if (editingTxId === tx.id) {
       doFullReset();
-      setCartOpen(false);
     }
   };
 
@@ -467,6 +441,7 @@ export default function Kasir() {
       return;
     }
 
+    const completedAt = new Date();
     if (editingTxId) {
       // Update existing open bill → paid
       const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
@@ -482,11 +457,12 @@ export default function Kasir() {
         paymentAmount: checkoutPaidAmount,
         change,
         profit: totalProfit,
+        date: completedAt,
         customerId,
         customerName: customerName.trim() || undefined,
-        tableNumber: tableNumber.trim() || undefined,
         remarks: remarks.trim() || undefined,
-        closedAt: new Date(),
+        cashierName: activeCashierName,
+        closedAt: completedAt,
         debtAmount,
       });
 
@@ -515,7 +491,6 @@ export default function Kasir() {
         discountValue: c.discountValue,
         discountAmount: getItemDiscountAmount(c),
         subtotal: getItemSubtotal(c),
-        notes: c.notes,
       }));
       await db.transactionItems.bulkAdd(itemRecords);
 
@@ -547,7 +522,7 @@ export default function Kasir() {
       setLastTxItems(itemRecords);
       setReceiptOpen(true);
     } else {
-      const receiptNumber = `TX${Date.now()}`;
+      const receiptNumber = draftReceiptNumber || `TX${Date.now()}`;
 
       const txData: Transaction = {
         subtotal,
@@ -559,14 +534,14 @@ export default function Kasir() {
         paymentAmount: checkoutPaidAmount,
         change,
         profit: totalProfit,
-        date: new Date(),
+        date: completedAt,
         receiptNumber,
         status: 'completed',
         customerId,
         customerName: customerName.trim() || undefined,
-        tableNumber: tableNumber.trim() || undefined,
         remarks: remarks.trim() || undefined,
         createdBy: currentUser?.id,
+        cashierName: activeCashierName,
         debtAmount,
       };
 
@@ -596,7 +571,6 @@ export default function Kasir() {
         discountValue: c.discountValue,
         discountAmount: getItemDiscountAmount(c),
         subtotal: getItemSubtotal(c),
-        notes: c.notes,
       }));
       await db.transactionItems.bulkAdd(itemRecords);
 
@@ -614,26 +588,10 @@ export default function Kasir() {
 
     doFullReset();
     setCheckoutOpen(false);
-    setCartOpen(false);
   };
 
   const cartCount = cart.reduce((s, c) => s + c.qty, 0);
   const openBillsCount = openBills?.length ?? 0;
-
-  const handleScan = (barcode: string) => {
-    setScannerOpen(false);
-    const product = products?.find(p => p.sku === barcode || p.barcode === barcode);
-    if (product) {
-      if (isStockManaged(product) && product.stock <= 0) {
-        toast.error(t('cashier.toast.productOutOfStock', { name: product.name }));
-        return;
-      }
-      addToCart(product);
-      toast.success(t('cashier.toast.addedToCart', { name: product.name }));
-    } else {
-      toast.error(t('cashier.toast.productNotFound', { code: barcode }));
-    }
-  };
 
   const handleScanKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && scanInput.trim()) {
@@ -660,6 +618,38 @@ export default function Kasir() {
     }
   }, [scanInput]);
 
+  useEffect(() => {
+    if (!checkoutOpen || !checkoutHistoryEntryRef.current) return;
+
+    const handleBrowserBack = (event: PopStateEvent) => {
+      event.stopImmediatePropagation();
+      window.history.pushState(checkoutHistoryStateRef.current, '', checkoutHistoryUrlRef.current);
+      setCheckoutOpen(false);
+    };
+
+    window.addEventListener('popstate', handleBrowserBack, true);
+    return () => window.removeEventListener('popstate', handleBrowserBack, true);
+  }, [checkoutOpen]);
+
+  useEffect(() => {
+    if (!checkoutOpen || !Capacitor.isNativePlatform()) return;
+
+    let active = true;
+    let removeBackButtonListener: (() => void) | undefined;
+    void CapacitorApp.addListener('backButton', () => setCheckoutOpen(false)).then(handle => {
+      if (active) {
+        removeBackButtonListener = () => { void handle.remove(); };
+      } else {
+        void handle.remove();
+      }
+    });
+
+    return () => {
+      active = false;
+      removeBackButtonListener?.();
+    };
+  }, [checkoutOpen]);
+
   // Open the Open Bills sheet when navigated here from the dashboard
   useEffect(() => {
     if ((location.state as { openBills?: boolean } | null)?.openBills) {
@@ -675,570 +665,241 @@ export default function Kasir() {
   }
 
   return (
-    <div className="px-4 pt-6 pb-4 h-[calc(100vh-4rem)]">
-      <div className="flex flex-col md:flex-row gap-0 md:gap-4 h-full">
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-          {/* Header */}
-      <div className="flex items-center justify-between mb-4 pt-1">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5 text-primary" />
-          {t('cashier.title')}
-          {editingTxId && (
-            <Badge variant="secondary" className="text-[10px] font-normal">
-              {t('cashier.editingBill')}
-            </Badge>
-          )}
-        </h1>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-9 gap-1.5 text-xs relative"
-          onClick={() => setOpenBillsOpen(true)}
-        >
-          <ClipboardList className="w-4 h-4" />
-          {t('cashier.openBill')}{openBillsCount > 0 && ` (${openBillsCount})`}
-        </Button>
-      </div>
-
-      {/* Search */}
-      <div className="flex gap-2 mb-3 px-1">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder={t('cashier.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10" />
-        </div>
-        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={() => setScannerOpen(true)}>
-          <ScanBarcode className="w-5 h-5" />
-        </Button>
-      </div>
-
-      {/* SKU / Barcode scan input */}
-      <div className="flex gap-2 mb-3 px-1">
-        <div className="relative flex-1">
-          <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            ref={scanInputRef}
-            placeholder={t('cashier.scanPlaceholder')}
-            value={scanInput}
-            onChange={e => setScanInput(e.target.value)}
-            onKeyDown={handleScanKeyDown}
-            className="pl-9 h-10 text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Category chips */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-3 pb-1 pr-4" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}>
-        <button onClick={() => setFilterCategory('all')} className={cn('shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors', filterCategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
-          {t('cashier.categoryAll')}
-        </button>
-        {categories?.map(c => (
-          <button key={c.id} onClick={() => setFilterCategory(c.id!.toString())} className={cn('shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors', filterCategory === c.id!.toString() ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
-            {c.icon} {c.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Product Grid */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {filtered.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-sm text-muted-foreground">
-              {products && products.length > 0
-                ? t('cashier.empty.outOfStock')
-                : t('cashier.empty.noProducts')}
-            </p>
-          </div>
-        ) : layoutMode === 'rows' ? (
-          <div className="space-y-1.5 px-0.5 pb-2">
-            {filtered.map(p => (
-              <Card key={p.id} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]" onClick={() => addToCart(p)}>
-                <CardContent className="p-2 flex items-center gap-3">
-                  <div className="w-12 h-12 bg-muted rounded-lg overflow-hidden flex items-center justify-center shrink-0">
-                    {p.photo ? (
-                      <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <PackageIcon className="w-5 h-5 text-muted-foreground/30" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start gap-2">
-                      <h3 className="text-xs font-semibold truncate">{p.name}</h3>
-                      <p className="text-xs font-bold text-primary shrink-0">{rp(p.price)}</p>
-                    </div>
-                    {p.description && (
-                      <p className="text-[10px] text-muted-foreground truncate" title={p.description}>
-                        {p.description}
-                      </p>
-                    )}
-                    <div className="flex justify-between items-center mt-1">
-                      {isStockManaged(p) ? (
-                        <p className="text-[10px] text-muted-foreground">{t('cashier.productCard.stock', { stock: p.stock, unit: p.unit })}</p>
-                      ) : (
-                        <p className="text-[10px] text-primary">{t('cashier.productCard.alwaysAvailable')}</p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            {filtered.map(p => (
-              <Card key={p.id} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]" onClick={() => addToCart(p)}>
-                <CardContent className="p-0">
-                  <div className="w-full aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center">
-                    {p.photo ? (
-                      <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <PackageIcon className="w-8 h-8 text-muted-foreground/30" />
-                    )}
-                  </div>
-                  <div className="p-2.5">
-                    <h3 className="text-xs font-semibold truncate">{p.name}</h3>
-                    <p className="text-sm font-bold text-primary mt-0.5">{rp(p.price)}</p>
-                    {p.description && (
-                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate" title={p.description}>
-                        {p.description}
-                      </p>
-                    )}
-                    {isStockManaged(p) ? (
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{t('cashier.productCard.stock', { stock: p.stock, unit: p.unit })}</p>
-                    ) : (
-                      <p className="text-[10px] text-primary mt-0.5">{t('cashier.productCard.alwaysAvailable')}</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-        </div>
-      </div>
-
-      {/* Desktop Cart Panel */}
-      <div className="hidden md:flex md:w-80 lg:w-96 flex-col overflow-hidden bg-card rounded-xl border border-border shrink-0">
-        <div className="p-4 border-b border-border shrink-0">
-          <h3 className="text-base font-bold flex items-center gap-2">
-            <ShoppingCart className="w-4 h-4 text-primary" />
-            {t('cashier.cart.title', { count: cartCount })}
-            {editingTxId && <span className="text-xs font-normal text-muted-foreground">{t('cashier.cart.editLabel')}</span>}
-          </h3>
-        </div>
-        {cart.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center p-8">
-            <p className="text-sm text-muted-foreground">{t('cashier.cart.empty')}</p>
-          </div>
-        ) : (
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex-1 overflow-y-auto space-y-3 p-4">
-              {cart.map(item => (
-                <div key={item.product.id} className="bg-muted/50 p-3 rounded-xl space-y-1.5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{item.product.name}</p>
-                      <p className="text-xs text-muted-foreground">{rp(item.product.price)} × {item.qty}</p>
-                      {item.discountType && getItemDiscountAmount(item) > 0 && (
-                        <p className="text-[10px] text-destructive">
-                          {t('cashier.cartDiscount.label')}: {item.discountType === 'percentage' ? `${item.discountValue}%` : rp(item.discountValue)} (-{rp(getItemDiscountAmount(item))})
-                        </p>
-                      )}
-                      <p className="text-sm font-bold text-primary">{rp(getItemSubtotal(item))}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" onClick={() => item.qty === 1 ? removeFromCart(item.product.id!) : updateQty(item.product.id!, -1)}>
-                        {item.qty === 1 ? <X className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-                      </Button>
-                      <input
-                        key={item.qty}
-                        type="number"
-                        inputMode="numeric"
-                        defaultValue={item.qty}
-                        onBlur={e => {
-                          const val = parseInt(e.target.value);
-                          if (!isNaN(val) && val >= 1) {
-                            if (isStockManaged(item.product) && val > item.product.stock) {
-                              toast.error(t('cashier.toast.stockLowWithMax', { max: item.product.stock }));
-                              e.target.value = String(item.product.stock);
-                              setCart(prev => prev.map(c => c.product.id === item.product.id ? { ...c, qty: item.product.stock } : c));
-                            } else {
-                              setCart(prev => prev.map(c => c.product.id === item.product.id ? { ...c, qty: val } : c));
-                            }
-                          } else {
-                            e.target.value = String(item.qty);
-                          }
-                        }}
-                        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                        className="w-10 h-8 text-center text-sm font-bold bg-transparent border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" onClick={() => updateQty(item.product.id!, 1)}>
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {item.notes ? (
-                      <button
-                        className="flex items-center gap-1 text-[10px] text-accent bg-accent/10 px-2 py-0.5 rounded-full"
-                        onClick={() => { setEditingItemNotes(item.product.id!); setTempItemNotes(item.notes || ''); }}
-                      >
-                        <Pencil className="w-2.5 h-2.5" />
-                        {item.notes}
-                      </button>
-                    ) : (
-                      <button
-                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                        onClick={() => { setEditingItemNotes(item.product.id!); setTempItemNotes(''); }}
-                      >
-                        <Pencil className="w-2.5 h-2.5" />
-                        {t('cashier.itemNotes.add')}
-                      </button>
-                    )}
-                    {item.discountType ? (
-                      <button
-                        className="flex items-center gap-1 text-[10px] text-destructive bg-destructive/10 px-2 py-0.5 rounded-full"
-                        onClick={() => openItemDiscount(item)}
-                      >
-                        <Tag className="w-2.5 h-2.5" />
-                        {t('cashier.itemDiscount.change')}
-                      </button>
-                    ) : (
-                      <button
-                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                        onClick={() => openItemDiscount(item)}
-                      >
-                        <Tag className="w-2.5 h-2.5" />
-                        {t('cashier.itemDiscount.add')}
-                      </button>
-                    )}
-                  </div>
-                  {editingItemNotes === item.product.id && (
-                    <div className="flex gap-2 items-center">
-                      <Input
-                        autoFocus
-                        value={tempItemNotes}
-                        onChange={e => setTempItemNotes(e.target.value)}
-                        placeholder={t('cashier.itemNotes.placeholder')}
-                        className="h-8 text-xs"
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') { updateItemNotes(item.product.id!, tempItemNotes); setEditingItemNotes(null); }
-                          if (e.key === 'Escape') setEditingItemNotes(null);
-                        }}
-                      />
-                      <Button size="sm" className="h-8 text-xs" onClick={() => { updateItemNotes(item.product.id!, tempItemNotes); setEditingItemNotes(null); }}>{t('cashier.buttons.ok')}</Button>
-                    </div>
-                  )}
-                </div>
-              ))}
+    <div className="px-4 pt-4 pb-4 h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-4 h-full min-h-0">
+        <section className="flex flex-1 min-w-0 min-h-0 flex-col overflow-hidden">
+          <div className="shrink-0">
+            <div className="flex items-center mb-4 pt-1">
+              <h1 className="text-xl font-bold flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5 text-primary" />
+                {t('cashier.title')}
+                {editingTxId && (
+                  <Badge variant="secondary" className="text-[10px] font-normal">
+                    {t('cashier.editingBill')}
+                  </Badge>
+                )}
+              </h1>
             </div>
 
-            <div className="flex gap-2 px-4 mb-2">
-              <CustomerPicker
-                customers={customers ?? []}
-                value={customerName}
-                customerId={customerId}
-                onChange={(name, id) => { setCustomerName(name); setCustomerId(id); }}
-                className="flex-1 [&_input]:h-9 [&_input]:text-xs"
-              />
-              <div className="relative flex-[0.6]">
-                <Hash className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5" />
+                {t('receipt.cashierLabel')}: <strong className="text-foreground">{activeCashierName}</strong>
+              </span>
+              <span>
+                {t('receipt.no')}: <strong className="text-foreground">{draftReceiptNumber || '—'}</strong>
+              </span>
+            </div>
+
+            <div className="flex gap-2 px-1">
+              <div className="relative flex-1">
+                <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  placeholder={t('cashier.checkout.table')}
-                  value={tableNumber}
-                  onChange={e => setTableNumber(e.target.value)}
-                  className="pl-8 h-9 text-xs"
+                  ref={scanInputRef}
+                  placeholder={t('cashier.scanPlaceholder')}
+                  value={scanInput}
+                  onChange={e => setScanInput(e.target.value)}
+                  onKeyDown={handleScanKeyDown}
+                  className="pl-12 h-16 text-lg"
                 />
               </div>
-            </div>
-
-            <div className="border-t pt-4 space-y-3 px-4 pb-4">
-              {txDiscountAmount > 0 ? (
-                <button
-                  onClick={() => { setTempDiscountType(txDiscountType!); setTempDiscountValue(txDiscountValue); setDiscountDialogOpen(true); }}
-                  className="flex items-center gap-1.5 text-xs text-destructive font-medium"
-                >
-                  <Tag className="w-3.5 h-3.5" />
-                  {t('cashier.cartDiscount.label')}: {txDiscountType === 'percentage' ? `${txDiscountValue}%` : rp(Number(txDiscountValue))}
-                  <span className="text-[10px] underline ml-1">{t('cashier.cartDiscount.change')}</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => { setTempDiscountType('nominal'); setTempDiscountValue(''); setDiscountDialogOpen(true); }}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <Tag className="w-3.5 h-3.5" />
-                  <span>{t('cashier.cartDiscount.add')}</span>
-                </button>
-              )}
-
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{t('cashier.cartDiscount.subtotal')}</span>
-                <span className="font-medium">{rp(subtotal)}</span>
-              </div>
-              {txDiscountAmount > 0 && (
-                <div className="flex justify-between text-sm text-destructive">
-                  <span>{t('cashier.cartDiscount.discount')}</span>
-                  <span>-{rp(txDiscountAmount)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-lg font-bold">
-                <span>{t('cashier.cartDiscount.total')}</span>
-                <span className="text-primary">{rp(total)}</span>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-12 text-sm font-semibold"
-                  onClick={() => setSaveConfirmOpen(true)}
-                  disabled={cart.length === 0}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {t('cashier.buttons.saveBill')}
-                </Button>
-                <Button
-                  className="flex-1 h-12 text-sm font-semibold"
-                  onClick={() => { setCheckoutOpen(true); setUseDebt(false); setPaymentMethodId(paymentMethods?.[0]?.id?.toString() ?? ''); setPaymentAmount(total.toString()); setIsQuickAdding(false); }}
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  {t('cashier.buttons.pay')}
-                </Button>
-              </div>
-
-              {editingTxId && can('delete_transaction') && (
-                <Button
-                  variant="outline"
-                  className="w-full h-10 text-xs text-destructive border-destructive/30 hover:bg-destructive/5"
-                  onClick={handleCancelFromCart}
-                >
-                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                  {t('cashier.buttons.cancelBill')}
-                </Button>
-              )}
+              <Button variant="outline" size="icon" aria-label={t('cashier.productList.title')} title={t('cashier.productList.title')} className="h-16 w-16 shrink-0" onClick={() => setProductListOpen(true)}>
+                <List className="w-6 h-6" />
+              </Button>
             </div>
           </div>
-        )}
-      </div>
-      </div>{/* end flex row */}
 
-      {/* Cart FAB (mobile only) */}
-      {cartCount > 0 && (
-        <button
-          onClick={() => setCartOpen(true)}
-          className="md:hidden fixed right-4 flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-full shadow-xl active:scale-95 transition-transform z-40"
-          style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
-        >
-          <ShoppingCart className="w-5 h-5" />
-          <span className="font-bold text-sm">{t('cashier.cart.title', { count: cartCount })}</span>
-          <span className="text-sm font-bold">• {rp(total)}</span>
-        </button>
-      )}
+          <div className="flex-1 min-h-0 overflow-auto p-4">
+            {cart.length === 0 ? (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-sm text-muted-foreground">{t('cashier.cart.empty')}</p>
+              </div>
+            ) : (
+              <table className="w-full min-w-[650px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-muted-foreground">
+                    <th className="px-3 py-2 font-medium">{t('cashier.cartTable.item')}</th>
+                    <th className="px-3 py-2 text-center font-medium">{t('cashier.cartTable.quantity')}</th>
+                    <th className="px-3 py-2 text-right font-medium">{t('cashier.cartTable.unitPrice')}</th>
+                    <th className="px-3 py-2 text-right font-medium">{t('cashier.cartTable.subtotal')}</th>
+                    <th className="w-12 px-2 py-2" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {cart.map(item => (
+                    <tr key={item.product.id} className="border-b last:border-0">
+                      <td className="px-3 py-3">
+                        <p className="font-semibold">{item.product.name}</p>
+                        {item.discountType && getItemDiscountAmount(item) > 0 && (
+                          <p className="text-xs text-destructive">
+                            {t('cashier.cartDiscount.label')}: {item.discountType === 'percentage' ? `${item.discountValue}%` : rp(item.discountValue)}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="outline" size="icon" aria-label={`Kurangi ${item.product.name}`} title={`Kurangi ${item.product.name}`} className="h-8 w-8" onClick={() => updateQty(item.product.id!, -1)}>
+                            <Minus className="w-3.5 h-3.5" />
+                          </Button>
+                          <span className="w-8 text-center font-semibold">{item.qty}</span>
+                          <Button variant="outline" size="icon" aria-label={`Tambah ${item.product.name}`} title={`Tambah ${item.product.name}`} className="h-8 w-8" onClick={() => updateQty(item.product.id!, 1)}>
+                            <Plus className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-right">{rp(item.product.price)}</td>
+                      <td className="px-3 py-3 text-right font-semibold">{rp(getItemSubtotal(item))}</td>
+                      <td className="px-2 py-3 text-right">
+                        <Button variant="ghost" size="icon" aria-label={`Hapus ${item.product.name}`} title={`Hapus ${item.product.name}`} className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(item.product.id!)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
 
-      {/* Cart Sheet (mobile only) */}
-      <div className="md:hidden">
-      <Sheet open={cartOpen} onOpenChange={(open) => { setCartOpen(open); if (!open) setEditingItemNotes(null); }}>
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl max-w-lg mx-auto">
-          <SheetHeader>
-            <SheetTitle className="text-left">
+        <aside className="flex max-h-[42%] min-h-[220px] shrink-0 flex-col overflow-hidden border border-border bg-card lg:max-h-none lg:h-full lg:w-80">
+          <div className="shrink-0 border-b border-border p-4">
+            <h2 className="text-base font-bold flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4 text-primary" />
               {t('cashier.cart.title', { count: cartCount })}
-              {editingTxId && <span className="text-xs font-normal text-muted-foreground ml-2">{t('cashier.cart.editOpenBillLabel')}</span>}
-            </SheetTitle>
+              {editingTxId && <span className="text-xs font-normal text-muted-foreground">{t('cashier.cart.editLabel')}</span>}
+            </h2>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{t('cashier.cartDiscount.subtotal')}</span>
+              <span>{rp(subtotal)}</span>
+            </div>
+            {txDiscountAmount > 0 && (
+              <div className="flex justify-between text-sm text-destructive">
+                <span>{t('cashier.cartDiscount.discount')}</span>
+                <span>-{rp(txDiscountAmount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between rounded-lg bg-primary/5 p-3 text-lg font-bold">
+              <span>{t('cashier.cartDiscount.total')}</span>
+              <span className="text-primary">{rp(total)}</span>
+            </div>
+
+            {txDiscountAmount > 0 ? (
+              <button
+                onClick={() => { setTempDiscountType(txDiscountType!); setTempDiscountValue(txDiscountValue); setDiscountDialogOpen(true); }}
+                className="flex items-center gap-1.5 text-xs text-destructive font-medium"
+              >
+                <Tag className="w-3.5 h-3.5" />
+                {t('cashier.cartDiscount.label')}: {txDiscountType === 'percentage' ? `${txDiscountValue}%` : rp(Number(txDiscountValue))}
+                <span className="text-[10px] underline ml-1">{t('cashier.cartDiscount.change')}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => { setTempDiscountType('nominal'); setTempDiscountValue(''); setDiscountDialogOpen(true); }}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Tag className="w-3.5 h-3.5" />
+                <span>{t('cashier.cartDiscount.add')}</span>
+              </button>
+            )}
+
+            <Button variant="outline" className="w-full h-11 text-sm font-semibold" onClick={() => setSaveConfirmOpen(true)} disabled={cart.length === 0}>
+              <Save className="w-4 h-4 mr-2" />
+              {t('cashier.buttons.saveBill')}
+            </Button>
+            <Button
+              className="w-full h-12 text-sm font-semibold"
+              onClick={openCheckout}
+              disabled={cart.length === 0}
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              {t('cashier.buttons.continuePayment')}
+            </Button>
+
+            {editingTxId && can('delete_transaction') && (
+              <Button variant="ghost" className="w-full h-10 text-xs text-destructive hover:bg-destructive/5" onClick={handleCancelFromCart}>
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                {t('cashier.buttons.cancelBill')}
+              </Button>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      <Sheet open={productListOpen} onOpenChange={setProductListOpen}>
+        <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-md">
+          <SheetHeader className="p-5 pb-3">
+            <SheetTitle>{t('cashier.productList.title')}</SheetTitle>
           </SheetHeader>
-          <div className="flex flex-col h-full mt-4">
-            <div className="flex-1 overflow-y-auto space-y-3 pb-4">
-              {cart.map(item => (
-                <div key={item.product.id} className="bg-muted/50 p-3 rounded-xl space-y-1.5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{item.product.name}</p>
-                      <p className="text-xs text-muted-foreground">{rp(item.product.price)} × {item.qty}</p>
-                      {item.discountType && getItemDiscountAmount(item) > 0 && (
-                        <p className="text-[10px] text-destructive">
-                          {t('cashier.cartDiscount.label')}: {item.discountType === 'percentage' ? `${item.discountValue}%` : rp(item.discountValue)} (-{rp(getItemDiscountAmount(item))})
-                        </p>
-                      )}
-                      <p className="text-sm font-bold text-primary">{rp(getItemSubtotal(item))}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" onClick={() => item.qty === 1 ? removeFromCart(item.product.id!) : updateQty(item.product.id!, -1)}>
-                        {item.qty === 1 ? <X className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-                      </Button>
-                      <input
-                        key={item.qty}
-                        type="number"
-                        inputMode="numeric"
-                        defaultValue={item.qty}
-                        onBlur={e => {
-                          const val = parseInt(e.target.value);
-                          if (!isNaN(val) && val >= 1) {
-                            if (isStockManaged(item.product) && val > item.product.stock) {
-                              toast.error(t('cashier.toast.stockLowWithMax', { max: item.product.stock }));
-                              e.target.value = String(item.product.stock);
-                              setCart(prev => prev.map(c => c.product.id === item.product.id ? { ...c, qty: item.product.stock } : c));
-                            } else {
-                              setCart(prev => prev.map(c => c.product.id === item.product.id ? { ...c, qty: val } : c));
-                            }
-                          } else {
-                            e.target.value = String(item.qty);
-                          }
-                        }}
-                        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                        className="w-10 h-8 text-center text-sm font-bold bg-transparent border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" onClick={() => updateQty(item.product.id!, 1)}>
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  {/* Item notes & discount row */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {item.notes ? (
-                      <button
-                        className="flex items-center gap-1 text-[10px] text-accent bg-accent/10 px-2 py-0.5 rounded-full"
-                        onClick={() => { setEditingItemNotes(item.product.id!); setTempItemNotes(item.notes || ''); }}
-                      >
-                        <Pencil className="w-2.5 h-2.5" />
-                        {item.notes}
-                      </button>
-                    ) : (
-                      <button
-                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                        onClick={() => { setEditingItemNotes(item.product.id!); setTempItemNotes(''); }}
-                      >
-                        <Pencil className="w-2.5 h-2.5" />
-                        {t('cashier.itemNotes.add')}
-                      </button>
-                    )}
-                    {item.discountType ? (
-                      <button
-                        className="flex items-center gap-1 text-[10px] text-destructive bg-destructive/10 px-2 py-0.5 rounded-full"
-                        onClick={() => openItemDiscount(item)}
-                      >
-                        <Tag className="w-2.5 h-2.5" />
-                        {t('cashier.itemDiscount.change')}
-                      </button>
-                    ) : (
-                      <button
-                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                        onClick={() => openItemDiscount(item)}
-                      >
-                        <Tag className="w-2.5 h-2.5" />
-                        {t('cashier.itemDiscount.add')}
-                      </button>
-                    )}
-                  </div>
-                  {/* Inline notes editor */}
-                  {editingItemNotes === item.product.id && (
-                    <div className="flex gap-2 items-center">
-                      <Input
-                        autoFocus
-                        value={tempItemNotes}
-                        onChange={e => setTempItemNotes(e.target.value)}
-                        placeholder={t('cashier.itemNotes.placeholder')}
-                        className="h-8 text-xs"
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') { updateItemNotes(item.product.id!, tempItemNotes); setEditingItemNotes(null); }
-                          if (e.key === 'Escape') setEditingItemNotes(null);
-                        }}
-                      />
-                      <Button size="sm" className="h-8 text-xs" onClick={() => { updateItemNotes(item.product.id!, tempItemNotes); setEditingItemNotes(null); }}>{t('cashier.buttons.ok')}</Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Customer / Table quick inputs */}
-            <div className="flex gap-2 mb-2">
-              <CustomerPicker
-                customers={customers ?? []}
-                value={customerName}
-                customerId={customerId}
-                onChange={(name, id) => { setCustomerName(name); setCustomerId(id); }}
-                className="flex-1 [&_input]:h-9 [&_input]:text-xs"
-              />
-              <div className="relative flex-[0.6]">
-                <Hash className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <Input
-                  placeholder={t('cashier.checkout.table')}
-                  value={tableNumber}
-                  onChange={e => setTableNumber(e.target.value)}
-                  className="pl-8 h-9 text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div className="border-t pt-4 space-y-3 pb-6">
-              {txDiscountAmount > 0 ? (
-                <button
-                  onClick={() => { setTempDiscountType(txDiscountType!); setTempDiscountValue(txDiscountValue); setDiscountDialogOpen(true); }}
-                  className="flex items-center gap-1.5 text-xs text-destructive font-medium"
-                >
-                  <Tag className="w-3.5 h-3.5" />
-                  {t('cashier.cartDiscount.label')}: {txDiscountType === 'percentage' ? `${txDiscountValue}%` : rp(Number(txDiscountValue))}
-                  <span className="text-[10px] underline ml-1">{t('cashier.cartDiscount.change')}</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => { setTempDiscountType('nominal'); setTempDiscountValue(''); setDiscountDialogOpen(true); }}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <Tag className="w-3.5 h-3.5" />
-                  <span>{t('cashier.cartDiscount.add')}</span>
-                </button>
-              )}
-
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{t('cashier.cartDiscount.subtotal')}</span>
-                <span className="font-medium">{rp(subtotal)}</span>
-              </div>
-              {txDiscountAmount > 0 && (
-                <div className="flex justify-between text-sm text-destructive">
-                  <span>{t('cashier.cartDiscount.discount')}</span>
-                  <span>-{rp(txDiscountAmount)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-lg font-bold">
-                <span>{t('cashier.cartDiscount.total')}</span>
-                <span className="text-primary">{rp(total)}</span>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-12 text-sm font-semibold"
-                  onClick={() => setSaveConfirmOpen(true)}
-                  disabled={cart.length === 0}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {t('cashier.buttons.saveBill')}
-                </Button>
-                <Button
-                  className="flex-1 h-12 text-sm font-semibold"
-                  onClick={() => { setCheckoutOpen(true); setUseDebt(false); setPaymentMethodId(paymentMethods?.[0]?.id?.toString() ?? ''); setPaymentAmount(total.toString()); setIsQuickAdding(false); }}
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  {t('cashier.buttons.pay')}
-                </Button>
-              </div>
-
-              {editingTxId && can('delete_transaction') && (
-                <Button
-                  variant="outline"
-                  className="w-full h-10 text-xs text-destructive border-destructive/30 hover:bg-destructive/5"
-                  onClick={handleCancelFromCart}
-                >
-                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                  {t('cashier.buttons.cancelBill')}
-                </Button>
-              )}
-            </div>
+          <div className="px-5 pb-4">
+            <Input
+              autoFocus
+              value={productSearch}
+              onChange={e => setProductSearch(e.target.value)}
+              onKeyDown={e => {
+                if (e.key !== 'Enter' || !productQuery) return;
+                const product = products?.find(item =>
+                  item.sku?.toLowerCase() === productQuery || item.barcode?.toLowerCase() === productQuery
+                );
+                if (!product) return;
+                e.preventDefault();
+                if (isStockManaged(product) && product.stock <= 0) {
+                  toast.error(t('cashier.toast.productOutOfStock', { name: product.name }));
+                  return;
+                }
+                addToCart(product);
+                setProductSearch('');
+              }}
+              placeholder={t('cashier.productList.search')}
+              aria-label={t('cashier.productList.search')}
+            />
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto border-t">
+            {selectableProducts.length === 0 ? (
+              <p className="p-8 text-center text-sm text-muted-foreground">{t('cashier.productList.empty')}</p>
+            ) : (
+              selectableProducts.map(product => {
+                const cartItem = cart.find(item => item.product.id === product.id);
+                const outOfStock = isStockManaged(product) && product.stock <= 0;
+                const stockLimitReached = isStockManaged(product) && (cartItem?.qty ?? 0) >= product.stock;
+                return (
+                  <button
+                    key={product.id}
+                    type="button"
+                    disabled={outOfStock || stockLimitReached}
+                    onClick={() => {
+                      addToCart(product);
+                      setProductSearch('');
+                    }}
+                    className="flex w-full items-center justify-between gap-3 border-b px-5 py-4 text-left transition-colors hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">{product.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {[product.sku, product.barcode].filter(Boolean).join(' · ') || t('cashier.productList.noCode')}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 flex-col items-end gap-1">
+                      <span className="text-sm font-semibold">{rp(product.price)}</span>
+                      {cartItem && <span className="text-xs font-medium text-primary">{t('cashier.productList.inCart', { count: cartItem.qty })}</span>}
+                      <span className={cn('text-xs', outOfStock || stockLimitReached ? 'text-destructive' : 'text-muted-foreground')}>
+                        {outOfStock
+                          ? t('cashier.productList.outOfStock')
+                          : isStockManaged(product)
+                            ? t('cashier.productList.stock', { stock: product.stock, unit: product.unit })
+                            : t('cashier.productList.unmanagedStock')}
+                      </span>
+                    </span>
+                    <Plus className="h-4 w-4 shrink-0 text-primary" />
+                  </button>
+                );
+              })
+            )}
           </div>
         </SheetContent>
       </Sheet>
-      </div>{/* end mobile cart wrapper */}
 
       {/* Open Bills Sheet */}
       <Sheet open={openBillsOpen} onOpenChange={setOpenBillsOpen}>
@@ -1270,7 +931,6 @@ export default function Kasir() {
                     </div>
                     <div className="flex gap-1.5 text-[10px] text-muted-foreground mb-2">
                       {bill.customerName && <span>👤 {bill.customerName}</span>}
-                      {bill.tableNumber && <span>🪑 {t('cashier.openBillsSheet.tablePrefix', { number: bill.tableNumber })}</span>}
                       {bill.remarks && <span className="truncate max-w-[120px]">📝 {bill.remarks}</span>}
                     </div>
                     <div className="space-y-2">
@@ -1289,20 +949,6 @@ export default function Kasir() {
                           </Button>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full h-8 text-xs border-primary/30 text-primary hover:bg-primary/5 flex items-center justify-center"
-                        onClick={async () => {
-                          const items = await db.transactionItems.where('transactionId').equals(bill.id!).toArray();
-                          setKitchenTicketTx(bill);
-                          setKitchenTicketItems(items);
-                          setKitchenTicketOpen(true);
-                        }}
-                      >
-                        <Printer className="w-3.5 h-3.5 mr-1" />
-                        {t('cashier.buttons.printKitchen')}
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -1314,11 +960,52 @@ export default function Kasir() {
 
       {/* Checkout Dialog */}
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-        <DialogContent className="max-w-[95vw] md:max-w-lg rounded-xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="max-w-[95vw] md:max-w-6xl rounded-xl max-h-[92vh] h-[92vh] flex flex-col p-0 overflow-hidden">
           <DialogHeader className="p-6 pb-2 shrink-0">
             <DialogTitle>{t('cashier.checkout.title')}</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-6 pt-0 space-y-4">
+          <div className="grid flex-1 min-h-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] overflow-hidden">
+            <div className="min-h-0 overflow-y-auto bg-muted/40 p-4 md:p-6">
+              <div className="mx-auto max-w-[380px] bg-white text-black p-5 shadow-sm" style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+                <div className="border-b border-dashed border-gray-400 pb-3 text-center">
+                  {storeSettings?.logo && <img src={storeSettings.logo} alt="" className="mx-auto mb-2 h-12 w-12 object-contain" />}
+                  <p className="text-base font-bold">{storeSettings?.storeName || t('receipt.storeFallback')}</p>
+                  {storeSettings?.address && <p className="mt-1 text-[10px]">{storeSettings.address}</p>}
+                  {storeSettings?.phone && <p className="text-[10px]">{storeSettings.phone}</p>}
+                  <p className="mt-2 text-[10px]">{t('receipt.no')}: {draftReceiptNumber || '—'}</p>
+                  <p className="text-[10px]">{t('receipt.cashierLabel')}: {activeCashierName}</p>
+                  <p className="text-[10px]">{t('receipt.dateTime')}: {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: dateLocale })}</p>
+                </div>
+                <div className="space-y-3 py-3">
+                  {cart.map(item => (
+                    <div key={item.product.id}>
+                      <p className="font-semibold">{item.product.name}</p>
+                      <div className="flex justify-between text-[10px]">
+                        <span>{item.qty} x {rp(item.product.price)}</span>
+                        <span>{rp(getItemSubtotal(item))}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-1 border-t border-dashed border-gray-400 py-3 text-[11px]">
+                  <div className="flex justify-between"><span>{t('cashier.cartDiscount.subtotal')}</span><span>{rp(subtotal)}</span></div>
+                  {txDiscountAmount > 0 && <div className="flex justify-between"><span>{t('cashier.cartDiscount.discount')}</span><span>-{rp(txDiscountAmount)}</span></div>}
+                  <div className="flex justify-between border-t border-dashed border-gray-400 pt-2 text-sm font-bold"><span>{t('cashier.cartDiscount.total')}</span><span>{rp(total)}</span></div>
+                  <div className="flex justify-between pt-1"><span>{t('cashier.checkout.amountLabel.full')}</span><span>{rp(checkoutPaidAmount)}</span></div>
+                  {useDebt && debtAmount > 0 ? (
+                    <div className="flex justify-between font-semibold"><span>{t('cashier.checkout.remainingDebt')}</span><span>{rp(debtAmount)}</span></div>
+                  ) : (
+                    <div className="flex justify-between"><span>{t('cashier.checkout.changeLabel')}</span><span>{rp(change)}</span></div>
+                  )}
+                  <div className="flex justify-between pt-1"><span>{t('cashier.checkout.paymentMethod')}</span><span>{paymentMethods?.find(pm => pm.id?.toString() === paymentMethodId)?.name || '-'}</span></div>
+                </div>
+                <div className="border-t border-dashed border-gray-400 pt-3 text-[10px]">
+                  <span className="font-bold">{t('cashier.checkout.notes')}:</span> {remarks.trim() || '-'}
+                </div>
+              </div>
+            </div>
+
+            <div className="min-h-0 overflow-y-auto p-4 md:p-6 space-y-4">
             <div className="text-center py-3 bg-primary/5 rounded-xl">
               <p className="text-sm text-muted-foreground">{t('cashier.checkout.totalLabel')}</p>
               <p className="text-3xl font-bold text-primary">{rp(total)}</p>
@@ -1343,7 +1030,7 @@ export default function Kasir() {
 
             <div className="space-y-1.5">
               <p className="text-sm font-medium">{t('cashier.checkout.paymentMethod')}</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {paymentMethods?.map(pm => (
                   <button key={pm.id} onClick={() => setPaymentMethodId(pm.id!.toString())} className={cn('p-3 rounded-xl text-xs font-semibold border-2 transition-colors', paymentMethodId === pm.id!.toString() ? 'border-primary bg-primary/5 text-primary' : 'border-muted bg-muted/50 text-muted-foreground')}>
                     {pm.name}
@@ -1395,24 +1082,13 @@ export default function Kasir() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex gap-2">
-                <CustomerPicker
-                  customers={customers ?? []}
-                  value={customerName}
-                  customerId={customerId}
-                  onChange={(name, id) => { setCustomerName(name); setCustomerId(id); }}
-                  className="flex-1 [&_input]:h-10 [&_input]:text-sm"
-                />
-                <div className="relative flex-[0.7]">
-                  <Hash className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder={t('cashier.checkout.table')}
-                    value={tableNumber}
-                    onChange={e => setTableNumber(e.target.value)}
-                    className="pl-8 h-10 text-sm"
-                  />
-                </div>
-              </div>
+              <CustomerPicker
+                customers={customers ?? []}
+                value={customerName}
+                customerId={customerId}
+                onChange={(name, id) => { setCustomerName(name); setCustomerId(id); }}
+                className="w-full [&_input]:h-10 [&_input]:text-sm"
+              />
               <Input
                 placeholder={t('cashier.checkout.notes')}
                 value={remarks}
@@ -1450,6 +1126,7 @@ export default function Kasir() {
               <Check className="w-5 h-5 mr-2" />
               {t('cashier.checkout.confirmButton')}
             </Button>
+          </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -1620,7 +1297,7 @@ export default function Kasir() {
                   : t('cashier.paymentMethod.debt'))
               : paymentMethods?.find(pm => pm.id === lastTransaction.paymentMethodId)?.name || t('cashier.paymentMethod.cash')
           }
-          cashierName={lastTransaction.createdBy ? allUsers?.find(u => u.id === lastTransaction.createdBy)?.name : undefined}
+          cashierName={lastTransaction.cashierName || (lastTransaction.createdBy ? allUsers?.find(u => u.id === lastTransaction.createdBy)?.name : undefined) || activeCashierName}
         />
       )}
 
@@ -1636,21 +1313,11 @@ export default function Kasir() {
             </p>
             <div className="flex flex-col gap-2">
               <Button
-                className="w-full h-11 font-semibold"
-                onClick={async () => {
-                  setSaveConfirmOpen(false);
-                  await saveOpenBill(true);
-                }}
-              >
-                <Printer className="w-4 h-4 mr-2" />
-                {t('cashier.buttons.saveAndPrintKitchen')}
-              </Button>
-              <Button
                 variant="outline"
                 className="w-full h-11 font-semibold"
                 onClick={async () => {
                   setSaveConfirmOpen(false);
-                  await saveOpenBill(false);
+                  await saveOpenBill();
                 }}
               >
                 <Save className="w-4 h-4 mr-2" />
@@ -1667,25 +1334,6 @@ export default function Kasir() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Kitchen Ticket Dialog */}
-      {kitchenTicketTx && (
-        <KitchenTicket
-          open={kitchenTicketOpen}
-          onClose={() => setKitchenTicketOpen(false)}
-          transaction={kitchenTicketTx}
-          items={kitchenTicketItems}
-          storeSettings={storeSettings}
-          cashierName={kitchenTicketTx.createdBy ? allUsers?.find(u => u.id === kitchenTicketTx.createdBy)?.name : undefined}
-        />
-      )}
-
-      {/* Barcode Scanner */}
-      <BarcodeScanner
-        open={scannerOpen}
-        onClose={() => setScannerOpen(false)}
-        onScan={handleScan}
-      />
 
       {/* Cancel Open Bill Confirmation */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
