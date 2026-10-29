@@ -1,10 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Transaction, type TransactionItemRecord } from '@/lib/db';
-import { useState, useEffect } from 'react';
-import { format, startOfDay, endOfDay } from 'date-fns';
+import { useState, useEffect, useMemo } from 'react';
+import { format } from 'date-fns';
 import { id as idLocale, enUS, ms } from 'date-fns/locale';
 import type { Locale } from 'date-fns';
-import { ArrowLeft, Search, Receipt as ReceiptIcon, Calendar, ChevronRight, ShoppingBag, CalendarIcon, X, Trash2, ShoppingCart, UserCircle2, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Search, Receipt as ReceiptIcon, Calendar, ChevronRight, ShoppingBag, Trash2, ShoppingCart, UserCircle2, RotateCcw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -22,6 +20,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useTranslation } from 'react-i18next';
 import { applySaleStockDelta } from '@/lib/stock-movements';
+import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
+import { formatRetailDate, getDateRangeBounds } from '@/lib/date-range';
 
 const LOCALES: Record<string, Locale> = { id: idLocale, en: enUS, ms };
 const NUMBER_LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
@@ -38,27 +38,38 @@ export default function TransactionHistory() {
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
-  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange>({});
+  const bounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [restoreStock, setRestoreStock] = useState(true);
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'open'>('all');
   const [filterCashier, setFilterCashier] = useState<string>('all');
 
-  const transactions = useLiveQuery(() =>
-    db.transactions.orderBy('date').reverse().toArray()
-  );
+  const transactions = useLiveQuery(() => {
+    if (bounds.start && bounds.end) {
+      return db.transactions.where('date').between(bounds.start, bounds.end, true, true).toArray()
+        .then(records => records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
+    if (bounds.start) {
+      return db.transactions.where('date').aboveOrEqual(bounds.start).toArray()
+        .then(records => records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
+    if (bounds.end) return db.transactions.where('date').belowOrEqual(bounds.end).reverse().toArray();
+    return db.transactions.orderBy('date').reverse().toArray();
+  }, [bounds.start?.getTime(), bounds.end?.getTime()]);
 
-  // Query all transaction items and build lookup map
+  // Only load items for the transactions in the selected date range.
   const txItemsMap = useLiveQuery(async () => {
-    const items = await db.transactionItems.toArray();
+    const transactionIds = (transactions ?? []).map(transaction => transaction.id!).filter(Boolean);
+    if (transactionIds.length === 0) return {};
+    const items = await db.transactionItems.where('transactionId').anyOf(transactionIds).toArray();
     const map: Record<number, TransactionItemRecord[]> = {};
     for (const item of items) {
       if (!map[item.transactionId]) map[item.transactionId] = [];
       map[item.transactionId].push(item);
     }
     return map;
-  });
+  }, [transactions]);
 
   const getTxItems = (txId: number | undefined): TransactionItemRecord[] =>
     txId ? (txItemsMap?.[txId] ?? []) : [];
@@ -98,15 +109,6 @@ export default function TransactionHistory() {
         return false;
       }
     }
-    // Date filter
-    if (dateFrom) {
-      const txDate = new Date(tx.date);
-      if (txDate < startOfDay(dateFrom)) return false;
-    }
-    if (dateTo) {
-      const txDate = new Date(tx.date);
-      if (txDate > endOfDay(dateTo)) return false;
-    }
     // Search filter
     if (search) {
       const q = search.toLowerCase();
@@ -130,7 +132,7 @@ export default function TransactionHistory() {
   const dateKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
   const filteredTotal = filtered.filter(t => t.status !== 'open').reduce((s, t) => s + t.total, 0);
-  const hasDateFilter = dateFrom || dateTo;
+  const hasDateFilter = dateRange.from || dateRange.to;
 
   const openDetail = (tx: Transaction) => {
     setSelectedTx(tx);
@@ -140,11 +142,6 @@ export default function TransactionHistory() {
   const openReceipt = () => {
     setDetailOpen(false);
     setTimeout(() => setReceiptOpen(true), 200);
-  };
-
-  const clearDateFilter = () => {
-    setDateFrom(undefined);
-    setDateTo(undefined);
   };
 
   const handleDeleteTransaction = async () => {
@@ -214,52 +211,7 @@ export default function TransactionHistory() {
         />
       </div>
 
-      {/* Date Filter */}
-      <div className="flex items-center gap-2 mb-4">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className={cn("h-9 text-xs gap-1.5 flex-1", dateFrom && "border-primary text-primary")}>
-              <CalendarIcon className="w-3.5 h-3.5" />
-              {dateFrom ? format(dateFrom, 'dd MMM yyyy', { locale: dateLocale }) : t('transactionHistory.dateFrom')}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <CalendarPicker
-              mode="single"
-              selected={dateFrom}
-              onSelect={setDateFrom}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
-
-        <span className="text-xs text-muted-foreground">—</span>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className={cn("h-9 text-xs gap-1.5 flex-1", dateTo && "border-primary text-primary")}>
-              <CalendarIcon className="w-3.5 h-3.5" />
-              {dateTo ? format(dateTo, 'dd MMM yyyy', { locale: dateLocale }) : t('transactionHistory.dateTo')}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <CalendarPicker
-              mode="single"
-              selected={dateTo}
-              onSelect={setDateTo}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
-
-        {hasDateFilter && (
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={clearDateFilter}>
-            <X className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
+      <DateRangeFilter value={dateRange} onApply={setDateRange} onReset={() => setDateRange({})} />
 
       {/* Status filter tabs */}
       <div className="flex gap-1.5 mb-4">
@@ -337,7 +289,7 @@ export default function TransactionHistory() {
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-xs font-semibold text-muted-foreground">
-                  {t('transactionHistory.groupHeader_other', { date: format(new Date(dateKey), 'EEEE, dd MMMM yyyy', { locale: dateLocale }), count: grouped[dateKey].length })}
+                  {t('transactionHistory.groupHeader_other', { date: formatRetailDate(new Date(dateKey)), count: grouped[dateKey].length })}
                 </p>
               </div>
               <div className="space-y-2">
@@ -411,7 +363,7 @@ export default function TransactionHistory() {
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">{t('transactionHistory.detail.date')}</span>
-                  <span>{format(new Date(selectedTx.date), 'dd MMM yyyy, HH:mm', { locale: dateLocale })}</span>
+                  <span>{formatRetailDate(new Date(selectedTx.date))} {format(new Date(selectedTx.date), 'HH:mm')}</span>
                 </div>
                  <div className="flex justify-between text-xs">
                    <span className="text-muted-foreground">{t('transactionHistory.detail.payment')}</span>

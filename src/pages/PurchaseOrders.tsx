@@ -11,6 +11,8 @@ import LockedPage from '@/components/LockedPage';
 import { db, type PurchaseOrderStatus } from '@/lib/db';
 import { useAuth } from '@/hooks/use-auth';
 import { useTranslation } from 'react-i18next';
+import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
+import { formatRetailDate, getDateRangeBounds } from '@/lib/date-range';
 
 const LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
 
@@ -19,15 +21,26 @@ export default function PurchaseOrdersPage() {
   const { t, i18n } = useTranslation('settings');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | PurchaseOrderStatus>('all');
+  const [dateRange, setDateRange] = useState<DateRange>({});
+  const bounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
 
-  const orders = useLiveQuery(() => db.purchaseOrders.orderBy('orderDate').reverse().toArray());
+  const orders = useLiveQuery(() => {
+    if (bounds.start && bounds.end) {
+      return db.purchaseOrders.where('orderDate').between(bounds.start, bounds.end, true, true).toArray()
+        .then(records => records.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()));
+    }
+    if (bounds.start) {
+      return db.purchaseOrders.where('orderDate').aboveOrEqual(bounds.start).toArray()
+        .then(records => records.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()));
+    }
+    if (bounds.end) {
+      return db.purchaseOrders.where('orderDate').belowOrEqual(bounds.end).reverse().toArray();
+    }
+    return db.purchaseOrders.orderBy('orderDate').reverse().toArray();
+  }, [bounds.start?.getTime(), bounds.end?.getTime()]);
   const numberLocale = LOCALES[i18n.language] ?? 'id-ID';
   const currency = useMemo(
     () => new Intl.NumberFormat(numberLocale, { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }),
-    [numberLocale],
-  );
-  const dateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(numberLocale, { dateStyle: 'medium' }),
     [numberLocale],
   );
 
@@ -78,13 +91,15 @@ export default function PurchaseOrdersPage() {
         </Select>
       </div>
 
+      <DateRangeFilter value={dateRange} onApply={setDateRange} onReset={() => setDateRange({})} />
+
       {orders === undefined ? (
         <p className="py-10 text-center text-sm text-muted-foreground">{t('purchaseOrders.loading')}</p>
       ) : filteredOrders.length === 0 ? (
         <div className="py-12 text-center">
           <ClipboardList className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">{query || statusFilter !== 'all' ? t('purchaseOrders.noResults') : t('purchaseOrders.empty')}</p>
-          {!query && statusFilter === 'all' && (
+          <p className="text-sm text-muted-foreground">{query || statusFilter !== 'all' || dateRange.from || dateRange.to ? t('purchaseOrders.noResults') : t('purchaseOrders.empty')}</p>
+          {!query && statusFilter === 'all' && !dateRange.from && !dateRange.to && (
             <Button asChild variant="outline" size="sm" className="mt-3">
               <Link to="/purchase-orders/new"><Plus className="w-4 h-4 mr-1" />{t('purchaseOrders.create')}</Link>
             </Button>
@@ -104,7 +119,7 @@ export default function PurchaseOrdersPage() {
                       </Badge>
                     </div>
                     <p className="text-sm mt-1 truncate">{order.supplierName}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{dateFormatter.format(new Date(order.orderDate))}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatRetailDate(new Date(order.orderDate))}</p>
                   </div>
                   <p className="text-sm font-bold text-right shrink-0">{currency.format(order.subtotal)}</p>
                 </CardContent>

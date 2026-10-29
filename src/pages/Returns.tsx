@@ -22,6 +22,8 @@ import {
   reversePurchaseReturn,
   reverseSalesReturn,
 } from '@/lib/returns';
+import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
+import { formatRetailDate, getDateRangeBounds } from '@/lib/date-range';
 
 type Reason = 'damaged' | 'expired' | 'wrong_item' | 'quality' | 'other';
 type Condition = 'resellable' | 'damaged';
@@ -48,6 +50,8 @@ export default function ReturnsPage() {
   const [notes, setNotes] = useState('');
   const [printData, setPrintData] = useState<ReturnPrintData | null>(null);
   const [printSize, setPrintSize] = useState<PrintSize>('A4');
+  const [dateRange, setDateRange] = useState<DateRange>({});
+  const bounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
 
   const suppliers = useLiveQuery(() => db.suppliers.where('isDeleted').equals(0).toArray());
   const purchaseable = useLiveQuery(
@@ -61,10 +65,38 @@ export default function ReturnsPage() {
   );
   const products = useLiveQuery(() => db.products.where('isDeleted').equals(0).toArray());
   const storeSettings = useLiveQuery(() => db.storeSettings.toCollection().first());
-  const purchaseReturns = useLiveQuery(() => db.purchaseReturns.orderBy('createdAt').reverse().toArray());
-  const purchaseReturnItems = useLiveQuery(() => db.purchaseReturnItems.toArray());
-  const salesReturns = useLiveQuery(() => db.salesReturns.orderBy('createdAt').reverse().toArray());
-  const salesReturnItems = useLiveQuery(() => db.salesReturnItems.toArray());
+  const purchaseReturns = useLiveQuery(() => {
+    if (bounds.start && bounds.end) {
+      return db.purchaseReturns.where('date').between(bounds.start, bounds.end, true, true).toArray()
+        .then(records => records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
+    if (bounds.start) {
+      return db.purchaseReturns.where('date').aboveOrEqual(bounds.start).toArray()
+        .then(records => records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
+    if (bounds.end) return db.purchaseReturns.where('date').belowOrEqual(bounds.end).reverse().toArray();
+    return db.purchaseReturns.orderBy('date').reverse().toArray();
+  }, [bounds.start?.getTime(), bounds.end?.getTime()]);
+  const purchaseReturnItems = useLiveQuery(async () => {
+    const ids = (purchaseReturns ?? []).map(record => record.id!).filter(Boolean);
+    return ids.length ? db.purchaseReturnItems.where('purchaseReturnId').anyOf(ids).toArray() : [];
+  }, [purchaseReturns]);
+  const salesReturns = useLiveQuery(() => {
+    if (bounds.start && bounds.end) {
+      return db.salesReturns.where('date').between(bounds.start, bounds.end, true, true).toArray()
+        .then(records => records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
+    if (bounds.start) {
+      return db.salesReturns.where('date').aboveOrEqual(bounds.start).toArray()
+        .then(records => records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
+    if (bounds.end) return db.salesReturns.where('date').belowOrEqual(bounds.end).reverse().toArray();
+    return db.salesReturns.orderBy('date').reverse().toArray();
+  }, [bounds.start?.getTime(), bounds.end?.getTime()]);
+  const salesReturnItems = useLiveQuery(async () => {
+    const ids = (salesReturns ?? []).map(record => record.id!).filter(Boolean);
+    return ids.length ? db.salesReturnItems.where('salesReturnId').anyOf(ids).toArray() : [];
+  }, [salesReturns]);
   const returnableTransactions = (transactions ?? []).filter(tx => tx.status === 'completed');
   const selectedTransaction = returnableTransactions.find(tx => String(tx.id) === transactionId);
 
@@ -221,6 +253,9 @@ export default function ReturnsPage() {
           <option value="58mm">58 mm</option><option value="80mm">80 mm</option><option value="A4">A4</option>
         </select>
       </div>
+      <div className="print:hidden">
+        <DateRangeFilter value={dateRange} onApply={setDateRange} onReset={() => setDateRange({})} />
+      </div>
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="grid w-full grid-cols-3 print:hidden">
           <TabsTrigger value="purchase">{t('returns.purchaseTab')}</TabsTrigger>
@@ -264,7 +299,7 @@ export default function ReturnsPage() {
               {(purchaseReturns ?? []).map(record => (
                 <div key={record.id} className="flex items-center justify-between gap-2 border-b py-2">
                   <div><p className="text-sm font-semibold">{record.returnNumber} · {record.supplierName}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(record.date).toLocaleString()} · {statusLabel(record.status)} · {reasonLabel(record.reason)} · {formatCurrency(record.totalValue)}</p>
+                    <p className="text-xs text-muted-foreground">{formatRetailDate(new Date(record.date))} · {statusLabel(record.status)} · {reasonLabel(record.reason)} · {formatCurrency(record.totalValue)}</p>
                     <p className="text-[10px] text-muted-foreground">{record.createdByName}{record.approvedByName ? ` · ${t('returns.approvedBy')}: ${record.approvedByName}` : ''}</p></div>
                   <div className="flex gap-1">
                     <Button variant="outline" size="sm" onClick={() => beginPrint(record, 'purchase')}><Printer className="h-4 w-4" /></Button>
@@ -340,7 +375,7 @@ export default function ReturnsPage() {
               {(salesReturns ?? []).map(record => (
                 <div key={record.id} className="flex items-center justify-between gap-2 border-b py-2">
                   <div><p className="text-sm font-semibold">{record.returnNumber} · {record.receiptNumber}</p>
-                    <p className="text-xs text-muted-foreground">{record.customerName || t('returns.walkIn')} · {statusLabel(record.status)} · {reasonLabel(record.reason)} · {formatCurrency(record.refundValue)}</p>
+                    <p className="text-xs text-muted-foreground">{formatRetailDate(new Date(record.date))} · {record.customerName || t('returns.walkIn')} · {statusLabel(record.status)} · {reasonLabel(record.reason)} · {formatCurrency(record.refundValue)}</p>
                     <p className="text-[10px] text-muted-foreground">{record.createdByName}{record.approvedByName ? ` · ${t('returns.approvedBy')}: ${record.approvedByName}` : ''}</p></div>
                   <div className="flex gap-1">
                     <Button variant="outline" size="sm" onClick={() => beginPrint(record, 'sales')}><Printer className="h-4 w-4" /></Button>

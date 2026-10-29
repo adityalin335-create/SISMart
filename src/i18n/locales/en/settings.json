@@ -1,5 +1,21 @@
 {
   "title": "Settings",
+  "dateFilter": {
+    "title": "Date filter",
+    "quick": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "7days": "7 days",
+      "30days": "30 days",
+      "thisMonth": "This month",
+      "lastMonth": "Last month"
+    },
+    "from": "From date",
+    "to": "To date",
+    "show": "Show",
+    "reset": "Reset",
+    "invalidRange": "The start date must be on or before the end date."
+  },
   "storeFallback": "My Store",
   "notSet": "Not set",
   "installApp": {
@@ -86,11 +102,11 @@
       "description": "{{count}} unpaid debts"
     },
     "stockIn": {
-      "title": "Stock In",
+      "title": "Goods In",
       "description": "Record incoming stock & auto COGS"
     },
     "stockOut": {
-      "title": "Stock Out",
+      "title": "Goods Out",
       "description": "Record non-sales outgoing stock"
     },
     "expenses": {
@@ -102,25 +118,25 @@
       "description": "View stock movements per period"
     },
     "purchaseOrders": {
-      "title": "Purchase Orders",
+      "title": "Purchase Order (PO)",
       "description": "Create and track supplier orders"
     },
     "receivings": {
-      "title": "Receiving",
-      "description": "Record goods received against Purchase Orders"
+      "title": "Goods Receiving",
+      "description": "Record goods received against Purchase Orders (PO)"
     }
   },
   "purchaseOrders": {
-    "title": "Purchase Orders",
+    "title": "Purchase Order (PO)",
     "create": "Create PO",
-    "createTitle": "Create Purchase Order",
+    "createTitle": "Create Purchase Order (PO)",
     "editTitle": "Edit Draft PO",
-    "detailTitle": "Purchase Order Details",
+    "detailTitle": "Purchase Order (PO) Details",
     "searchPlaceholder": "Search PO number or supplier...",
     "filterStatus": "Filter status",
     "loading": "Loading...",
-    "empty": "No Purchase Orders yet.",
-    "noResults": "No Purchase Orders found.",
+    "empty": "No Purchase Orders (PO) yet.",
+    "noResults": "No Purchase Orders (PO) found.",
     "status": {
       "all": "All statuses",
       "draft": "Draft",
@@ -129,7 +145,7 @@
       "received": "Fully received"
     },
     "locked": {
-      "title": "Purchase Order access is restricted",
+      "title": "Purchase Order (PO) access is restricted",
       "permission": "Stock management permission"
     },
     "form": {
@@ -153,7 +169,7 @@
       "expectedDateBeforeOrderDate": "Expected delivery cannot be earlier than the PO date.",
       "saved": "PO draft saved.",
       "submitted": "PO submitted.",
-      "saveFailed": "Could not save Purchase Order."
+      "saveFailed": "Could not save Purchase Order (PO)."
     },
     "ownerName": "Owner",
     "saving": "Saving...",
@@ -161,7 +177,7 @@
     "submit": "Submit PO",
     "editDraftOnly": "Only draft Purchase Orders can be edited.",
     "backToDetail": "Back to details",
-    "notFound": "Purchase Order not found.",
+    "notFound": "Purchase Order (PO) not found.",
     "back": "Back",
     "backToList": "Back to Purchase Orders",
     "editDraft": "Edit Draft",
@@ -171,7 +187,7 @@
     "receivingPhaseNote": "This PO has been submitted and can receive goods.",
     "print": {
       "button": "Print PO",
-      "title": "Purchase Order",
+      "title": "Purchase Order (PO)",
       "storeFallback": "Store",
       "poDate": "PO Date",
       "supplier": "Supplier",
@@ -186,24 +202,24 @@
     }
   },
   "receivings": {
-    "title": "Receiving",
-    "create": "Create Receiving",
-    "createTitle": "Create Receiving from PO",
-    "detailTitle": "Receiving Details",
-    "searchPlaceholder": "Search receiving, PO, supplier, or delivery note...",
+    "title": "Goods Receiving",
+    "create": "Create Goods Receiving",
+    "createTitle": "Create Goods Receiving from PO",
+    "detailTitle": "Goods Receiving Details",
+    "searchPlaceholder": "Search receiving number, PO, supplier, or delivery note...",
     "loading": "Loading...",
-    "empty": "No receiving history yet.",
-    "noResults": "No receiving records found.",
+    "empty": "No goods receiving history yet.",
+    "noResults": "No goods receiving records found.",
     "noDeliveryNote": "No delivery note",
     "status": { "draft": "Draft", "confirmed": "Confirmed" },
-    "locked": { "title": "Receiving access is restricted", "permission": "Stock management permission" },
-    "notFound": "Receiving record not found.",
-    "backToList": "Back to Receiving",
-    "purchaseOrder": "Purchase Order",
+    "locked": { "title": "Goods Receiving access is restricted", "permission": "Stock management permission" },
+    "notFound": "Goods receiving record not found.",
+    "backToList": "Back to Goods Receiving",
+    "purchaseOrder": "Purchase Order (PO)",
     "selectPo": "Select an open Purchase Order",
     "noOpenPo": "No Purchase Orders can receive goods.",
-    "createFromPo": "Create Receiving",
-    "createFromPoHint": "This PO can receive goods from the Receiving menu.",
+    "createFromPo": "Create Goods Receiving",
+    "createFromPoHint": "This PO can receive goods from the Goods Receiving menu.",
     "deliveryNote": "Supplier delivery note number",
     "receivedDate": "Received date",
     "notes": "Notes",
@@ -216,14 +232,14 @@
     "actualUnitCost": "Actual unit cost",
     "quantityAccepted": "Added to stock",
     "saveDraft": "Save Draft",
-    "confirm": "Confirm Receiving",
+    "confirm": "Confirm Goods Receiving",
     "saving": "Saving...",
     "confirmedBy": "Confirmed by {{name}} · {{date}}",
     "toast": {
-      "selectPo": "Select a Purchase Order first.",
+      "selectPo": "Select a Purchase Order (PO) first.",
       "saved": "Receiving draft saved.",
-      "confirmed": "Receiving confirmed and stock updated.",
-      "saveFailed": "Could not save receiving."
+      "confirmed": "Goods receiving confirmed and stock updated.",
+      "saveFailed": "Could not save goods receiving."
     }
   },
   "masterData": {
@@ -255,7 +271,7 @@
       "saveSuccess": "Receipt settings saved"
     },
     "stockOpname": {
-      "title": "Stock Opname",
+      "title": "Stock Count",
       "description": "Adjust physical product stocks and record differences"
     },
     "theme": {
@@ -783,10 +799,10 @@
   },
   "stockIn": {
     "locked": {
-      "title": "Stock In",
-      "permissionLabel": "Stock In / Stock Out"
+      "title": "Goods In",
+      "permissionLabel": "Goods In / Goods Out"
     },
-    "title": "Stock In",
+    "title": "Goods In",
     "add": "Add",
     "supplierFilter": {
       "placeholder": "Filter Supplier",
@@ -796,14 +812,14 @@
     "count_zero": "{{count}} records",
     "count_one": "{{count}} record",
     "count_other": "{{count}} records",
-    "empty": "No stock in data yet",
+    "empty": "No goods-in records yet",
     "item": {
       "fromSupplier": "from {{supplier}}",
       "quantity": "+{{qty}}",
       "unitPrice": "@ Rp {{price}}"
     },
     "dialog": {
-      "title": "Add Stock In",
+      "title": "Add Goods In",
       "productLabel": "Product *",
       "supplierLabel": "Supplier *",
       "quantityLabel": "Quantity *",
@@ -813,7 +829,7 @@
       "notesLabel": "Notes",
       "notesPlaceholder": "Optional",
       "total": "Total: Rp {{amount}}",
-      "save": "Save Stock In"
+      "save": "Save Goods In"
     },
     "toast": {
       "fillAll": "Please complete all fields",
@@ -822,20 +838,20 @@
   },
   "stockOut": {
     "locked": {
-      "title": "Stock Out",
-      "permissionLabel": "Stock In / Stock Out"
+      "title": "Goods Out",
+      "permissionLabel": "Goods In / Goods Out"
     },
-    "title": "Stock Out",
+    "title": "Goods Out",
     "add": "Add",
     "count_zero": "{{count}} records",
     "count_one": "{{count}} record",
     "count_other": "{{count}} records",
-    "empty": "No stock out data yet",
+    "empty": "No goods-out records yet",
     "item": {
       "quantity": "-{{qty}}"
     },
     "dialog": {
-      "title": "Add Stock Out",
+      "title": "Add Goods Out",
       "productLabel": "Product *",
       "quantityLabel": "Quantity *",
       "quantityPlaceholder": "1",
@@ -844,7 +860,7 @@
       "notesLabel": "Notes",
       "notesPlaceholder": "Optional",
       "stockAfter": "Stock after: {{stock}} {{unit}}",
-      "save": "Save Stock Out"
+      "save": "Save Goods Out"
     },
     "reasons": {
       "damaged": "Damaged",
@@ -852,7 +868,7 @@
       "expired": "Expired",
       "returnSupplier": "Return to Supplier",
       "ownUse": "Own Use",
-      "opname": "Stock Opname",
+      "opname": "Stock Count",
       "other": "Other"
     },
     "toast": {
@@ -945,7 +961,7 @@
       "available": "Available"
     },
     "stockInValue": {
-      "title": "Stock In Value",
+      "title": "Goods-In Value",
       "totalPurchase": "Total Purchase",
       "average": "Average: {{avg}} per unit"
     },
@@ -955,13 +971,13 @@
       "out": "Out"
     },
     "reasons": {
-      "title": "Stock Out Reasons",
+      "title": "Goods-Out Reasons",
       "damaged": "Damaged",
       "lost": "Lost",
       "return": "Return",
       "expired": "Expired",
       "sample": "Sample",
-      "opname": "Stock Opname",
+      "opname": "Stock Count",
       "other": "Other",
       "unit": "unit"
     },
@@ -1302,7 +1318,7 @@
       "button": "Open Settings"
     },
     "notOwner": "Only the store owner can manage employees.",
-    "title": "Employees & Access",
+    "title": "Users & Access",
     "desc": "Manage who can access what in your store. The owner always has full access.",
     "addButton": "Add Employee",
     "card": {
@@ -1410,10 +1426,10 @@
     "skuBarcodeNotFound": "Product with SKU/Barcode \"{{code}}\" not found"
   },
   "stockOpname": {
-    "title": "Stock Opname",
+    "title": "Stock Count",
     "initButton": "Start New Opname",
-    "historyTitle": "Stock Opname History",
-    "noHistory": "No stock opname history yet",
+    "historyTitle": "Stock Count History",
+    "noHistory": "No stock count history yet",
     "emptyDraft": "No products are currently tracked for stock",
     "differenceText": "Difference",
     "systemStockText": "System Stock",
@@ -1429,15 +1445,15 @@
       "uploadError": "Invalid file format or failed to read Excel data"
     },
     "dialog": {
-      "submitTitle": "Complete Stock Opname?",
+      "submitTitle": "Complete Stock Count?",
       "submitDescription": "Product stock balances in the system will be permanently updated to match your physical stock count. The differences will be recorded in stock movements.",
       "submitConfirm": "Complete",
       "submitCancel": "Cancel"
     },
     "toast": {
       "draftStarted": "New opname session started successfully",
-      "saved": "Stock opname completed successfully",
-      "saveFailed": "Failed to complete stock opname",
+      "saved": "Stock count completed successfully",
+      "saveFailed": "Failed to complete stock count",
       "notesPlaceholder": "Opname session notes (optional)"
     }
   },
@@ -1532,14 +1548,14 @@
     }
   },
   "returns": {
-    "title": "Return Management",
+    "title": "Returns",
     "menuDescription": "Purchase and sales returns",
     "noPermission": "You do not have permission to manage returns.",
     "purchaseTitle": "Purchase Return",
     "salesTitle": "Sales Return",
     "purchaseTab": "Purchase",
     "salesTab": "Sales",
-    "approvals": "Approvals",
+    "approvals": "Approval",
     "supplier": "Supplier",
     "selectSupplier": "Select supplier",
     "transaction": "Source transaction",

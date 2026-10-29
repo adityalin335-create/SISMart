@@ -1,15 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, TrendingUp, ShoppingCart, Package, DollarSign, ArrowDown, ArrowUp, Minus, Wallet, CreditCard, Download, Printer } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 import LockedPage from '@/components/LockedPage';
 import ExportReportDialog from '@/components/reports/ExportReportDialog';
@@ -22,6 +20,8 @@ import { useTranslation } from 'react-i18next';
 import { calculateProductSales } from '@/lib/report-calculations';
 import { InAppReview } from '@capacitor-community/in-app-review';
 import { getReturnReportTotals } from '@/lib/returns';
+import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
+import { formatRetailDate, getDateRangeBounds, queryDateRange } from '@/lib/date-range';
 
 const CURRENCY_SYMBOL: Record<string, string> = { id: 'Rp', en: 'Rp', ms: 'Rp' };
 const NUMBER_LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
@@ -32,8 +32,14 @@ export default function Laporan() {
   const numberLocale = NUMBER_LOCALES[i18n.language] ?? 'id-ID';
   const currencySymbol = CURRENCY_SYMBOL[i18n.language] ?? 'Rp';
   const storeSettings = useLiveQuery(() => db.storeSettings.toCollection().first());
-  const [period, setPeriod] = useState<'daily' | '7' | '30'>('daily');
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [dateRange, setDateRange] = useState<DateRange>(() => {
+    const today = new Date();
+    return { from: today, to: today };
+  });
+  const dateBounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
+  const isSingleDay = Boolean(dateRange.from && dateRange.to &&
+    format(dateRange.from, 'yyyy-MM-dd') === format(dateRange.to, 'yyyy-MM-dd'));
+  const selectedDate = dateRange.from ?? dateRange.to ?? new Date();
   const [includeExpenses, setIncludeExpenses] = useState(true);
   const [exportOpen, setExportOpen] = useState(false);
   const [surveyOpen, setSurveyOpen] = useState(false);
@@ -41,8 +47,6 @@ export default function Laporan() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportData, setReportData] = useState<DailyReportPrintData | null>(null);
   const [shouldRequestReviewOnClose, setShouldRequestReviewOnClose] = useState(false);
-  const days = period === 'daily' ? 1 : Number(period);
-
   useEffect(() => {
     if (shouldShowUserTypeSurvey()) {
       const t = setTimeout(() => setSurveyOpen(true), 600);
@@ -50,19 +54,10 @@ export default function Laporan() {
     }
   }, []);
 
-  const dateRange = (() => {
-    if (period === 'daily') {
-      const date = new Date(`${selectedDate}T00:00:00`);
-      return { start: startOfDay(date), end: endOfDay(date) };
-    }
-
-    return { start: startOfDay(subDays(new Date(), days - 1)), end: endOfDay(new Date()) };
-  })();
-
   const transactions = useLiveQuery(async () => {
-    const all = await db.transactions.where('date').between(dateRange.start, dateRange.end, true, true).toArray();
+    const all = await queryDateRange(db.transactions, dateRange);
     return all.filter(t => t.status !== 'open');
-  }, [dateRange.start.getTime(), dateRange.end.getTime()]);
+  }, [dateBounds.start?.getTime(), dateBounds.end?.getTime()]);
 
   const txItems = useLiveQuery(async () => {
     if (!transactions || transactions.length === 0) return [];
@@ -71,25 +66,25 @@ export default function Laporan() {
   }, [transactions]);
 
   const expenses = useLiveQuery(async () => {
-    const all = await db.expenses.where('date').between(dateRange.start, dateRange.end, true, true).toArray();
+    const all = await queryDateRange(db.expenses, dateRange);
     return all.filter(e => e.isDeleted === 0);
-  }, [dateRange.start.getTime(), dateRange.end.getTime()]);
+  }, [dateBounds.start?.getTime(), dateBounds.end?.getTime()]);
 
   const debtPayments = useLiveQuery(
-    () => db.debtPayments.where('date').between(dateRange.start, dateRange.end, true, true).toArray(),
-    [dateRange.start.getTime(), dateRange.end.getTime()],
+    () => queryDateRange(db.debtPayments, dateRange),
+    [dateBounds.start?.getTime(), dateBounds.end?.getTime()],
   );
   const salesReturns = useLiveQuery(
-    () => db.salesReturns.where('date').between(dateRange.start, dateRange.end, true, true).toArray(),
-    [dateRange.start.getTime(), dateRange.end.getTime()],
+    () => queryDateRange(db.salesReturns, dateRange),
+    [dateBounds.start?.getTime(), dateBounds.end?.getTime()],
   );
   const purchaseReturns = useLiveQuery(
-    () => db.purchaseReturns.where('date').between(dateRange.start, dateRange.end, true, true).toArray(),
-    [dateRange.start.getTime(), dateRange.end.getTime()],
+    () => queryDateRange(db.purchaseReturns, dateRange),
+    [dateBounds.start?.getTime(), dateBounds.end?.getTime()],
   );
   const purchaseMovements = useLiveQuery(
-    () => db.stockIns.where('date').between(dateRange.start, dateRange.end, true, true).toArray(),
-    [dateRange.start.getTime(), dateRange.end.getTime()],
+    () => queryDateRange(db.stockIns, dateRange),
+    [dateBounds.start?.getTime(), dateBounds.end?.getTime()],
   );
   const purchaseReturnLines = useLiveQuery(async () => {
     if (!purchaseReturns?.length) return [];
@@ -161,25 +156,20 @@ export default function Laporan() {
 
   const chartData = (() => {
     const map: Record<string, number> = {};
-
-    if (period === 'daily') {
-      map[format(new Date(`${selectedDate}T00:00:00`), 'dd/MM')] = 0;
-    } else {
-      for (let i = days - 1; i >= 0; i--) {
-        const d = format(subDays(new Date(), i), 'dd/MM');
-        map[d] = 0;
-      }
-    }
-
     transactions?.forEach(t => {
-      const d = format(new Date(t.date), 'dd/MM');
-      if (map[d] !== undefined) map[d] += t.total;
+      const day = format(new Date(t.date), 'yyyy-MM-dd');
+      map[day] = (map[day] ?? 0) + t.total;
     });
-    return Object.entries(map).map(([date, sales]) => ({ date, sales }));
+    if (isSingleDay && dateRange.from) {
+      const day = format(dateRange.from, 'yyyy-MM-dd');
+      map[day] ??= 0;
+    }
+    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b))
+      .map(([day, sales]) => ({ date: formatRetailDate(new Date(`${day}T00:00:00`)), sales }));
   })();
 
   const productSales = calculateProductSales(allItems, transactions ?? []);
-  const topProducts = productSales.sort((a, b) => b.qty - a.qty).slice(0, period === 'daily' ? 10 : 5);
+  const topProducts = productSales.sort((a, b) => b.qty - a.qty).slice(0, isSingleDay ? 10 : 5);
 
   const paymentSummary: Record<number, { name: string; amount: number; count: number }> = {};
   transactions?.forEach(t => {
@@ -203,7 +193,7 @@ export default function Laporan() {
 
   const handlePrintDailyReport = () => {
     const itemsCount = allItems.reduce((s, item) => s + item.quantity, 0);
-    const formattedDate = format(new Date(`${selectedDate}T00:00:00`), 'dd-MM-yyyy');
+    const formattedDate = formatRetailDate(selectedDate);
     
     const data: DailyReportPrintData = {
       dateStr: formattedDate,
@@ -254,8 +244,8 @@ export default function Laporan() {
       <ExportReportDialog
         open={exportOpen}
         onOpenChange={setExportOpen}
-        defaultStartMs={dateRange.start.getTime()}
-        defaultEndMs={dateRange.end.getTime()}
+        defaultStartMs={dateBounds.start?.getTime() ?? transactions?.at(-1)?.date.getTime() ?? new Date().getTime()}
+        defaultEndMs={dateBounds.end?.getTime() ?? new Date().getTime()}
       />
 
       <UserTypeModal open={surveyOpen} onClose={() => setSurveyOpen(false)} />
@@ -281,26 +271,11 @@ export default function Laporan() {
         />
       )}
 
-      <Tabs value={period} onValueChange={v => setPeriod(v as 'daily' | '7' | '30')}>
-        <TabsList className="w-full">
-          <TabsTrigger value="daily" className="flex-1">{t('tabs.daily')}</TabsTrigger>
-          <TabsTrigger value="7" className="flex-1">{t('tabs.7days')}</TabsTrigger>
-          <TabsTrigger value="30" className="flex-1">{t('tabs.30days')}</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <DateRangeFilter value={dateRange} onApply={setDateRange} onReset={() => setDateRange({})} />
 
-      {period === 'daily' && (
+      {isSingleDay && (
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="report-date" className="text-xs">{t('daily.reportDate')}</Label>
-              <Input
-                id="report-date"
-                type="date"
-                value={selectedDate}
-                onChange={e => setSelectedDate(e.target.value)}
-              />
-            </div>
             <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
               <div>
                 <Label htmlFor="include-expenses" className="text-sm font-medium">{t('daily.includeExpenses')}</Label>
@@ -349,7 +324,7 @@ export default function Laporan() {
         </Card>
       </div>
 
-      {period === 'daily' && (
+      {isSingleDay && (
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-1.5">
@@ -393,7 +368,7 @@ export default function Laporan() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-1.5">
             <DollarSign className="w-4 h-4" />
-            {t(period === 'daily' ? 'pl.daily' : 'pl.title')}
+            {t(isSingleDay ? 'pl.daily' : 'pl.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -471,7 +446,7 @@ export default function Laporan() {
             const parent = purchaseReturnById.get(item.purchaseReturnId)!;
             const direction = parent.reversalOfId ? -1 : 1;
             return <div key={item.id} className="flex justify-between gap-2 border-b pb-2 text-xs">
-              <span>{parent.supplierName} · {item.productName} × {direction * item.quantity}<small className="block text-muted-foreground">{format(new Date(parent.date), 'dd/MM/yyyy')}</small></span>
+              <span>{parent.supplierName} · {item.productName} × {direction * item.quantity}<small className="block text-muted-foreground">{formatRetailDate(new Date(parent.date))}</small></span>
               <strong>{direction < 0 ? '-' : ''}{rp(item.totalValue)}</strong>
             </div>;
           })}
@@ -491,7 +466,7 @@ export default function Laporan() {
               : 0;
             return <div key={item.id} className="flex justify-between gap-2 border-b pb-2 text-xs">
               <span>{parent.customerName || t('returnReports.walkIn')} · {item.productName} × {direction * item.quantity}
-                <small className="block text-muted-foreground">{t(`returnReports.resolution.${parent.resolution}`)} · {format(new Date(parent.date), 'dd/MM/yyyy')}</small></span>
+                <small className="block text-muted-foreground">{t(`returnReports.resolution.${parent.resolution}`)} · {formatRetailDate(new Date(parent.date))}</small></span>
               <strong>{direction < 0 ? '-' : ''}{rp(lineRefund)}</strong>
             </div>;
           })}
@@ -534,7 +509,7 @@ export default function Laporan() {
         </Card>
       )}
 
-      {period !== 'daily' && (
+      {!isSingleDay && (
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">{t('chart.title')}</CardTitle>
@@ -556,7 +531,7 @@ export default function Laporan() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-1.5">
             <Package className="w-4 h-4" />
-            {t(period === 'daily' ? 'products.daily' : 'products.title')}
+            {t(isSingleDay ? 'products.daily' : 'products.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>

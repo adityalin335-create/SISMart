@@ -1,5 +1,21 @@
 {
   "title": "Tetapan",
+  "dateFilter": {
+    "title": "Tapis tarikh",
+    "quick": {
+      "today": "Hari Ini",
+      "yesterday": "Semalam",
+      "7days": "7 Hari",
+      "30days": "30 Hari",
+      "thisMonth": "Bulan Ini",
+      "lastMonth": "Bulan Lalu"
+    },
+    "from": "Dari Tarikh",
+    "to": "Hingga Tarikh",
+    "show": "Paparkan",
+    "reset": "Set Semula",
+    "invalidRange": "Tarikh mula mesti sama atau sebelum tarikh akhir."
+  },
   "storeFallback": "Kedai Saya",
   "notSet": "Belum ditetapkan",
   "installApp": {
@@ -21,7 +37,7 @@
     "troubleshoot": "Jika pilihan tidak muncul, muat semula halaman dan cuba lagi. Sesetengah pelayar memerlukan lawatan kedua sebelum menawarkan pemasangan."
   },
   "employees": {
-    "sectionTitle": "Pekerja & Akses",
+    "sectionTitle": "Pengguna & Akses",
     "owner": "Pemilik",
     "staff": "Pekerja",
     "logout": "Log Keluar",
@@ -59,11 +75,11 @@
       "description": "{{count}} hutang belum lunas"
     },
     "stockIn": {
-      "title": "Stock In",
+      "title": "Barang Masuk",
       "description": "Catat barang masuk & Kos automatik"
     },
     "stockOut": {
-      "title": "Stock Out",
+      "title": "Barang Keluar",
       "description": "Catat barang keluar bukan jualan"
     },
     "expenses": {
@@ -75,25 +91,25 @@
       "description": "Lihat pergerakan stok setiap tempoh"
     },
     "purchaseOrders": {
-      "title": "Pesanan Pembelian",
+      "title": "Pesanan Pembelian (PO)",
       "description": "Buat dan pantau pesanan kepada pembekal"
     },
     "receivings": {
-      "title": "Penerimaan",
+      "title": "Penerimaan Barang",
       "description": "Rekod barang diterima daripada Pesanan Pembelian"
     }
   },
   "purchaseOrders": {
-    "title": "Pesanan Pembelian",
+    "title": "Pesanan Pembelian (PO)",
     "create": "Buat PO",
-    "createTitle": "Buat Pesanan Pembelian",
+    "createTitle": "Buat Pesanan Pembelian (PO)",
     "editTitle": "Ubah Draf PO",
-    "detailTitle": "Butiran Pesanan Pembelian",
+    "detailTitle": "Butiran Pesanan Pembelian (PO)",
     "searchPlaceholder": "Cari nombor PO atau pembekal...",
     "filterStatus": "Tapis status",
     "loading": "Memuatkan data...",
-    "empty": "Belum ada Pesanan Pembelian.",
-    "noResults": "Pesanan Pembelian tidak ditemui.",
+    "empty": "Belum ada Pesanan Pembelian (PO).",
+    "noResults": "Pesanan Pembelian (PO) tidak ditemui.",
     "status": {
       "all": "Semua status",
       "draft": "Draf",
@@ -102,7 +118,7 @@
       "received": "Diterima penuh"
     },
     "locked": {
-      "title": "Akses Pesanan Pembelian dihadkan",
+      "title": "Akses Pesanan Pembelian (PO) dihadkan",
       "permission": "Kebenaran mengurus stok"
     },
     "form": {
@@ -126,7 +142,7 @@
       "expectedDateBeforeOrderDate": "Jangkaan barang tiba tidak boleh lebih awal daripada tarikh PO.",
       "saved": "Draf PO berjaya disimpan.",
       "submitted": "PO berjaya dihantar.",
-      "saveFailed": "Pesanan Pembelian gagal disimpan."
+      "saveFailed": "Pesanan Pembelian (PO) gagal disimpan."
     },
     "ownerName": "Pemilik",
     "saving": "Menyimpan...",
@@ -134,7 +150,7 @@
     "submit": "Hantar PO",
     "editDraftOnly": "Hanya PO berstatus draf boleh diubah.",
     "backToDetail": "Kembali ke butiran",
-    "notFound": "Pesanan Pembelian tidak ditemui.",
+    "notFound": "Pesanan Pembelian (PO) tidak ditemui.",
     "back": "Kembali",
     "backToList": "Kembali ke senarai PO",
     "editDraft": "Ubah Draf",
@@ -144,7 +160,7 @@
     "receivingPhaseNote": "PO telah dihantar dan boleh menerima barang.",
     "print": {
       "button": "Cetak PO",
-      "title": "Pesanan Pembelian",
+      "title": "Pesanan Pembelian (PO)",
       "storeFallback": "Kedai",
       "poDate": "Tarikh PO",
       "supplier": "Pembekal",
@@ -159,24 +175,24 @@
     }
   },
   "receivings": {
-    "title": "Penerimaan",
-    "create": "Buat Penerimaan",
-    "createTitle": "Buat Penerimaan daripada PO",
-    "detailTitle": "Butiran Penerimaan",
+    "title": "Penerimaan Barang",
+    "create": "Buat Penerimaan Barang",
+    "createTitle": "Buat Penerimaan Barang daripada PO",
+    "detailTitle": "Butiran Penerimaan Barang",
     "searchPlaceholder": "Cari penerimaan, PO, pembekal atau nota penghantaran...",
     "loading": "Memuatkan data...",
-    "empty": "Belum ada sejarah penerimaan.",
-    "noResults": "Rekod penerimaan tidak ditemui.",
+    "empty": "Belum ada sejarah penerimaan barang.",
+    "noResults": "Rekod penerimaan barang tidak ditemui.",
     "noDeliveryNote": "Nota penghantaran belum diisi",
     "status": { "draft": "Draf", "confirmed": "Disahkan" },
-    "locked": { "title": "Akses penerimaan dihadkan", "permission": "Kebenaran mengurus stok" },
-    "notFound": "Rekod penerimaan tidak ditemui.",
-    "backToList": "Kembali ke senarai penerimaan",
-    "purchaseOrder": "Pesanan Pembelian",
+    "locked": { "title": "Akses Penerimaan Barang dihadkan", "permission": "Kebenaran mengurus stok" },
+    "notFound": "Rekod penerimaan barang tidak ditemui.",
+    "backToList": "Kembali ke senarai Penerimaan Barang",
+    "purchaseOrder": "Pesanan Pembelian (PO)",
     "selectPo": "Pilih PO yang masih boleh diterima",
     "noOpenPo": "Tiada PO yang masih boleh menerima barang.",
-    "createFromPo": "Buat Penerimaan",
-    "createFromPoHint": "PO ini boleh menerima barang melalui menu Penerimaan.",
+    "createFromPo": "Buat Penerimaan Barang",
+    "createFromPoHint": "PO ini boleh menerima barang melalui menu Penerimaan Barang.",
     "deliveryNote": "Nombor nota penghantaran pembekal",
     "receivedDate": "Tarikh penerimaan",
     "notes": "Catatan",
@@ -193,7 +209,7 @@
     "saving": "Menyimpan...",
     "confirmedBy": "Disahkan oleh {{name}} · {{date}}",
     "toast": {
-      "selectPo": "Pilih Pesanan Pembelian terlebih dahulu.",
+      "selectPo": "Pilih Pesanan Pembelian (PO) terlebih dahulu.",
       "saved": "Draf penerimaan berjaya disimpan.",
       "confirmed": "Penerimaan disahkan dan stok dikemas kini.",
       "saveFailed": "Penerimaan gagal disimpan."
@@ -228,7 +244,7 @@
       "saveSuccess": "Tetapan resit disimpan"
     },
     "stockOpname": {
-      "title": "Stock Opname",
+      "title": "Kiraan Stok",
       "description": "Laraskan stok fizikal produk dan rekod perbezaan"
     },
     "theme": {
@@ -965,9 +981,9 @@
     "skuBarcodeNotFound": "Produk dengan SKU/Barcode \"{{code}}\" tidak ditemui"
   },
   "stockOpname": {
-    "title": "Stock Opname",
+    "title": "Kiraan Stok",
     "initButton": "Mula Opname Baru",
-    "historyTitle": "Sejarah Stock Opname",
+    "historyTitle": "Sejarah Kiraan Stok",
     "noHistory": "Belum ada sejarah stock opname",
     "emptyDraft": "Tiada produk yang dikesan untuk stok",
     "differenceText": "Perbezaan",
@@ -984,7 +1000,7 @@
       "uploadError": "Format fail tidak sah atau gagal membaca data Excel"
     },
     "dialog": {
-      "submitTitle": "Selesaikan Stock Opname?",
+      "submitTitle": "Selesaikan Kiraan Stok?",
       "submitDescription": "Baki stok produk dalam sistem akan dikemas kini secara kekal sepadan dengan kiraan stok fizikal anda. Perbezaan akan direkodkan dalam pergerakan stok.",
       "submitConfirm": "Selesaikan",
       "submitCancel": "Batal"

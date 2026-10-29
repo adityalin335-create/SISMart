@@ -33,30 +33,30 @@
     "columns": {
       "date": "Tanggal",
       "opening": "Stok Awal",
-      "receiving": "Penerimaan",
+      "receiving": "Penerimaan Barang",
       "sales": "Penjualan",
       "returns": "Retur",
-      "stockOpname": "Koreksi SO",
+      "stockOpname": "Penyesuaian Stok Opname",
       "closing": "Stok Akhir"
     },
     "detail": {
       "time": "Waktu",
-      "type": "Jenis Pergerakan",
+      "type": "Pergerakan Stok",
       "reference": "Nomor Referensi",
-      "in": "Masuk",
-      "out": "Keluar",
+      "in": "Barang Masuk",
+      "out": "Barang Keluar",
       "balance": "Saldo Setelah Pergerakan"
     },
     "types": {
       "opening_stock": "Stok Awal",
-      "receiving": "Penerimaan",
+      "receiving": "Penerimaan Barang",
       "sale": "Penjualan",
       "stock_adjustment": "Penyesuaian Stok",
-      "stock_opname": "Koreksi SO",
+      "stock_opname": "Penyesuaian Stok Opname",
       "return": "Retur",
       "purchase_return": "Retur Pembelian",
       "sales_return": "Retur Penjualan",
-      "exchange": "Barang Pengganti"
+      "exchange": "Tukar Barang"
     }
   },
   "dialog": {
@@ -111,7 +111,7 @@
   "barcodeScanner": {
     "title": "Scan Barcode",
     "cameraError": "Gagal memulai kamera.",
-    "permissionTip": "Tip: Setelah mengubah izin di Settings, buka kembali aplikasi.",
+    "permissionTip": "Tip: Setelah mengubah izin di Pengaturan, buka kembali aplikasi.",
     "requestingPermission": "Meminta izin kamera...",
     "scanHint": "Arahkan barcode ke dalam kotak scan",
     "cancel": "Batal",
@@ -119,7 +119,7 @@
     "flashUnsupported": "Flash tidak didukung di perangkat ini",
     "httpsRequired": "Aplikasi harus diakses melalui HTTPS untuk mengakses kamera.",
     "browserUnsupported": "Browser tidak mendukung akses kamera. Coba update aplikasi atau gunakan browser lain.",
-    "permissionDeniedNative": "Izin kamera ditolak. Buka Settings perangkat > Apps > SISMart > Permissions, lalu aktifkan Camera.",
+    "permissionDeniedNative": "Izin kamera ditolak. Buka Pengaturan perangkat > Aplikasi > SISMart > Izin, lalu aktifkan Kamera.",
     "permissionDeniedWeb": "Izin kamera ditolak. Klik ikon gembok di address bar dan izinkan akses kamera.",
     "permissionDeniedGeneric": "Izin kamera ditolak. Mohon izinkan akses kamera lalu coba lagi.",
     "noCamera": "Kamera tidak ditemukan di perangkat ini.",

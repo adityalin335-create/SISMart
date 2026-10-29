@@ -10,22 +10,32 @@ import LockedPage from '@/components/LockedPage';
 import { db } from '@/lib/db';
 import { useAuth } from '@/hooks/use-auth';
 import { useTranslation } from 'react-i18next';
-
-const LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
+import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
+import { formatRetailDate, getDateRangeBounds } from '@/lib/date-range';
 
 export default function ReceivingsPage() {
   const { can } = useAuth();
-  const { t, i18n } = useTranslation('settings');
+  const { t } = useTranslation('settings');
   const [search, setSearch] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange>({});
+  const bounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
   const receivings = useLiveQuery(async () => {
-    const records = await db.receivings.orderBy('receivedAt').reverse().toArray();
+    const records = bounds.start && bounds.end
+      ? await db.receivings.where('receivedAt').between(bounds.start, bounds.end, true, true).toArray()
+      : bounds.start
+        ? await db.receivings.where('receivedAt').aboveOrEqual(bounds.start).toArray()
+        : bounds.end
+          ? await db.receivings.where('receivedAt').belowOrEqual(bounds.end).reverse().toArray()
+          : await db.receivings.orderBy('receivedAt').reverse().toArray();
+    if (bounds.start && !bounds.end) {
+      records.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+    }
+    if (bounds.start && bounds.end) {
+      records.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+    }
     const orders = await db.purchaseOrders.bulkGet(records.map(record => record.purchaseOrderId));
     return records.map((record, index) => ({ record, poNumber: orders[index]?.poNumber ?? '' }));
-  });
-  const dateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(LOCALES[i18n.language] ?? 'id-ID', { dateStyle: 'medium' }),
-    [i18n.language],
-  );
+  }, [bounds.start?.getTime(), bounds.end?.getTime()]);
 
   if (!can('manage_stock_inout')) {
     return <LockedPage title={t('receivings.locked.title')} permissionLabel={t('receivings.locked.permission')} />;
@@ -58,6 +68,7 @@ export default function ReceivingsPage() {
           className="pl-9"
         />
       </div>
+      <DateRangeFilter value={dateRange} onApply={setDateRange} onReset={() => setDateRange({})} />
 
       {receivings === undefined ? (
         <p className="py-10 text-center text-sm text-muted-foreground">{t('receivings.loading')}</p>
@@ -86,7 +97,7 @@ export default function ReceivingsPage() {
                     </div>
                     <p className="text-sm mt-1 truncate">{record.supplierName} · {poNumber}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {record.supplierDeliveryNoteNumber || t('receivings.noDeliveryNote')} · {dateFormatter.format(new Date(record.receivedAt))}
+                      {record.supplierDeliveryNoteNumber || t('receivings.noDeliveryNote')} · {formatRetailDate(new Date(record.receivedAt))}
                     </p>
                   </div>
                 </CardContent>

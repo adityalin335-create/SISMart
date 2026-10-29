@@ -11,6 +11,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useTranslation } from 'react-i18next';
 import { db, isStockManaged } from '@/lib/db';
 import { getDailyStockCardSummaries, getStockCardMovements } from '@/lib/stock-card';
+import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
+import { formatRetailDate, isDateInRange } from '@/lib/date-range';
 
 export default function StockCardPage() {
   const { id: routeId } = useParams();
@@ -18,6 +20,7 @@ export default function StockCardPage() {
   const { can } = useAuth();
   const { t } = useTranslation('products');
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange>({});
   const data = useLiveQuery(async () => {
     if (!Number.isSafeInteger(productId) || productId <= 0) return null;
     const product = await db.products.get(productId);
@@ -25,10 +28,9 @@ export default function StockCardPage() {
     return { product, movements: await getStockCardMovements(product) };
   }, [productId]);
   const locale = 'id-ID';
-  const dateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }),
-    [locale],
-  );
+  const dateFormatter = useMemo(() => new Intl.DateTimeFormat(locale, {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+  }), [locale]);
   const timeFormatter = useMemo(
     () => new Intl.DateTimeFormat(locale, { timeStyle: 'short' }),
     [locale],
@@ -52,6 +54,7 @@ export default function StockCardPage() {
 
   const { product, movements } = data;
   const dailySummaries = getDailyStockCardSummaries(movements);
+  const displayedSummaries = dailySummaries.filter(summary => isDateInRange(summary.date, dateRange));
   const ledgerClosingStock = dailySummaries[dailySummaries.length - 1]?.closingStock ?? 0;
   const inconsistentDates = dailySummaries.filter(summary => !summary.isConsistent);
   const hasStockMismatch = isStockManaged(product) &&
@@ -79,6 +82,8 @@ export default function StockCardPage() {
           {!isStockManaged(product) && <Badge variant="secondary">{t('stockCard.unmanaged')}</Badge>}
         </CardContent>
       </Card>
+
+      <DateRangeFilter value={dateRange} onApply={setDateRange} onReset={() => setDateRange({})} />
 
       <Card className="border-0 shadow-sm">
         <CardContent className="p-0">
@@ -111,7 +116,7 @@ export default function StockCardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {dailySummaries.map(summary => {
+                {displayedSummaries.map(summary => {
                   const isExpanded = expandedDate === summary.dateKey;
                   return (
                     <Fragment key={summary.dateKey}>
@@ -126,7 +131,7 @@ export default function StockCardPage() {
                             {isExpanded
                               ? <ChevronDown className="h-4 w-4 shrink-0" />
                               : <ChevronRight className="h-4 w-4 shrink-0" />}
-                            {dateFormatter.format(summary.date)}
+                            {formatRetailDate(summary.date)}
                           </button>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">{numberFormatter.format(summary.openingStock)}</TableCell>
@@ -171,7 +176,7 @@ export default function StockCardPage() {
                     </Fragment>
                   );
                 })}
-                {dailySummaries.length === 0 && (
+                {displayedSummaries.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="h-28 text-center text-sm text-muted-foreground">
                       <ClipboardList className="mx-auto mb-2 h-8 w-8 opacity-40" />

@@ -1,5 +1,21 @@
 {
   "title": "Pengaturan",
+  "dateFilter": {
+    "title": "Filter tanggal",
+    "quick": {
+      "today": "Hari Ini",
+      "yesterday": "Kemarin",
+      "7days": "7 Hari",
+      "30days": "30 Hari",
+      "thisMonth": "Bulan Ini",
+      "lastMonth": "Bulan Lalu"
+    },
+    "from": "Dari Tanggal",
+    "to": "Sampai Tanggal",
+    "show": "Tampilkan",
+    "reset": "Reset",
+    "invalidRange": "Tanggal awal harus sama atau sebelum tanggal akhir."
+  },
   "storeFallback": "Toko Saya",
   "notSet": "Belum diatur",
   "installApp": {
@@ -21,22 +37,22 @@
     "troubleshoot": "Kalau opsi tidak muncul, refresh halaman dulu lalu coba lagi. Beberapa browser butuh kunjungan kedua sebelum menawarkan install."
   },
   "employees": {
-    "sectionTitle": "Karyawan & Akses",
+    "sectionTitle": "Pengguna & Akses",
     "owner": "Pemilik",
-    "staff": "Karyawan",
+    "staff": "Pengguna",
     "logout": "Keluar",
     "activate": {
       "title": "Aktifkan Multi-User",
-      "description": "Buat akun karyawan dengan akses terbatas. Data Anda tetap aman.",
+      "description": "Buat akun pengguna dengan akses terbatas. Data Anda tetap aman.",
       "button": "Aktifkan"
     },
     "manage": {
-      "title": "Kelola Karyawan",
-      "description": "{{count}} akun terdaftar · atur akses per karyawan"
+      "title": "Kelola Pengguna",
+      "description": "{{count}} akun terdaftar · atur akses setiap pengguna"
     },
     "active": {
       "title": "Multi-User Aktif",
-      "description": "Karyawan harus login untuk akses kasir",
+      "description": "Pengguna harus masuk untuk mengakses kasir",
       "disable": "Nonaktifkan"
     },
     "activateDialog": {
@@ -58,7 +74,7 @@
     },
     "disableDialog": {
       "title": "Nonaktifkan Multi-User?",
-      "description": "Aplikasi akan kembali ke mode tanpa login. Akun karyawan tetap tersimpan dan akan aktif kembali jika multi-user diaktifkan lagi. Data transaksi tetap utuh.",
+      "description": "Aplikasi akan kembali ke mode tanpa login. Akun pengguna tetap tersimpan dan akan aktif kembali jika multi-user diaktifkan lagi. Data transaksi tetap utuh.",
       "confirm": "Nonaktifkan"
     },
     "logoutDialog": {
@@ -86,11 +102,11 @@
       "description": "{{count}} hutang belum lunas"
     },
     "stockIn": {
-      "title": "Stock In",
+      "title": "Barang Masuk",
       "description": "Catat barang masuk & HPP otomatis"
     },
     "stockOut": {
-      "title": "Stock Out",
+      "title": "Barang Keluar",
       "description": "Catat barang keluar non-penjualan"
     },
     "expenses": {
@@ -102,25 +118,25 @@
       "description": "Lihat pergerakan stok per periode"
     },
     "purchaseOrders": {
-      "title": "Purchase Order",
+      "title": "Pesanan Pembelian (PO)",
       "description": "Buat dan pantau pesanan ke supplier"
     },
     "receivings": {
-      "title": "Receiving",
-      "description": "Catat penerimaan barang dari Purchase Order"
+      "title": "Penerimaan Barang",
+      "description": "Catat penerimaan barang dari Pesanan Pembelian (PO)"
     }
   },
   "purchaseOrders": {
-    "title": "Purchase Order",
+    "title": "Pesanan Pembelian (PO)",
     "create": "Buat PO",
-    "createTitle": "Buat Purchase Order",
+    "createTitle": "Buat Pesanan Pembelian (PO)",
     "editTitle": "Ubah Draft PO",
-    "detailTitle": "Detail Purchase Order",
+    "detailTitle": "Detail Pesanan Pembelian (PO)",
     "searchPlaceholder": "Cari nomor PO atau supplier...",
     "filterStatus": "Filter status",
     "loading": "Memuat data...",
-    "empty": "Belum ada Purchase Order.",
-    "noResults": "Purchase Order tidak ditemukan.",
+    "empty": "Belum ada Pesanan Pembelian (PO).",
+    "noResults": "Pesanan Pembelian (PO) tidak ditemukan.",
     "status": {
       "all": "Semua status",
       "draft": "Draft",
@@ -129,7 +145,7 @@
       "received": "Diterima penuh"
     },
     "locked": {
-      "title": "Akses Purchase Order dibatasi",
+      "title": "Akses Pesanan Pembelian (PO) dibatasi",
       "permission": "Izin mengelola stok"
     },
     "form": {
@@ -153,7 +169,7 @@
       "expectedDateBeforeOrderDate": "Perkiraan barang datang tidak boleh sebelum tanggal PO.",
       "saved": "Draft PO berhasil disimpan.",
       "submitted": "PO berhasil diajukan.",
-      "saveFailed": "Purchase Order gagal disimpan."
+      "saveFailed": "Pesanan Pembelian (PO) gagal disimpan."
     },
     "ownerName": "Pemilik",
     "saving": "Menyimpan...",
@@ -161,7 +177,7 @@
     "submit": "Ajukan PO",
     "editDraftOnly": "Hanya PO berstatus draft yang dapat diubah.",
     "backToDetail": "Kembali ke detail",
-    "notFound": "Purchase Order tidak ditemukan.",
+    "notFound": "Pesanan Pembelian (PO) tidak ditemukan.",
     "back": "Kembali",
     "backToList": "Kembali ke daftar PO",
     "editDraft": "Ubah Draft",
@@ -171,7 +187,7 @@
     "receivingPhaseNote": "PO diajukan dan dapat menerima barang.",
     "print": {
       "button": "Cetak PO",
-      "title": "Purchase Order",
+      "title": "Pesanan Pembelian (PO)",
       "storeFallback": "Toko",
       "poDate": "Tanggal PO",
       "supplier": "Supplier",
@@ -186,24 +202,24 @@
     }
   },
   "receivings": {
-    "title": "Receiving",
-    "create": "Buat Receiving",
-    "createTitle": "Buat Receiving dari PO",
-    "detailTitle": "Detail Receiving",
-    "searchPlaceholder": "Cari nomor receiving, PO, supplier, atau surat jalan...",
+    "title": "Penerimaan Barang",
+    "create": "Buat Penerimaan Barang",
+    "createTitle": "Buat Penerimaan Barang dari PO",
+    "detailTitle": "Detail Penerimaan Barang",
+    "searchPlaceholder": "Cari nomor penerimaan, PO, supplier, atau surat jalan...",
     "loading": "Memuat data...",
-    "empty": "Belum ada riwayat receiving.",
-    "noResults": "Receiving tidak ditemukan.",
+    "empty": "Belum ada riwayat penerimaan barang.",
+    "noResults": "Penerimaan barang tidak ditemukan.",
     "noDeliveryNote": "Surat jalan belum diisi",
     "status": { "draft": "Draft", "confirmed": "Dikonfirmasi" },
-    "locked": { "title": "Akses Receiving dibatasi", "permission": "Izin mengelola stok" },
-    "notFound": "Receiving tidak ditemukan.",
-    "backToList": "Kembali ke daftar Receiving",
-    "purchaseOrder": "Purchase Order",
+    "locked": { "title": "Akses Penerimaan Barang dibatasi", "permission": "Izin mengelola stok" },
+    "notFound": "Penerimaan barang tidak ditemukan.",
+    "backToList": "Kembali ke daftar Penerimaan Barang",
+    "purchaseOrder": "Pesanan Pembelian (PO)",
     "selectPo": "Pilih PO yang masih dapat diterima",
     "noOpenPo": "Tidak ada PO yang masih dapat menerima barang.",
-    "createFromPo": "Buat Receiving",
-    "createFromPoHint": "PO ini dapat menerima barang melalui menu Receiving.",
+    "createFromPo": "Buat Penerimaan Barang",
+    "createFromPoHint": "PO ini dapat menerima barang melalui menu Penerimaan Barang.",
     "deliveryNote": "Nomor surat jalan supplier",
     "receivedDate": "Tanggal penerimaan",
     "notes": "Catatan",
@@ -216,14 +232,14 @@
     "actualUnitCost": "Biaya beli aktual per unit",
     "quantityAccepted": "Masuk stok",
     "saveDraft": "Simpan Draft",
-    "confirm": "Konfirmasi Receiving",
+    "confirm": "Konfirmasi Penerimaan Barang",
     "saving": "Menyimpan...",
     "confirmedBy": "Dikonfirmasi oleh {{name}} · {{date}}",
     "toast": {
-      "selectPo": "Pilih Purchase Order terlebih dahulu.",
+      "selectPo": "Pilih Pesanan Pembelian (PO) terlebih dahulu.",
       "saved": "Draft receiving berhasil disimpan.",
-      "confirmed": "Receiving dikonfirmasi dan stok diperbarui.",
-      "saveFailed": "Receiving gagal disimpan."
+      "confirmed": "Penerimaan barang dikonfirmasi dan stok diperbarui.",
+      "saveFailed": "Penerimaan barang gagal disimpan."
     }
   },
   "masterData": {
@@ -255,7 +271,7 @@
       "saveSuccess": "Pengaturan struk disimpan"
     },
     "stockOpname": {
-      "title": "Stock Opname",
+      "title": "Stok Opname",
       "description": "Sesuaikan stok fisik produk dan catat selisihnya"
     },
     "theme": {
@@ -783,10 +799,10 @@
   },
   "stockIn": {
     "locked": {
-      "title": "Stock In",
-      "permissionLabel": "Stock In / Stock Out"
+      "title": "Barang Masuk",
+      "permissionLabel": "Barang Masuk / Barang Keluar"
     },
-    "title": "Stock In",
+    "title": "Barang Masuk",
     "add": "Tambah",
     "supplierFilter": {
       "placeholder": "Filter Supplier",
@@ -796,14 +812,14 @@
     "count_zero": "{{count}} catatan",
     "count_one": "{{count}} catatan",
     "count_other": "{{count}} catatan",
-    "empty": "Belum ada data stock in",
+    "empty": "Belum ada data barang masuk",
     "item": {
       "fromSupplier": "dari {{supplier}}",
       "quantity": "+{{qty}}",
       "unitPrice": "@ Rp {{price}}"
     },
     "dialog": {
-      "title": "Tambah Stock In",
+      "title": "Tambah Barang Masuk",
       "productLabel": "Produk *",
       "supplierLabel": "Supplier *",
       "quantityLabel": "Jumlah *",
@@ -813,7 +829,7 @@
       "notesLabel": "Catatan",
       "notesPlaceholder": "Opsional",
       "total": "Total: Rp {{amount}}",
-      "save": "Simpan Stock In"
+      "save": "Simpan Barang Masuk"
     },
     "toast": {
       "fillAll": "Lengkapi semua field",
@@ -822,20 +838,20 @@
   },
   "stockOut": {
     "locked": {
-      "title": "Stock Out",
-      "permissionLabel": "Stock In / Stock Out"
+      "title": "Barang Keluar",
+      "permissionLabel": "Barang Masuk / Barang Keluar"
     },
-    "title": "Stock Out",
+    "title": "Barang Keluar",
     "add": "Tambah",
     "count_zero": "{{count}} catatan",
     "count_one": "{{count}} catatan",
     "count_other": "{{count}} catatan",
-    "empty": "Belum ada data stock out",
+    "empty": "Belum ada data barang keluar",
     "item": {
       "quantity": "-{{qty}}"
     },
     "dialog": {
-      "title": "Tambah Stock Out",
+      "title": "Tambah Barang Keluar",
       "productLabel": "Produk *",
       "quantityLabel": "Jumlah *",
       "quantityPlaceholder": "1",
@@ -844,7 +860,7 @@
       "notesLabel": "Catatan",
       "notesPlaceholder": "Opsional",
       "stockAfter": "Stok setelah: {{stock}} {{unit}}",
-      "save": "Simpan Stock Out"
+      "save": "Simpan Barang Keluar"
     },
     "reasons": {
       "damaged": "Rusak",
@@ -852,7 +868,7 @@
       "expired": "Kadaluarsa",
       "returnSupplier": "Retur ke Supplier",
       "ownUse": "Pemakaian Sendiri",
-      "opname": "Stock Opname",
+      "opname": "Stok Opname",
       "other": "Lainnya"
     },
     "toast": {
@@ -940,8 +956,8 @@
       "30days": "30 Hari"
     },
     "summary": {
-      "in": "Masuk",
-      "out": "Keluar",
+      "in": "Barang Masuk",
+      "out": "Barang Keluar",
       "available": "Tersedia"
     },
     "stockInValue": {
@@ -951,17 +967,17 @@
     },
     "movementChart": {
       "title": "Pergerakan Stok",
-      "in": "Masuk",
-      "out": "Keluar"
+      "in": "Barang Masuk",
+      "out": "Barang Keluar"
     },
     "reasons": {
-      "title": "Alasan Stock Keluar",
+      "title": "Alasan Barang Keluar",
       "damaged": "Rusak",
       "lost": "Hilang",
       "return": "Retur",
-      "expired": "Expired",
-      "sample": "Sample",
-      "opname": "Stock Opname",
+      "expired": "Kedaluwarsa",
+      "sample": "Sampel",
+      "opname": "Stok Opname",
       "other": "Lainnya",
       "unit": "unit"
     },
@@ -1297,13 +1313,13 @@
   "users": {
     "notEnabled": {
       "title": "Multi-user belum aktif",
-      "description": "Aktifkan dulu di halaman Pengaturan untuk mengelola karyawan dan akses.",
+      "description": "Aktifkan dulu di halaman Pengaturan untuk mengelola pengguna dan akses.",
       "button": "Buka Pengaturan"
     },
-    "notOwner": "Hanya pemilik toko yang dapat mengelola karyawan.",
-    "title": "Karyawan & Akses",
+    "notOwner": "Hanya pemilik toko yang dapat mengelola pengguna.",
+    "title": "Pengguna & Akses",
     "desc": "Atur siapa yang bisa mengakses apa di toko Anda. Pemilik selalu memiliki akses penuh.",
-    "addButton": "Tambah Karyawan",
+    "addButton": "Tambah Pengguna",
     "card": {
       "owner": "Pemilik",
       "you": "Anda",
@@ -1320,9 +1336,9 @@
       "delete": "Hapus"
     },
     "dialog": {
-      "addTitle": "Tambah Karyawan",
-      "editTitle": "Edit Karyawan",
-      "descAdd": "Karyawan akan login dengan username dan PIN.",
+      "addTitle": "Tambah Pengguna",
+      "editTitle": "Ubah Pengguna",
+      "descAdd": "Pengguna akan masuk dengan nama pengguna dan PIN.",
       "descEdit": "Ubah nama dan akses. Username tidak bisa diubah; gunakan tombol reset PIN untuk mengganti PIN.",
       "nameLabel": "Nama Lengkap *",
       "namePlaceholder": "Contoh: Budi Santoso",
@@ -1334,7 +1350,7 @@
       "ownerNotice": "Pemilik selalu memiliki akses penuh ke semua fitur.",
       "accessLabel": "Hak Akses",
       "saving": "Menyimpan…",
-      "saveAdd": "Tambah Karyawan",
+      "saveAdd": "Tambah Pengguna",
       "saveEdit": "Simpan Perubahan"
     },
     "pinReset": {
@@ -1353,9 +1369,9 @@
       "nameRequired": "Nama tidak boleh kosong",
       "usernameInvalid": "Username 3-20 karakter, hanya huruf/angka/underscore",
       "pinInvalid": "PIN harus 4-6 digit angka",
-      "createFailed": "Gagal menambah karyawan",
-      "staffCreated": "Karyawan \"{{name}}\" ditambahkan",
-      "staffUpdated": "Data karyawan diperbarui",
+      "createFailed": "Gagal menambah pengguna",
+      "staffCreated": "Pengguna \"{{name}}\" ditambahkan",
+      "staffUpdated": "Data pengguna diperbarui",
       "pinReset": "PIN {{name}} berhasil direset",
       "pinResetFailed": "Gagal reset PIN",
       "cannotSelfDisable": "Tidak bisa menonaktifkan akun yang sedang login",
@@ -1409,10 +1425,10 @@
     "skuBarcodeNotFound": "Produk dengan SKU/Barcode \"{{code}}\" tidak ditemukan"
   },
   "stockOpname": {
-    "title": "Stock Opname",
+    "title": "Stok Opname",
     "initButton": "Mulai Opname Baru",
-    "historyTitle": "Riwayat Stock Opname",
-    "noHistory": "Belum ada riwayat stock opname",
+    "historyTitle": "Riwayat Stok Opname",
+    "noHistory": "Belum ada riwayat stok opname",
     "emptyDraft": "Belum ada produk yang dilacak stoknya",
     "differenceText": "Selisih",
     "systemStockText": "Stok Sistem",
@@ -1428,15 +1444,15 @@
       "uploadError": "Format file tidak valid atau gagal membaca data Excel"
     },
     "dialog": {
-      "submitTitle": "Selesaikan Stock Opname?",
+      "submitTitle": "Selesaikan Stok Opname?",
       "submitDescription": "Saldo stok di sistem akan disesuaikan secara permanen sesuai dengan input stok fisik Anda. Selisih akan dicatat ke dalam mutasi stok.",
       "submitConfirm": "Selesaikan",
       "submitCancel": "Batal"
     },
     "toast": {
       "draftStarted": "Sesi opname baru berhasil dimulai",
-      "saved": "Stock opname berhasil diselesaikan",
-      "saveFailed": "Gagal menyelesaikan stock opname",
+      "saved": "Stok opname berhasil diselesaikan",
+      "saveFailed": "Gagal menyelesaikan stok opname",
       "notesPlaceholder": "Catatan sesi opname (opsional)"
     }
   },
@@ -1545,8 +1561,8 @@
     "selectTransaction": "Pilih transaksi selesai",
     "walkIn": "Pelanggan umum",
     "resolution": "Penyelesaian",
-    "refund": "Refund",
-    "exchange": "Tukar barang",
+    "refund": "Pengembalian Uang",
+    "exchange": "Tukar Barang",
     "replacementProduct": "Pilih barang pengganti",
     "replacementQuantity": "Jumlah barang pengganti",
     "resellable": "Layak dijual kembali",

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type StockOpname, type StockOpnameItem, type Product } from '@/lib/db';
@@ -17,6 +17,8 @@ import { id as localeId, enUS, ms as localeMs } from 'date-fns/locale';
 import type { Locale } from 'date-fns';
 import { downloadOrShareFile } from '@/lib/file-utils';
 import { completeStockOpname } from '@/lib/stock-opname';
+import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
+import { formatRetailDate, getDateRangeBounds } from '@/lib/date-range';
 
 const DATE_LOCALES: Record<string, Locale> = { id: localeId, en: enUS, ms: localeMs };
 
@@ -41,6 +43,8 @@ export default function StockOpnamePage() {
   const [draftItems, setDraftItems] = useState<DraftItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [notes, setNotes] = useState('');
+  const [historyDateRange, setHistoryDateRange] = useState<DateRange>({});
+  const historyBounds = useMemo(() => getDateRangeBounds(historyDateRange), [historyDateRange]);
 
   // UI state
   const [submitting, setSubmitting] = useState(false);
@@ -53,7 +57,18 @@ export default function StockOpnamePage() {
 
   // Load data from DB
   const products = useLiveQuery(() => db.products.where('isDeleted').equals(0).toArray());
-  const opnameHistory = useLiveQuery(() => db.stockOpnames.orderBy('date').reverse().toArray());
+  const opnameHistory = useLiveQuery(() => {
+    if (historyBounds.start && historyBounds.end) {
+      return db.stockOpnames.where('date').between(historyBounds.start, historyBounds.end, true, true).toArray()
+        .then(records => records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
+    if (historyBounds.start) {
+      return db.stockOpnames.where('date').aboveOrEqual(historyBounds.start).toArray()
+        .then(records => records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
+    if (historyBounds.end) return db.stockOpnames.where('date').belowOrEqual(historyBounds.end).reverse().toArray();
+    return db.stockOpnames.orderBy('date').reverse().toArray();
+  }, [historyBounds.start?.getTime(), historyBounds.end?.getTime()]);
 
   // Fetch active draft opname on mount
   useEffect(() => {
@@ -196,7 +211,7 @@ export default function StockOpnamePage() {
       const ExcelJSModule = await import('exceljs');
       const ExcelJS = (ExcelJSModule as unknown as { default?: typeof ExcelJSModule }).default ?? ExcelJSModule;
       const wb = new ExcelJS.Workbook();
-      const ws = wb.addWorksheet('Stock Opname');
+      const ws = wb.addWorksheet('Stok Opname');
 
       // Title & Instructions
       ws.mergeCells('A1:F1');
@@ -266,7 +281,7 @@ export default function StockOpnamePage() {
         fileName,
         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         dialogTitle: 'Simpan / Bagikan Templat',
-        shareTitle: 'Templat Stock Opname',
+        shareTitle: 'Templat Stok Opname',
       });
       toast.success('Templat Excel berhasil diunduh');
     } catch (err) {
@@ -426,7 +441,7 @@ export default function StockOpnamePage() {
             <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle className="text-sm font-bold">
-                  Sesi Aktif ({format(new Date(activeOpname.date), 'dd MMMM yyyy HH:mm', { locale: dateLocale })})
+                  Sesi Aktif ({formatRetailDate(new Date(activeOpname.date))} {format(new Date(activeOpname.date), 'HH:mm', { locale: dateLocale })})
                 </CardTitle>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
                   Lakukan pencocokan stok fisik produk di bawah ini.
@@ -529,7 +544,7 @@ export default function StockOpnamePage() {
           {/* Action buttons */}
           <Button className="w-full h-11 font-bold mt-2" onClick={() => setConfirmOpen(true)}>
             <Check className="w-5 h-5 mr-1.5" />
-            Selesaikan Stock Opname
+            Selesaikan Stok Opname
           </Button>
         </div>
       ) : (
@@ -544,6 +559,11 @@ export default function StockOpnamePage() {
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block px-1">
               {t('stockOpname.historyTitle')}
             </h2>
+            <DateRangeFilter
+              value={historyDateRange}
+              onApply={setHistoryDateRange}
+              onReset={() => setHistoryDateRange({})}
+            />
 
             <div className="space-y-2">
               {opnameHistory?.map(opname => (
@@ -555,7 +575,7 @@ export default function StockOpnamePage() {
                   <CardContent className="p-3 flex items-center justify-between">
                     <div className="space-y-0.5">
                       <p className="text-xs font-bold">
-                        {format(new Date(opname.date), 'dd MMMM yyyy HH:mm', { locale: dateLocale })}
+                        {formatRetailDate(new Date(opname.date))} {format(new Date(opname.date), 'HH:mm', { locale: dateLocale })}
                       </p>
                       {opname.notes && <p className="text-[10px] text-muted-foreground italic truncate max-w-[280px]">{opname.notes}</p>}
                     </div>
@@ -607,10 +627,10 @@ export default function StockOpnamePage() {
         <DialogContent className="max-w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-sm font-bold">
-              Detail Stock Opname #{selectedHistory?.id}
+              Detail Stok Opname #{selectedHistory?.id}
             </DialogTitle>
             <DialogDescription className="text-[10px] pt-1">
-              Tanggal: {selectedHistory && format(new Date(selectedHistory.date), 'dd MMMM yyyy HH:mm', { locale: dateLocale })}
+              Tanggal: {selectedHistory && `${formatRetailDate(new Date(selectedHistory.date))} ${format(new Date(selectedHistory.date), 'HH:mm', { locale: dateLocale })}`}
               {selectedHistory?.notes && <span className="block mt-1 italic">Catatan: {selectedHistory.notes}</span>}
             </DialogDescription>
           </DialogHeader>

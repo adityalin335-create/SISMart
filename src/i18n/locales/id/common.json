@@ -8,7 +8,7 @@
     "products": "Produk",
     "cashier": "Kasir",
     "reports": "Laporan",
-    "more": "Lainnya"
+    "more": "Pengaturan"
   },
   "common": {
     "save": "Simpan",
@@ -81,9 +81,9 @@
       "ctaLabel": "Atur Produk"
     },
     "2026-06-stock-opname": {
-      "title": "Stock Opname (Penyesuaian Stok)",
+      "title": "Stok Opname (Penyesuaian Stok)",
       "description": "Kini kamu bisa melakukan audit stok fisik produk secara periodik. Sistem mendukung pencocokan stok fisik secara manual atau massal lewat unduh-unggah lembar kerja Excel. Selisih stok akan langsung disesuaikan secara otomatis dan dicatat ke dalam mutasi laporan stok.",
-      "ctaLabel": "Mulai Stock Opname"
+      "ctaLabel": "Mulai Stok Opname"
     },
     "2026-06-receipt-footer": {
       "title": "Kustomisasi Footer Struk",
@@ -96,14 +96,14 @@
       "ctaLabel": "Buka Daftar Hutang"
     },
     "2026-06-print-daily-closing": {
-      "title": "Cetak Laporan Closing Harian",
-      "description": "Kini kamu bisa mempratinjau, mengunduh, membagikan, dan mencetak laporan closing penjualan harian langsung ke printer thermal Bluetooth. Halaman Laporan kini otomatis membuka tab Harian secara default, lengkap dengan indikator jika belum ada transaksi di hari tersebut.",
+      "title": "Cetak Laporan Penutupan Harian",
+      "description": "Kini kamu bisa mempratinjau, mengunduh, membagikan, dan mencetak laporan penutupan penjualan harian langsung ke printer thermal Bluetooth. Halaman Laporan kini otomatis membuka tampilan Harian, lengkap dengan indikator jika belum ada transaksi di hari tersebut.",
       "ctaLabel": "Buka Laporan"
     },
     "2026-06-stock-search-scan": {
-      "title": "Cari & Scan Produk di Stock In/Out",
-      "description": "Input stok kini lebih cepat. Di halaman Stock In dan Stock Out, pilih produk lewat pencarian berdasarkan nama, SKU, atau barcode — lengkap dengan opsi scan kamera seperti di kasir. Kolom Jumlah dan Harga Beli juga otomatis diformat ribuan (10.000) agar mudah dibaca.",
-      "ctaLabel": "Buka Stock In"
+      "title": "Cari & Pindai Produk di Barang Masuk/Keluar",
+      "description": "Input stok kini lebih cepat. Di halaman Barang Masuk dan Barang Keluar, pilih produk lewat pencarian berdasarkan nama, SKU, atau barcode — lengkap dengan opsi pindai kamera seperti di kasir. Kolom Jumlah dan Harga Beli juga otomatis diformat ribuan (10.000) agar mudah dibaca.",
+      "ctaLabel": "Buka Barang Masuk"
     },
     "2026-06-export-excel": {
       "title": "Export Laporan ke Excel",

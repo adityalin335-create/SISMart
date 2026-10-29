@@ -4,14 +4,15 @@ import { useMemo, useState } from 'react';
 import { Package, ArrowDownToLine, ArrowUpFromLine, TrendingUp, AlertTriangle, Warehouse, BarChart3, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { format, subDays } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 import LockedPage from '@/components/LockedPage';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { getStockReportPeriod, getTrackedStockProducts } from '@/lib/stock-report-period';
+import { getTrackedStockProducts } from '@/lib/stock-report-period';
+import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
+import { getDateRangeBounds } from '@/lib/date-range';
 
 const CURRENCY_SYMBOL: Record<string, string> = { id: 'Rp', en: 'Rp', ms: 'Rp' };
 const NUMBER_LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
@@ -22,19 +23,25 @@ export default function StockReport() {
   const { t, i18n } = useTranslation('settings');
   const numberLocale = NUMBER_LOCALES[i18n.language] ?? 'id-ID';
   const currencySymbol = CURRENCY_SYMBOL[i18n.language] ?? 'Rp';
-  const [period, setPeriod] = useState<'7' | '30'>('7');
-  const days = Number(period);
-  const { start, end } = useMemo(() => getStockReportPeriod(new Date(), days), [days]);
+  const [dateRange, setDateRange] = useState<DateRange>(() => {
+    const now = new Date();
+    return { from: subDays(now, 6), to: now };
+  });
+  const bounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
 
   const products = useLiveQuery(() => db.products.where('isDeleted').equals(0).toArray());
-  const stockIns = useLiveQuery(
-    async () => db.stockIns.where('date').between(start, end, true, true).toArray(),
-    [start.getTime(), end.getTime()],
-  );
-  const stockOuts = useLiveQuery(
-    async () => db.stockOuts.where('date').between(start, end, true, true).toArray(),
-    [start.getTime(), end.getTime()],
-  );
+  const stockIns = useLiveQuery(() => {
+    if (bounds.start && bounds.end) return db.stockIns.where('date').between(bounds.start, bounds.end, true, true).toArray();
+    if (bounds.start) return db.stockIns.where('date').aboveOrEqual(bounds.start).toArray();
+    if (bounds.end) return db.stockIns.where('date').belowOrEqual(bounds.end).toArray();
+    return db.stockIns.toArray();
+  }, [bounds.start?.getTime(), bounds.end?.getTime()]);
+  const stockOuts = useLiveQuery(() => {
+    if (bounds.start && bounds.end) return db.stockOuts.where('date').between(bounds.start, bounds.end, true, true).toArray();
+    if (bounds.start) return db.stockOuts.where('date').aboveOrEqual(bounds.start).toArray();
+    if (bounds.end) return db.stockOuts.where('date').belowOrEqual(bounds.end).toArray();
+    return db.stockOuts.toArray();
+  }, [bounds.start?.getTime(), bounds.end?.getTime()]);
 
   if (!can('view_reports')) {
     return <LockedPage title={t('stockReport.locked.title')} permissionLabel={t('stockReport.locked.permissionLabel')} />;
@@ -57,41 +64,21 @@ export default function StockReport() {
   const getProductName = (pid: number) => products?.find(p => p.id === pid)?.name ?? '-';
 
   const chartData = (() => {
-    const map: Record<string, { stockIn: number; stockOut: number }> = {};
-    for (let i = days - 1; i >= 0; i--) {
-      const d = format(subDays(new Date(), i), 'dd/MM');
-      map[d] = { stockIn: 0, stockOut: 0 };
-    }
+    const map: Record<string, { stockIn: number; stockOut: number; date: Date }> = {};
     stockIns?.forEach(si => {
-      const d = format(new Date(si.date), 'dd/MM');
-      if (map[d]) map[d].stockIn += si.quantity;
+      const date = new Date(si.date);
+      const key = format(date, 'yyyy-MM-dd');
+      map[key] ??= { stockIn: 0, stockOut: 0, date };
+      map[key].stockIn += si.quantity;
     });
     stockOuts?.forEach(so => {
-      const d = format(new Date(so.date), 'dd/MM');
-      if (map[d]) map[d].stockOut += so.quantity;
+      const date = new Date(so.date);
+      const key = format(date, 'yyyy-MM-dd');
+      map[key] ??= { stockIn: 0, stockOut: 0, date };
+      map[key].stockOut += so.quantity;
     });
-    return Object.entries(map).map(([date, data]) => ({ date, ...data }));
-  })();
-
-  const stockMovementData = (() => {
-    const map: Record<string, number> = {};
-    let cumulative = 0;
-    for (let i = days - 1; i >= 0; i--) {
-      const d = format(subDays(new Date(), i), 'dd/MM');
-      map[d] = 0;
-    }
-    stockIns?.forEach(si => {
-      const d = format(new Date(si.date), 'dd/MM');
-      if (map[d] !== undefined) map[d] += si.quantity;
-    });
-    stockOuts?.forEach(so => {
-      const d = format(new Date(so.date), 'dd/MM');
-      if (map[d] !== undefined) map[d] -= so.quantity;
-    });
-    return Object.entries(map).map(([date, movement]) => {
-      cumulative += movement;
-      return { date, stock: cumulative };
-    });
+    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b))
+      .map(([, data]) => ({ date: format(data.date, 'dd/MM/yyyy'), stockIn: data.stockIn, stockOut: data.stockOut }));
   })();
 
   const rp = (n: number) => `${currencySymbol} ${n.toLocaleString(numberLocale)}`;
@@ -124,12 +111,7 @@ export default function StockReport() {
         </h1>
       </div>
 
-      <Tabs value={period} onValueChange={v => setPeriod(v as '7' | '30')}>
-        <TabsList className="w-full">
-          <TabsTrigger value="7" className="flex-1">{t('stockReport.period.7days')}</TabsTrigger>
-          <TabsTrigger value="30" className="flex-1">{t('stockReport.period.30days')}</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <DateRangeFilter value={dateRange} onApply={setDateRange} onReset={() => setDateRange({})} />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-2">
