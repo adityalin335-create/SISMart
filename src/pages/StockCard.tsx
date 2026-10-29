@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowDown, ArrowLeft, ArrowUp, ChevronDown, ChevronRight, ClipboardList } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, ClipboardList } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,13 +12,11 @@ import { useTranslation } from 'react-i18next';
 import { db, isStockManaged } from '@/lib/db';
 import { getDailyStockCardSummaries, getStockCardMovements } from '@/lib/stock-card';
 
-const LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
-
 export default function StockCardPage() {
   const { id: routeId } = useParams();
   const productId = routeId ? Number(routeId) : NaN;
   const { can } = useAuth();
-  const { t, i18n } = useTranslation('products');
+  const { t } = useTranslation('products');
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const data = useLiveQuery(async () => {
     if (!Number.isSafeInteger(productId) || productId <= 0) return null;
@@ -26,7 +24,7 @@ export default function StockCardPage() {
     if (!product) return null;
     return { product, movements: await getStockCardMovements(product) };
   }, [productId]);
-  const locale = LOCALES[i18n.language] ?? 'id-ID';
+  const locale = 'id-ID';
   const dateFormatter = useMemo(
     () => new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }),
     [locale],
@@ -55,6 +53,7 @@ export default function StockCardPage() {
   const { product, movements } = data;
   const dailySummaries = getDailyStockCardSummaries(movements);
   const ledgerClosingStock = dailySummaries[dailySummaries.length - 1]?.closingStock ?? 0;
+  const inconsistentDates = dailySummaries.filter(summary => !summary.isConsistent);
   const hasStockMismatch = isStockManaged(product) &&
     Math.round(ledgerClosingStock * 1e6) !== Math.round(product.stock * 1e6);
   return (
@@ -77,7 +76,7 @@ export default function StockCardPage() {
               {numberFormatter.format(product.stock)} <span className="text-sm font-medium">{product.unit}</span>
             </p>
           </div>
-          {!isStockManaged(product) && <Badge variant="secondary">{t('card.stockUnmanaged')}</Badge>}
+          {!isStockManaged(product) && <Badge variant="secondary">{t('stockCard.unmanaged')}</Badge>}
         </CardContent>
       </Card>
 
@@ -91,6 +90,13 @@ export default function StockCardPage() {
               })}
             </p>
           )}
+          {inconsistentDates.length > 0 && (
+            <p role="alert" className="m-4 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              {t('stockCard.calculationMismatch', {
+                dates: inconsistentDates.map(summary => dateFormatter.format(summary.date)).join(', '),
+              })}
+            </p>
+          )}
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -101,7 +107,6 @@ export default function StockCardPage() {
                   <TableHead className="text-right whitespace-nowrap">{t('stockCard.columns.sales')}</TableHead>
                   <TableHead className="text-right whitespace-nowrap">{t('stockCard.columns.returns')}</TableHead>
                   <TableHead className="text-right whitespace-nowrap">{t('stockCard.columns.stockOpname')}</TableHead>
-                  <TableHead className="text-right whitespace-nowrap">{t('stockCard.columns.otherAdjustment')}</TableHead>
                   <TableHead className="text-right whitespace-nowrap">{t('stockCard.columns.closing')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -128,17 +133,12 @@ export default function StockCardPage() {
                         <TableCell className="text-right tabular-nums">{numberFormatter.format(summary.receiving)}</TableCell>
                         <TableCell className="text-right tabular-nums">{numberFormatter.format(summary.sales)}</TableCell>
                         <TableCell className="text-right tabular-nums">{numberFormatter.format(summary.returns)}</TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {summary.stockOpnameAdjustment > 0 && <ArrowUp className="mr-1 inline h-3 w-3 text-green-600" />}
-                          {summary.stockOpnameAdjustment < 0 && <ArrowDown className="mr-1 inline h-3 w-3 text-destructive" />}
-                          {numberFormatter.format(summary.stockOpnameAdjustment)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">{numberFormatter.format(summary.otherAdjustment)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{numberFormatter.format(summary.stockOpnameAdjustment)}</TableCell>
                         <TableCell className="text-right font-semibold tabular-nums">{numberFormatter.format(summary.closingStock)}</TableCell>
                       </TableRow>
                       {isExpanded && (
                         <TableRow>
-                          <TableCell colSpan={8} className="bg-muted/30 p-2 sm:p-4">
+                          <TableCell colSpan={7} className="bg-muted/30 p-2 sm:p-4">
                             <div className="overflow-x-auto rounded-md border bg-background">
                               <Table>
                                 <TableHeader>
@@ -173,7 +173,7 @@ export default function StockCardPage() {
                 })}
                 {dailySummaries.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-28 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={7} className="h-28 text-center text-sm text-muted-foreground">
                       <ClipboardList className="mx-auto mb-2 h-8 w-8 opacity-40" />
                       {t('stockCard.empty')}
                     </TableCell>

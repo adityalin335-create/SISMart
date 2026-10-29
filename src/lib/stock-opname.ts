@@ -18,12 +18,25 @@ export async function completeStockOpname(
       const item = items[index];
       const product = currentProducts[index];
       if (!product) throw new Error('Produk pada sesi stock opname tidak ditemukan.');
-      const snapshotUpdatedAt = item.systemStockUpdatedAt
-        ? new Date(item.systemStockUpdatedAt).getTime()
-        : undefined;
+      const stockInAfterSnapshot = item.systemStockInId === undefined
+        ? undefined
+        : await db.stockIns.where('productId').equals(item.productId)
+          .filter(movement => movement.id! > item.systemStockInId!)
+          .first();
+      const stockOutAfterSnapshot = item.systemStockOutId === undefined
+        ? undefined
+        : await db.stockOuts.where('productId').equals(item.productId)
+          .filter(movement => movement.id! > item.systemStockOutId!)
+          .first();
+      const legacySnapshotChanged = item.systemStockInId === undefined &&
+        item.systemStockOutId === undefined &&
+        item.systemStockUpdatedAt !== undefined &&
+        new Date(product.updatedAt).getTime() !== new Date(item.systemStockUpdatedAt).getTime();
       if (
         product.stock !== item.systemStock ||
-        (snapshotUpdatedAt !== undefined && new Date(product.updatedAt).getTime() !== snapshotUpdatedAt)
+        stockInAfterSnapshot !== undefined ||
+        stockOutAfterSnapshot !== undefined ||
+        legacySnapshotChanged
       ) {
         throw new Error(`Stok ${product.name} berubah selama sesi opname. Batalkan sesi dan mulai ulang sebelum menyimpan.`);
       }

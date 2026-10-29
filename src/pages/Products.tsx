@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { downloadOrShareFile } from '@/lib/file-utils';
 import { Link } from 'react-router-dom';
+import { hasValidProductAmounts } from '@/lib/product-validation';
 
 const CURRENCY_SYMBOL: Record<string, string> = { id: 'Rp', en: 'Rp', ms: 'Rp' };
 const NUMBER_LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
@@ -152,13 +153,21 @@ export default function Produk() {
       return;
     }
 
+    const priceValue = Number(price);
+    const costPriceValue = Number(hpp);
+    const stockValue = Number(stock);
+    if (!hasValidProductAmounts(priceValue, costPriceValue, stockValue)) {
+      toast.error(t('toast.invalidAmounts'));
+      return;
+    }
+
     const data = {
       name: name.trim(),
       sku: sku.trim(),
       categoryId: Number(categoryId),
-      price: Number(price) || 0,
-      hpp: Number(hpp) || 0,
-      stock: Number(stock) || 0,
+      price: priceValue,
+      hpp: costPriceValue,
+      stock: stockValue,
       trackStock,
       unit: unit.trim() || 'pcs',
       description: description.trim() || undefined,
@@ -521,10 +530,10 @@ export default function Produk() {
             const hpp = hppStr ? cleanNumber(hppStr) : 0;
             const stock = stockStr ? cleanNumber(stockStr) : 0;
 
-            if (price < 0) {
+            if (!Number.isFinite(price) || price < 0) {
               errors.push(t('excel.errorPriceInvalid'));
             }
-            if (hpp < 0) {
+            if (!Number.isFinite(hpp) || hpp < 0) {
               errors.push(t('excel.errorHppInvalid'));
             }
 
@@ -537,7 +546,7 @@ export default function Produk() {
               }
             }
 
-            if (trackStock && stock < 0) {
+            if (!Number.isFinite(stock) || stock < 0) {
               errors.push(t('excel.errorStockInvalid'));
             }
 
@@ -546,10 +555,10 @@ export default function Produk() {
               name,
               sku,
               categoryName,
-              price: price >= 0 ? price : 0,
-              hpp: hpp >= 0 ? hpp : 0,
+              price,
+              hpp,
               trackStock,
-              stock: stock >= 0 ? stock : 0,
+              stock,
               unit,
               barcode,
               description,

@@ -1,0 +1,10 @@
+[33m979838b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m feat: purchase order phase 1
+[33m25c2440[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m docs(readme): add sponsors section with Sumopod
+[33mce8532d[m feat(settings): add Telegram support menu and whats-new announcement
+[33ma3db2a0[m chore(settings): remove dev crash simulator button from issue report and clean up translation keys
+[33mde84cfe[m chore: sync package-lock.json with package.json
+[33m128e689[m feat(settings): add play store download & migration alert for web/pwa
+[33mcf79c19[m feat: add error reporting webhook integration and watermark sync fixes
+[33m2a6aa25[m feat(whats-new): add kitchen ticket slide, join WhatsApp link, and support external CTA links
+[33mfc6c00c[m feat: implement automatic background sync PUSH to cloud and simplify sync plan
+[33m6515164[m feat(cashier): implement kitchen ticket saving and printing with checklist boxes

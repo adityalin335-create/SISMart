@@ -26,32 +26,33 @@
     "notFound": "Produk tidak ditemukan.",
     "backToProducts": "Kembali ke produk",
     "currentStock": "Stok saat ini",
+    "unmanaged": "Stok tidak dikelola",
     "empty": "Belum ada pergerakan stok.",
-    "balanceMismatch": "Saldo ledger terakhir ({{ledger}}) tidak sama dengan stok produk ({{stock}}). Periksa riwayat pergerakan stok.",
+    "balanceMismatch": "Stok pada kartu ({{ledger}}) berbeda dengan stok produk ({{stock}}). Periksa riwayat pergerakan stok.",
+    "calculationMismatch": "Perhitungan stok tidak cocok pada tanggal: {{dates}}. Periksa rincian pergerakannya.",
     "columns": {
       "date": "Tanggal",
       "opening": "Stok Awal",
       "receiving": "Penerimaan",
       "sales": "Penjualan",
       "returns": "Retur",
-      "stockOpname": "Penyesuaian SO",
-      "otherAdjustment": "Penyesuaian Lain",
+      "stockOpname": "Koreksi SO",
       "closing": "Stok Akhir"
     },
     "detail": {
       "time": "Waktu",
-      "type": "Jenis",
+      "type": "Jenis Pergerakan",
       "reference": "Nomor Referensi",
       "in": "Masuk",
       "out": "Keluar",
-      "balance": "Saldo Berjalan"
+      "balance": "Saldo Setelah Pergerakan"
     },
     "types": {
       "opening_stock": "Stok Awal",
-      "receiving": "Receiving",
+      "receiving": "Penerimaan",
       "sale": "Penjualan",
       "stock_adjustment": "Penyesuaian Stok",
-      "stock_opname": "Stock Opname",
+      "stock_opname": "Koreksi SO",
       "return": "Retur"
     }
   },
@@ -101,6 +102,7 @@
     "noCategory": "Buat kategori terlebih dahulu sebelum menambah produk",
     "invalidImage": "File harus berupa gambar",
     "processImageFailed": "Gagal memproses gambar",
+    "invalidAmounts": "Harga jual, harga modal, dan stok harus berupa angka nol atau lebih.",
     "skuExists": "SKU \"{{sku}}\" sudah digunakan oleh produk \"{{name}}\""
   },
   "barcodeScanner": {

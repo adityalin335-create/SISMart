@@ -18,41 +18,42 @@
     "stockUnmanaged": "Stock not managed"
   },
   "stockCard": {
-    "title": "Stock Card",
-    "openAction": "View Stock Card",
-    "openForProduct": "View stock card for {{product}}",
-    "permission": "Stock viewing permission",
-    "loading": "Loading stock card...",
-    "notFound": "Product not found.",
-    "backToProducts": "Back to products",
-    "currentStock": "Current stock",
-    "empty": "No stock movements yet.",
-    "balanceMismatch": "The latest ledger balance ({{ledger}}) does not match product stock ({{stock}}). Check the stock movement history.",
+    "title": "Kartu Stok",
+    "openAction": "Lihat Kartu Stok",
+    "openForProduct": "Lihat kartu stok {{product}}",
+    "permission": "Izin melihat stok",
+    "loading": "Memuat kartu stok...",
+    "notFound": "Produk tidak ditemukan.",
+    "backToProducts": "Kembali ke produk",
+    "currentStock": "Stok saat ini",
+    "unmanaged": "Stok tidak dikelola",
+    "empty": "Belum ada pergerakan stok.",
+    "balanceMismatch": "Stok pada kartu ({{ledger}}) berbeda dengan stok produk ({{stock}}). Periksa riwayat pergerakan stok.",
+    "calculationMismatch": "Perhitungan stok tidak cocok pada tanggal: {{dates}}. Periksa rincian pergerakannya.",
     "columns": {
-      "date": "Date",
-      "opening": "Opening Stock",
-      "receiving": "Receiving",
-      "sales": "Sales",
-      "returns": "Returns",
-      "stockOpname": "SO Adjustment",
-      "otherAdjustment": "Other Adjustment",
-      "closing": "Closing Stock"
+      "date": "Tanggal",
+      "opening": "Stok Awal",
+      "receiving": "Penerimaan",
+      "sales": "Penjualan",
+      "returns": "Retur",
+      "stockOpname": "Koreksi SO",
+      "closing": "Stok Akhir"
     },
     "detail": {
-      "time": "Time",
-      "type": "Type",
-      "reference": "Reference Number",
-      "in": "Stock In",
-      "out": "Stock Out",
-      "balance": "Running Balance"
+      "time": "Waktu",
+      "type": "Jenis Pergerakan",
+      "reference": "Nomor Referensi",
+      "in": "Masuk",
+      "out": "Keluar",
+      "balance": "Saldo Setelah Pergerakan"
     },
     "types": {
-      "opening_stock": "Opening Stock",
-      "receiving": "Receiving",
-      "sale": "Sales",
-      "stock_adjustment": "Stock Adjustment",
-      "stock_opname": "Stock Opname",
-      "return": "Return"
+      "opening_stock": "Stok Awal",
+      "receiving": "Penerimaan",
+      "sale": "Penjualan",
+      "stock_adjustment": "Penyesuaian Stok",
+      "stock_opname": "Koreksi SO",
+      "return": "Retur"
     }
   },
   "dialog": {
@@ -101,6 +102,7 @@
     "noCategory": "Create a category first before adding products",
     "invalidImage": "File must be an image",
     "processImageFailed": "Failed to process image",
+    "invalidAmounts": "Selling price, cost price, and stock must be numbers greater than or equal to zero.",
     "skuExists": "SKU \"{{sku}}\" is already used by product \"{{name}}\""
   },
   "barcodeScanner": {

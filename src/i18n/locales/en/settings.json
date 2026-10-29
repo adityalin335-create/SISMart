@@ -1236,6 +1236,7 @@
       "billSaved": "Pending transaction {{receiptNumber}} saved!",
       "billCancelled": "Pending transaction {{receiptNumber}} cancelled",
       "transactionSuccess": "Transaction successful! {{receiptNumber}}",
+      "checkoutFailed": "Transaction could not be saved. Stock and transaction data were not changed.",
       "cartEmpty": "Cart is empty",
       "selectCustomerForDebt": "Select a customer from the list for debt transactions",
       "paymentAmountRange": "Payment amount must be between {{symbol}}0 and the transaction total",

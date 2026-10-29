@@ -72,6 +72,41 @@ describe('Stock Opname posting', () => {
     expect(await db.stockOuts.count()).toBe(0);
   });
 
+  it('allows non-stock product edits after a current opname snapshot', async () => {
+    await db.stockOpnameItems.update(
+      (await db.stockOpnameItems.toCollection().first())!.id!,
+      { systemStockInId: 0, systemStockOutId: 0 },
+    );
+    await db.products.update(productId, {
+      name: 'Produk Opname Diubah',
+      updatedAt: new Date(Date.now() + 1000),
+    });
+
+    await expect(completeStockOpname(opnameId, 'Final count', 1)).resolves.toBeUndefined();
+    expect((await db.products.get(productId))?.stock).toBe(8);
+    expect((await db.stockOpnames.get(opnameId))?.status).toBe('completed');
+  });
+
+  it('rejects stock movements after a current opname snapshot even if stock is restored', async () => {
+    await db.stockOpnameItems.update(
+      (await db.stockOpnameItems.toCollection().first())!.id!,
+      { systemStockInId: 0, systemStockOutId: 0 },
+    );
+    await db.stockOuts.add({
+      productId,
+      movementType: 'stock_adjustment',
+      quantity: 1,
+      reason: 'adjustment',
+      date: new Date(),
+      notes: 'Stock changed during opname',
+    });
+    await db.products.update(productId, { stock: 10 });
+
+    await expect(completeStockOpname(opnameId, 'Final count', 1))
+      .rejects.toThrow('berubah selama sesi opname');
+    expect((await db.stockOpnames.get(opnameId))?.status).toBe('draft');
+  });
+
   it('posts a stock opname movement with an explicit reference when the snapshot is current', async () => {
     await completeStockOpname(opnameId, 'Final count', 1);
 

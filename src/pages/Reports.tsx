@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { isNativePlatform, printRawNativeBluetooth, getDailyReportESCPOSData, type DailyReportPrintData } from '@/lib/printer';
 import DailyReportReceipt from '@/components/reports/DailyReportReceipt';
 import { useTranslation } from 'react-i18next';
+import { calculateProductSales } from '@/lib/report-calculations';
 import { InAppReview } from '@capacitor-community/in-app-review';
 
 const CURRENCY_SYMBOL: Record<string, string> = { id: 'Rp', en: 'Rp', ms: 'Rp' };
@@ -146,14 +147,8 @@ export default function Laporan() {
     return Object.entries(map).map(([date, sales]) => ({ date, sales }));
   })();
 
-  const productSales: Record<string, { name: string; qty: number; revenue: number; profit: number }> = {};
-  allItems.forEach(item => {
-    if (!productSales[item.productName]) productSales[item.productName] = { name: item.productName, qty: 0, revenue: 0, profit: 0 };
-    productSales[item.productName].qty += item.quantity;
-    productSales[item.productName].revenue += item.subtotal;
-    productSales[item.productName].profit += (item.price - item.hpp) * item.quantity - item.discountAmount;
-  });
-  const topProducts = Object.values(productSales).sort((a, b) => b.qty - a.qty).slice(0, period === 'daily' ? 10 : 5);
+  const productSales = calculateProductSales(allItems, transactions ?? []);
+  const topProducts = productSales.sort((a, b) => b.qty - a.qty).slice(0, period === 'daily' ? 10 : 5);
 
   const paymentSummary: Record<number, { name: string; amount: number; count: number }> = {};
   transactions?.forEach(t => {

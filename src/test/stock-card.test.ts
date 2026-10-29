@@ -238,10 +238,54 @@ describe('Stock Card', () => {
       sales: 2,
       returns: 1,
       stockOpnameAdjustment: -1,
-      otherAdjustment: 2,
+      reconciliationAdjustment: 2,
       closingStock: 15,
+      isConsistent: true,
     });
     expect(daily[1].movements).toHaveLength(5);
     expect(daily[2]).toMatchObject({ openingStock: 15, sales: 1, closingStock: 14 });
+    for (const summary of daily) {
+      expect(summary.closingStock).toBe(
+        summary.openingStock +
+          summary.receiving +
+          summary.returns +
+          summary.stockOpnameAdjustment -
+          summary.sales +
+          summary.reconciliationAdjustment,
+      );
+      expect(summary.isConsistent).toBe(true);
+    }
+  });
+
+  it('reconciles hidden non-opname adjustments into closing stock without exposing a summary column', () => {
+    const date = new Date(2026, 9, 1, 9);
+    const daily = getDailyStockCardSummaries([
+      { id: 'opening', date, referenceNumber: 'OPEN-1', type: 'opening_stock', stockIn: 10, stockOut: 0, balance: 10 },
+      { id: 'adjustment', date: new Date(2026, 9, 1, 10), referenceNumber: 'ADJ-1', type: 'stock_adjustment', stockIn: 2, stockOut: 0, balance: 12 },
+    ]);
+
+    expect(daily[0]).toMatchObject({
+      openingStock: 10,
+      receiving: 0,
+      sales: 0,
+      returns: 0,
+      stockOpnameAdjustment: 0,
+      reconciliationAdjustment: 2,
+      closingStock: 12,
+      isConsistent: true,
+    });
+    expect(daily[0]).not.toHaveProperty('otherAdjustment');
+    expect(daily[0].movements.map(movement => movement.referenceNumber)).toEqual(['OPEN-1', 'ADJ-1']);
+  });
+
+  it('marks a daily summary invalid when its calculated balance does not match the movement balance', () => {
+    const date = new Date(2026, 9, 1, 9);
+    const daily = getDailyStockCardSummaries([
+      { id: 'opening', date, referenceNumber: 'OPEN-1', type: 'opening_stock', stockIn: 10, stockOut: 0, balance: 10 },
+      { id: 'receive', date: new Date(2026, 9, 1, 10), referenceNumber: 'RCV-1', type: 'receiving', stockIn: 5, stockOut: 0, balance: 99 },
+    ]);
+
+    expect(daily[0].closingStock).toBe(15);
+    expect(daily[0].isConsistent).toBe(false);
   });
 });

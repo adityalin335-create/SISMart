@@ -367,7 +367,7 @@ export default function CloudBackupSettings() {
                   <Trans i18nKey="cloudBackup.hero.title" ns="settings" components={{ br: <br /> }} />
                 </h2>
                 <p className="text-xs text-muted-foreground leading-relaxed max-w-[280px] mx-auto">
-                  {t('cloudBackup.hero.description', { dashboard: 'dashboard.freekasir.com' })}
+                  {t('cloudBackup.hero.description', { dashboard: 'dashboard web' })}
                 </p>
               </div>
               {cheapestSyncPrice != null && (
@@ -389,12 +389,12 @@ export default function CloudBackupSettings() {
                 <BenefitItem
                   icon={<MonitorSmartphone className="w-4 h-4" />}
                   title={t('cloudBackup.benefits.dashboard.title')}
-                  desc={t('cloudBackup.benefits.dashboard.desc', { dashboard: 'dashboard.freekasir.com' })}
+                  desc={t('cloudBackup.benefits.dashboard.desc', { dashboard: 'dashboard web' })}
                 />
                 <BenefitItem
                   icon={<Store className="w-4 h-4" />}
                   title={t('cloudBackup.benefits.market.title')}
-                  desc={t('cloudBackup.benefits.market.desc', { market: 'market.freekasir.com' })}
+                  desc={t('cloudBackup.benefits.market.desc', { market: 'marketplace toko online' })}
                 />
                 <BenefitItem
                   icon={<Sparkles className="w-4 h-4" />}
@@ -432,7 +432,7 @@ export default function CloudBackupSettings() {
             rel="noopener noreferrer"
             className="block text-center text-[11px] font-medium text-primary"
           >
-            {t('cloudBackup.previewDashboard', { dashboard: 'dashboard.freekasir.com' })}
+            {t('cloudBackup.previewDashboard', { dashboard: 'dashboard web' })}
           </a>
         </div>
       ) : (
@@ -585,12 +585,12 @@ export default function CloudBackupSettings() {
                       <BenefitItem
                         icon={<MonitorSmartphone className="w-4 h-4" />}
                         title={t('cloudBackup.benefits.dashboard.title')}
-                        desc={t('cloudBackup.benefits.dashboard.desc', { dashboard: 'dashboard.freekasir.com' })}
+                        desc={t('cloudBackup.benefits.dashboard.desc', { dashboard: 'dashboard web' })}
                       />
                       <BenefitItem
                         icon={<Store className="w-4 h-4" />}
                         title={t('cloudBackup.benefits.market.title')}
-                        desc={t('cloudBackup.benefits.market.desc', { market: 'market.freekasir.com' })}
+                        desc={t('cloudBackup.benefits.market.desc', { market: 'marketplace toko online' })}
                       />
                       <BenefitItem
                         icon={<Sparkles className="w-4 h-4" />}
@@ -604,7 +604,7 @@ export default function CloudBackupSettings() {
                       rel="noopener noreferrer"
                       className="block text-center text-[11px] font-medium text-primary pt-0.5"
                     >
-                      {t('cloudBackup.previewDashboard', { dashboard: 'dashboard.freekasir.com' })}
+                      {t('cloudBackup.previewDashboard', { dashboard: 'dashboard web' })}
                     </a>
                   </CardContent>
                 </Card>
@@ -636,7 +636,7 @@ export default function CloudBackupSettings() {
                   href="https://dashboard.freekasir.com"
                   icon={<BarChart3 className="w-4 h-4" />}
                   title={t('cloudBackup.menu.dashboard.title')}
-                  subtitle={t('cloudBackup.menu.dashboard.subtitle', { dashboard: 'dashboard.freekasir.com' })}
+                  subtitle={t('cloudBackup.menu.dashboard.subtitle', { dashboard: 'dashboard web' })}
                 />
 
                 <MenuCard

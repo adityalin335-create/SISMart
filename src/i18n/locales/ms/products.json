@@ -18,41 +18,42 @@
     "stockUnmanaged": "Stok tidak diurus"
   },
   "stockCard": {
-    "title": "Kad Stok",
-    "openAction": "Lihat Kad Stok",
-    "openForProduct": "Lihat kad stok {{product}}",
-    "permission": "Kebenaran melihat stok",
-    "loading": "Memuatkan kad stok...",
-    "notFound": "Produk tidak ditemui.",
+    "title": "Kartu Stok",
+    "openAction": "Lihat Kartu Stok",
+    "openForProduct": "Lihat kartu stok {{product}}",
+    "permission": "Izin melihat stok",
+    "loading": "Memuat kartu stok...",
+    "notFound": "Produk tidak ditemukan.",
     "backToProducts": "Kembali ke produk",
-    "currentStock": "Stok semasa",
+    "currentStock": "Stok saat ini",
+    "unmanaged": "Stok tidak dikelola",
     "empty": "Belum ada pergerakan stok.",
-    "balanceMismatch": "Baki lejar terakhir ({{ledger}}) tidak sepadan dengan stok produk ({{stock}}). Semak sejarah pergerakan stok.",
+    "balanceMismatch": "Stok pada kartu ({{ledger}}) berbeda dengan stok produk ({{stock}}). Periksa riwayat pergerakan stok.",
+    "calculationMismatch": "Perhitungan stok tidak cocok pada tanggal: {{dates}}. Periksa rincian pergerakannya.",
     "columns": {
-      "date": "Tarikh",
+      "date": "Tanggal",
       "opening": "Stok Awal",
       "receiving": "Penerimaan",
-      "sales": "Jualan",
-      "returns": "Pulangan",
-      "stockOpname": "Pelarasan SO",
-      "otherAdjustment": "Pelarasan Lain",
+      "sales": "Penjualan",
+      "returns": "Retur",
+      "stockOpname": "Koreksi SO",
       "closing": "Stok Akhir"
     },
     "detail": {
-      "time": "Masa",
-      "type": "Jenis",
-      "reference": "Nombor Rujukan",
-      "in": "Stok Masuk",
-      "out": "Stok Keluar",
-      "balance": "Baki Berjalan"
+      "time": "Waktu",
+      "type": "Jenis Pergerakan",
+      "reference": "Nomor Referensi",
+      "in": "Masuk",
+      "out": "Keluar",
+      "balance": "Saldo Setelah Pergerakan"
     },
     "types": {
       "opening_stock": "Stok Awal",
       "receiving": "Penerimaan",
-      "sale": "Jualan",
-      "stock_adjustment": "Pelarasan Stok",
-      "stock_opname": "Stock Opname",
-      "return": "Pulangan"
+      "sale": "Penjualan",
+      "stock_adjustment": "Penyesuaian Stok",
+      "stock_opname": "Koreksi SO",
+      "return": "Retur"
     }
   },
   "dialog": {
@@ -101,6 +102,7 @@
     "noCategory": "Buat kategori terlebih dahulu sebelum menambah produk",
     "invalidImage": "Fail mestilah gambar",
     "processImageFailed": "Gagal memproses gambar",
+    "invalidAmounts": "Harga jual, harga kos, dan stok mestilah nombor sifar atau lebih.",
     "skuExists": "SKU \"{{sku}}\" sudah digunakan oleh produk \"{{name}}\""
   },
   "barcodeScanner": {

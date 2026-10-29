@@ -104,33 +104,43 @@ export default function StockOpnamePage() {
     if (!products) return;
 
     try {
-      const activeProducts = products.filter(p => p.trackStock !== false);
-      if (activeProducts.length === 0) {
+      const snapshot = await db.transaction(
+        'rw',
+        [db.products, db.stockIns, db.stockOuts, db.stockOpnames, db.stockOpnameItems],
+        async () => {
+          const currentProducts = await db.products.where('isDeleted').equals(0).toArray();
+          const trackedProducts = currentProducts.filter(p => p.trackStock !== false);
+          if (trackedProducts.length === 0) return null;
+
+          const lastStockIn = await db.stockIns.orderBy('id').last();
+          const lastStockOut = await db.stockOuts.orderBy('id').last();
+          const createdAt = new Date();
+          const id = await db.stockOpnames.add({
+            date: createdAt,
+            status: 'draft',
+            notes: '',
+            createdBy: currentUser?.id,
+          });
+          await db.stockOpnameItems.bulkAdd(trackedProducts.map(product => ({
+            opnameId: id,
+            productId: product.id!,
+            systemStock: product.stock,
+            systemStockUpdatedAt: product.updatedAt,
+            systemStockInId: lastStockIn?.id ?? 0,
+            systemStockOutId: lastStockOut?.id ?? 0,
+            realStock: product.stock,
+            difference: 0,
+          })));
+          return { opnameId: id, activeProducts: trackedProducts, now: createdAt };
+        },
+      );
+      if (!snapshot) {
         toast.error(t('stockOpname.emptyDraft'));
         return;
       }
 
-      // Create main draft record
-      const opnameId = await db.stockOpnames.add({
-        date: new Date(),
-        status: 'draft',
-        notes: '',
-        createdBy: currentUser?.id
-      });
-
-      // Map products to opname items
-      const itemsToAdd = activeProducts.map(p => ({
-        opnameId,
-        productId: p.id!,
-        systemStock: p.stock,
-        systemStockUpdatedAt: p.updatedAt,
-        realStock: p.stock, // initialize physical stock to system stock
-        difference: 0
-      }));
-
-      await db.stockOpnameItems.bulkAdd(itemsToAdd);
-
-      setActiveOpname({ id: opnameId, date: new Date(), status: 'draft', notes: '' });
+      const { opnameId, activeProducts, now } = snapshot;
+      setActiveOpname({ id: opnameId, date: now, status: 'draft', notes: '' });
       setNotes('');
       setDraftItems(activeProducts.map(p => ({
         productId: p.id!,

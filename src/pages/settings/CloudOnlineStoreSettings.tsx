@@ -430,7 +430,7 @@ export default function CloudOnlineStoreSettings() {
           <div class="container">
             <img src="\${qrUrl}" alt="QR Code" />
             <h1>\${store?.name || 'Toko Online'}</h1>
-            <p>market.freekasir.com/stores/\${store?.identifier}</p>
+            <p>Toko Online SISMart</p>
             <div class="footer">Dicetak melalui SISMart</div>
           </div>
           <script>
@@ -997,7 +997,7 @@ export default function CloudOnlineStoreSettings() {
                       rel="noopener noreferrer"
                       className="text-xs text-primary hover:underline font-bold flex items-center gap-1"
                     >
-                      market.freekasir.com/stores/{store.identifier}
+                      Buka Toko Online SISMart
                       <ChevronRight className="w-3 h-3" />
                     </a>
                   </div>
@@ -1041,7 +1041,7 @@ export default function CloudOnlineStoreSettings() {
                           </div>
                         )}
                         <p className="text-xs font-semibold mt-3 text-primary truncate max-w-[280px]">
-                          market.freekasir.com/stores/{store.identifier}
+                          Toko Online SISMart
                         </p>
                       </div>
                       <div className="flex gap-2">

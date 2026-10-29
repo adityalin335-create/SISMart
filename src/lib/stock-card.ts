@@ -26,8 +26,9 @@ export interface DailyStockCardSummary {
   sales: number;
   returns: number;
   stockOpnameAdjustment: number;
-  otherAdjustment: number;
+  reconciliationAdjustment: number;
   closingStock: number;
+  isConsistent: boolean;
   movements: StockCardMovement[];
 }
 
@@ -169,29 +170,44 @@ export function getDailyStockCardSummaries(
     const firstMovement = dayMovements[0];
     const lastMovement = dayMovements[dayMovements.length - 1];
     const openingMovements = dayMovements.filter(movement => movement.type === 'opening_stock');
+    const openingMovementTotal = roundStock(openingMovements.reduce(
+      (total, movement) => total + movement.stockIn - movement.stockOut,
+      0,
+    ));
     const openingStock = previousClosing ??
       (openingMovements.length > 0
-        ? openingMovements.reduce((total, movement) => total + movement.stockIn - movement.stockOut, 0)
-        : firstMovement.balance - firstMovement.stockIn + firstMovement.stockOut);
+        ? openingMovementTotal
+        : roundStock(firstMovement.balance - firstMovement.stockIn + firstMovement.stockOut));
     const sumDelta = (types: StockMovementType[]) => roundStock(dayMovements
       .filter(movement => types.includes(movement.type))
       .reduce((total, movement) => total + movement.stockIn - movement.stockOut, 0));
-
+    const receiving = sumDelta(['receiving']);
+    const sales = roundStock(dayMovements
+      .filter(movement => movement.type === 'sale')
+      .reduce((total, movement) => total + movement.stockOut - movement.stockIn, 0));
+    const returns = sumDelta(['return']);
+    const stockOpnameAdjustment = sumDelta(['stock_opname']);
+    const reconciliationAdjustment = sumDelta(['stock_adjustment']);
+    const closingStock = roundStock(
+      openingStock + receiving + returns + stockOpnameAdjustment - sales + reconciliationAdjustment,
+    );
+    const movementClosingStock = roundStock(
+      openingStock + dayMovements
+        .filter(movement => movement.type !== 'opening_stock')
+        .reduce((total, movement) => total + movement.stockIn - movement.stockOut, 0),
+    );
     const summary: DailyStockCardSummary = {
       dateKey,
       date: firstMovement.date,
       openingStock: roundStock(openingStock),
-      receiving: sumDelta(['receiving']),
-      sales: roundStock(dayMovements
-        .filter(movement => movement.type === 'sale')
-        .reduce((total, movement) => total + movement.stockOut - movement.stockIn, 0)),
-      returns: sumDelta(['return']),
-      stockOpnameAdjustment: sumDelta(['stock_opname']),
-      otherAdjustment: sumDelta([
-        'stock_adjustment',
-        ...(previousClosing === undefined ? [] : ['opening_stock' as const]),
-      ]),
-      closingStock: lastMovement.balance,
+      receiving,
+      sales,
+      returns,
+      stockOpnameAdjustment,
+      reconciliationAdjustment,
+      closingStock,
+      isConsistent: closingStock === movementClosingStock &&
+        movementClosingStock === roundStock(lastMovement.balance),
       movements: dayMovements,
     };
     summaries.push(summary);

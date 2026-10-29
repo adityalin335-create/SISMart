@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, isStockManaged, type Product, type Transaction, type TransactionItemRecord } from '@/lib/db';
 import { applySaleStockDelta } from '@/lib/stock-movements';
+import { createSaleWithItems } from '@/lib/sales';
 import { useState, useRef, useEffect } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -254,132 +255,105 @@ export default function Kasir() {
     if (cart.length === 0) { toast.error(t('cashier.toast.cartEmpty')); return; }
 
     const now = new Date();
-    if (editingTxId) {
-      // Update existing open bill
-      const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
+    const itemRecords: Omit<TransactionItemRecord, 'id' | 'transactionId'>[] = cart.map(c => ({
+      productId: c.product.id!,
+      productName: c.product.name,
+      quantity: c.qty,
+      price: c.product.price,
+      hpp: c.product.hpp,
+      discountType: c.discountType,
+      discountValue: c.discountValue,
+      discountAmount: getItemDiscountAmount(c),
+      subtotal: getItemSubtotal(c),
+    }));
 
-      await db.transactions.update(editingTxId, {
-        subtotal,
-        discountType: txDiscountType,
-        discountValue: Number(txDiscountValue) || 0,
-        discountAmount: txDiscountAmount,
-        total,
-        customerId,
-        customerName: customerName.trim() || undefined,
-        remarks: remarks.trim() || undefined,
-        date: now,
-      });
-      await db.transactionItems.where('transactionId').equals(editingTxId).delete();
-      const itemRecords: TransactionItemRecord[] = cart.map(c => ({
-        transactionId: editingTxId,
-        productId: c.product.id!,
-        productName: c.product.name,
-        quantity: c.qty,
-        price: c.product.price,
-        hpp: c.product.hpp,
-        discountType: c.discountType,
-        discountValue: c.discountValue,
-        discountAmount: getItemDiscountAmount(c),
-        subtotal: getItemSubtotal(c),
-      }));
-      await db.transactionItems.bulkAdd(itemRecords);
+    try {
+      if (editingTxId) {
+        const receiptNumber = await db.transaction(
+          'rw',
+          [db.transactions, db.transactionItems, db.products, db.stockIns, db.stockOuts],
+          async () => {
+            const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
+            const currentTx = await db.transactions.get(editingTxId);
+            if (!currentTx) throw new Error('Tagihan tidak ditemukan.');
+            await db.transactions.update(editingTxId, {
+              subtotal,
+              discountType: txDiscountType,
+              discountValue: Number(txDiscountValue) || 0,
+              discountAmount: txDiscountAmount,
+              total,
+              customerId,
+              customerName: customerName.trim() || undefined,
+              remarks: remarks.trim() || undefined,
+              date: now,
+            });
+            await db.transactionItems.where('transactionId').equals(editingTxId).delete();
+            await db.transactionItems.bulkAdd(itemRecords.map(item => ({ ...item, transactionId: editingTxId })));
 
-      // Adjust stock deltas
-      for (const cartItem of cart) {
-        if (!isStockManaged(cartItem.product)) continue;
-        const oldItem = oldItems.find(oi => oi.productId === cartItem.product.id);
-        const oldQty = oldItem?.quantity ?? 0;
-        const newQty = cartItem.qty;
-        const delta = newQty - oldQty;
-        if (delta !== 0) {
-          await applySaleStockDelta({
-            productId: cartItem.product.id!,
-            delta,
-            quantity: Math.abs(delta),
-            transactionId: editingTxId,
-            referenceNumber: (await db.transactions.get(editingTxId))?.receiptNumber ?? `TX-${editingTxId}`,
-            date: now,
-            createdBy: currentUser?.id,
-          });
-        }
-      }
-      // Restore stock for removed items that were in old bill
-      for (const oldItem of oldItems) {
-        const stillInCart = cart.find(c => c.product.id === oldItem.productId);
-        if (!stillInCart) {
-          await applySaleStockDelta({
-            productId: oldItem.productId,
-            delta: -oldItem.quantity,
-            quantity: oldItem.quantity,
-            transactionId: editingTxId,
-            referenceNumber: (await db.transactions.get(editingTxId))?.receiptNumber ?? `TX-${editingTxId}`,
-            date: now,
-            createdBy: currentUser?.id,
-          });
-        }
-      }
-
-      const updatedTx = await db.transactions.get(editingTxId);
-      toast.success(t('cashier.toast.billUpdated', { receiptNumber: updatedTx?.receiptNumber }));
-
-    } else {
-      const receiptNumber = draftReceiptNumber || `TX${Date.now()}`;
-      setDraftReceiptNumber(receiptNumber);
-
-      const txData: Transaction = {
-        subtotal,
-        discountType: txDiscountType,
-        discountValue: Number(txDiscountValue) || 0,
-        discountAmount: txDiscountAmount,
-        total,
-        paymentMethodId: 0,
-        paymentAmount: 0,
-        change: 0,
-        profit: 0,
-        date: now,
-        receiptNumber,
-        status: 'open',
-        customerId,
-        customerName: customerName.trim() || undefined,
-        remarks: remarks.trim() || undefined,
-        openedAt: now,
-        createdBy: currentUser?.id,
-      };
-
-      const txId = await db.transactions.add(txData);
-
-      const itemRecords: TransactionItemRecord[] = cart.map(c => ({
-        transactionId: txId as number,
-        productId: c.product.id!,
-        productName: c.product.name,
-        quantity: c.qty,
-        price: c.product.price,
-        hpp: c.product.hpp,
-        discountType: c.discountType,
-        discountValue: c.discountValue,
-        discountAmount: getItemDiscountAmount(c),
-        subtotal: getItemSubtotal(c),
-      }));
-      await db.transactionItems.bulkAdd(itemRecords);
-
-      for (const item of cart) {
-        if (!isStockManaged(item.product)) continue;
-        await applySaleStockDelta({
-          productId: item.product.id!,
-          delta: item.qty,
-          quantity: item.qty,
-          transactionId: txId as number,
-          referenceNumber: receiptNumber,
+            for (const cartItem of cart) {
+              const oldQty = oldItems.find(item => item.productId === cartItem.product.id)?.quantity ?? 0;
+              const delta = cartItem.qty - oldQty;
+              if (delta !== 0) {
+                await applySaleStockDelta({
+                  productId: cartItem.product.id!,
+                  delta,
+                  quantity: Math.abs(delta),
+                  transactionId: editingTxId,
+                  referenceNumber: currentTx.receiptNumber,
+                  date: now,
+                  createdBy: currentUser?.id,
+                });
+              }
+            }
+            for (const oldItem of oldItems) {
+              if (cart.some(item => item.product.id === oldItem.productId)) continue;
+              await applySaleStockDelta({
+                productId: oldItem.productId,
+                delta: -oldItem.quantity,
+                quantity: oldItem.quantity,
+                transactionId: editingTxId,
+                referenceNumber: currentTx.receiptNumber,
+                date: now,
+                createdBy: currentUser?.id,
+              });
+            }
+            return currentTx.receiptNumber;
+          },
+        );
+        toast.success(t('cashier.toast.billUpdated', { receiptNumber }));
+      } else {
+        const receiptNumber = draftReceiptNumber || `TX${Date.now()}`;
+        setDraftReceiptNumber(receiptNumber);
+        const txData: Transaction = {
+          subtotal,
+          discountType: txDiscountType,
+          discountValue: Number(txDiscountValue) || 0,
+          discountAmount: txDiscountAmount,
+          total,
+          paymentMethodId: 0,
+          paymentAmount: 0,
+          change: 0,
+          profit: 0,
           date: now,
+          receiptNumber,
+          status: 'open',
+          customerId,
+          customerName: customerName.trim() || undefined,
+          remarks: remarks.trim() || undefined,
+          openedAt: now,
+          createdBy: currentUser?.id,
+        };
+        await createSaleWithItems({
+          transaction: txData,
+          items: itemRecords,
           createdBy: currentUser?.id,
         });
+        toast.success(t('cashier.toast.billSaved', { receiptNumber }));
       }
-
-      toast.success(t('cashier.toast.billSaved', { receiptNumber }));
-
+      doFullReset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal menyimpan tagihan.');
     }
-
-    doFullReset();
   };
 
   const loadOpenBill = async (tx: Transaction) => {
@@ -411,28 +385,36 @@ export default function Kasir() {
 
   const cancelOpenBill = async (tx: Transaction) => {
     if (!tx.id) return;
-    const items = await db.transactionItems.where('transactionId').equals(tx.id).toArray();
-    for (const item of items) {
-      const product = await db.products.get(item.productId);
-      if (product && isStockManaged(product)) {
-        await applySaleStockDelta({
-          productId: item.productId,
-          delta: -item.quantity,
-          quantity: item.quantity,
-          transactionId: tx.id,
-          referenceNumber: tx.receiptNumber,
-          date: new Date(),
-          createdBy: currentUser?.id,
-        });
-      }
-    }
-    await db.transactionItems.where('transactionId').equals(tx.id).delete();
-    await db.transactions.delete(tx.id);
-    toast.success(t('cashier.toast.billCancelled', { receiptNumber: tx.receiptNumber }));
-    setCancelDialogOpen(false);
-    setCancelTargetTx(null);
-    if (editingTxId === tx.id) {
-      doFullReset();
+    try {
+      await db.transaction(
+        'rw',
+        [db.transactions, db.transactionItems, db.products, db.stockIns, db.stockOuts],
+        async () => {
+          const items = await db.transactionItems.where('transactionId').equals(tx.id!).toArray();
+          for (const item of items) {
+            const product = await db.products.get(item.productId);
+            if (product && isStockManaged(product)) {
+              await applySaleStockDelta({
+                productId: item.productId,
+                delta: -item.quantity,
+                quantity: item.quantity,
+                transactionId: tx.id!,
+                referenceNumber: tx.receiptNumber,
+                date: new Date(),
+                createdBy: currentUser?.id,
+              });
+            }
+          }
+          await db.transactionItems.where('transactionId').equals(tx.id!).delete();
+          await db.transactions.delete(tx.id!);
+        },
+      );
+      toast.success(t('cashier.toast.billCancelled', { receiptNumber: tx.receiptNumber }));
+      setCancelDialogOpen(false);
+      setCancelTargetTx(null);
+      if (editingTxId === tx.id) doFullReset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal membatalkan tagihan.');
     }
   };
 
@@ -471,93 +453,100 @@ export default function Kasir() {
     }
 
     const completedAt = new Date();
+    try {
     if (editingTxId) {
-      // Update existing open bill → paid
-      const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
-
-      await db.transactions.update(editingTxId, {
-        status: 'completed',
-        subtotal,
-        discountType: txDiscountType,
-        discountValue: Number(txDiscountValue) || 0,
-        discountAmount: txDiscountAmount,
-        total,
-        paymentMethodId: checkoutPaidAmount > 0 ? Number(paymentMethodId) : 0,
-        paymentAmount: checkoutPaidAmount,
-        change,
-        profit: totalProfit,
-        date: completedAt,
-        customerId,
-        customerName: customerName.trim() || undefined,
-        remarks: remarks.trim() || undefined,
-        cashierName: activeCashierName,
-        closedAt: completedAt,
-        debtAmount,
-      });
-
-      if (debtAmount > 0) {
-        await db.debts.add({
-          transactionId: editingTxId,
-          customerId: customerId!,
-          customerName: customerName.trim(),
-          originalAmount: debtAmount,
-          remainingAmount: debtAmount,
-          status: checkoutPaidAmount > 0 ? 'partial' : 'unpaid',
-          createdAt: new Date(),
-          settledAt: null,
-        });
-      }
-
-      await db.transactionItems.where('transactionId').equals(editingTxId).delete();
-      const itemRecords: TransactionItemRecord[] = cart.map(c => ({
-        transactionId: editingTxId,
-        productId: c.product.id!,
-        productName: c.product.name,
-        quantity: c.qty,
-        price: c.product.price,
-        hpp: c.product.hpp,
-        discountType: c.discountType,
-        discountValue: c.discountValue,
-        discountAmount: getItemDiscountAmount(c),
-        subtotal: getItemSubtotal(c),
-      }));
-      await db.transactionItems.bulkAdd(itemRecords);
-
-      // Adjust stock deltas (same as saveOpenBill)
-      for (const cartItem of cart) {
-        if (!isStockManaged(cartItem.product)) continue;
-        const oldItem = oldItems.find(oi => oi.productId === cartItem.product.id);
-        const oldQty = oldItem?.quantity ?? 0;
-        const newQty = cartItem.qty;
-        const delta = newQty - oldQty;
-        if (delta !== 0) {
-          await applySaleStockDelta({
-            productId: cartItem.product.id!,
-            delta,
-            quantity: Math.abs(delta),
-            transactionId: editingTxId,
-            referenceNumber: (await db.transactions.get(editingTxId))?.receiptNumber ?? `TX-${editingTxId}`,
+      const { updatedTx, itemRecords } = await db.transaction(
+        'rw',
+        [db.transactions, db.transactionItems, db.products, db.stockIns, db.stockOuts, db.debts],
+        async () => {
+          // Update existing open bill → paid
+          const oldItems = await db.transactionItems.where('transactionId').equals(editingTxId).toArray();
+          const existingTx = await db.transactions.get(editingTxId);
+          if (!existingTx || existingTx.status !== 'open') {
+            throw new Error('Transaksi tertunda tidak ditemukan atau sudah ditutup.');
+          }
+          await db.transactions.update(editingTxId, {
+            status: 'completed',
+            subtotal,
+            discountType: txDiscountType,
+            discountValue: Number(txDiscountValue) || 0,
+            discountAmount: txDiscountAmount,
+            total,
+            paymentMethodId: checkoutPaidAmount > 0 ? Number(paymentMethodId) : 0,
+            paymentAmount: checkoutPaidAmount,
+            change,
+            profit: totalProfit,
             date: completedAt,
-            createdBy: currentUser?.id,
+            customerId,
+            customerName: customerName.trim() || undefined,
+            remarks: remarks.trim() || undefined,
+            cashierName: activeCashierName,
+            closedAt: completedAt,
+            debtAmount,
           });
-        }
-      }
-      for (const oldItem of oldItems) {
-        const stillInCart = cart.find(c => c.product.id === oldItem.productId);
-        if (!stillInCart) {
-          await applySaleStockDelta({
-            productId: oldItem.productId,
-            delta: -oldItem.quantity,
-            quantity: oldItem.quantity,
-            transactionId: editingTxId,
-            referenceNumber: (await db.transactions.get(editingTxId))?.receiptNumber ?? `TX-${editingTxId}`,
-            date: completedAt,
-            createdBy: currentUser?.id,
-          });
-        }
-      }
 
-      const updatedTx = await db.transactions.get(editingTxId);
+          if (debtAmount > 0) {
+            await db.debts.add({
+              transactionId: editingTxId,
+              customerId: customerId!,
+              customerName: customerName.trim(),
+              originalAmount: debtAmount,
+              remainingAmount: debtAmount,
+              status: checkoutPaidAmount > 0 ? 'partial' : 'unpaid',
+              createdAt: new Date(),
+              settledAt: null,
+            });
+          }
+
+          await db.transactionItems.where('transactionId').equals(editingTxId).delete();
+          const records: TransactionItemRecord[] = cart.map(c => ({
+            transactionId: editingTxId,
+            productId: c.product.id!,
+            productName: c.product.name,
+            quantity: c.qty,
+            price: c.product.price,
+            hpp: c.product.hpp,
+            discountType: c.discountType,
+            discountValue: c.discountValue,
+            discountAmount: getItemDiscountAmount(c),
+            subtotal: getItemSubtotal(c),
+          }));
+          await db.transactionItems.bulkAdd(records);
+
+          for (const cartItem of cart) {
+            const oldItem = oldItems.find(oi => oi.productId === cartItem.product.id);
+            const delta = cartItem.qty - (oldItem?.quantity ?? 0);
+            if (delta !== 0) {
+              await applySaleStockDelta({
+                productId: cartItem.product.id!,
+                delta,
+                quantity: Math.abs(delta),
+                transactionId: editingTxId,
+                referenceNumber: existingTx.receiptNumber,
+                date: completedAt,
+                createdBy: currentUser?.id,
+              });
+            }
+          }
+          for (const oldItem of oldItems) {
+            if (cart.some(c => c.product.id === oldItem.productId)) continue;
+            await applySaleStockDelta({
+              productId: oldItem.productId,
+              delta: -oldItem.quantity,
+              quantity: oldItem.quantity,
+              transactionId: editingTxId,
+              referenceNumber: existingTx.receiptNumber,
+              date: completedAt,
+              createdBy: currentUser?.id,
+            });
+          }
+
+          return {
+            updatedTx: await db.transactions.get(editingTxId),
+            itemRecords: records,
+          };
+        },
+      );
       toast.success(t('cashier.toast.transactionSuccess', { receiptNumber: updatedTx?.receiptNumber }));
       trackEvent('create_transaction');
       setLastTransaction(updatedTx || null);
@@ -587,23 +576,7 @@ export default function Kasir() {
         debtAmount,
       };
 
-      const txId = await db.transactions.add(txData);
-
-      if (debtAmount > 0) {
-        await db.debts.add({
-          transactionId: txId as number,
-          customerId: customerId!,
-          customerName: customerName.trim(),
-          originalAmount: debtAmount,
-          remainingAmount: debtAmount,
-          status: checkoutPaidAmount > 0 ? 'partial' : 'unpaid',
-          createdAt: new Date(),
-          settledAt: null,
-        });
-      }
-
-      const itemRecords: TransactionItemRecord[] = cart.map(c => ({
-        transactionId: txId as number,
+      const itemRecords = cart.map(c => ({
         productId: c.product.id!,
         productName: c.product.name,
         quantity: c.qty,
@@ -614,26 +587,31 @@ export default function Kasir() {
         discountAmount: getItemDiscountAmount(c),
         subtotal: getItemSubtotal(c),
       }));
-      await db.transactionItems.bulkAdd(itemRecords);
-
-      for (const item of cart) {
-        if (!isStockManaged(item.product)) continue;
-        await applySaleStockDelta({
-          productId: item.product.id!,
-          delta: item.qty,
-          quantity: item.qty,
-          transactionId: txId as number,
-          referenceNumber: receiptNumber,
-          date: completedAt,
-          createdBy: currentUser?.id,
-        });
-      }
+      const txId = await createSaleWithItems({
+        transaction: txData,
+        items: itemRecords,
+        debt: debtAmount > 0 ? {
+          customerId: customerId!,
+          customerName: customerName.trim(),
+          originalAmount: debtAmount,
+          remainingAmount: debtAmount,
+          status: checkoutPaidAmount > 0 ? 'partial' : 'unpaid',
+          createdAt: new Date(),
+          settledAt: null,
+        } : undefined,
+        createdBy: currentUser?.id,
+      });
 
       toast.success(t('cashier.toast.transactionSuccess', { receiptNumber }));
       trackEvent('create_transaction');
-      setLastTransaction({ ...txData, id: txId as number });
-      setLastTxItems(itemRecords);
+      setLastTransaction({ ...txData, id: txId });
+      setLastTxItems(itemRecords.map(item => ({ ...item, transactionId: txId })));
       setReceiptOpen(true);
+    }
+    } catch (error) {
+      console.error('[Cashier] Gagal menyelesaikan transaksi:', error);
+      toast.error(t('cashier.toast.checkoutFailed'));
+      return;
     }
 
     doFullReset();

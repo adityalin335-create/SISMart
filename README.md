@@ -1,6 +1,8 @@
 # 🧾 SISMart
 
-A free, offline-first, open source Point of Sale (POS) Progressive Web App built for Indonesian Micro, Small, and Medium Enterprises (UMKM). All data is stored locally on the user's device — no server, no registration, no cost.
+SISMart is a free, offline-first, open source Point of Sale (POS) Progressive Web App built for Indonesian Micro, Small, and Medium Enterprises (UMKM). All data is stored locally on the user's device — no server, no registration, no cost.
+
+![Pratinjau branding SISMart - Sistem Kasir Minimarket](public/og-image.png)
 
 ---
 

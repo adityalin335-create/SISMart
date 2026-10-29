@@ -1,16 +1,17 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Package, ArrowDownToLine, ArrowUpFromLine, TrendingUp, AlertTriangle, Warehouse, BarChart3, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { format, subDays, startOfDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 import LockedPage from '@/components/LockedPage';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { getStockReportPeriod, getTrackedStockProducts } from '@/lib/stock-report-period';
 
 const CURRENCY_SYMBOL: Record<string, string> = { id: 'Rp', en: 'Rp', ms: 'Rp' };
 const NUMBER_LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
@@ -23,11 +24,17 @@ export default function StockReport() {
   const currencySymbol = CURRENCY_SYMBOL[i18n.language] ?? 'Rp';
   const [period, setPeriod] = useState<'7' | '30'>('7');
   const days = Number(period);
-  const since = startOfDay(subDays(new Date(), days));
+  const { start, end } = useMemo(() => getStockReportPeriod(new Date(), days), [days]);
 
-  const products = useLiveQuery(() => db.products.toArray());
-  const stockIns = useLiveQuery(async () => db.stockIns.where('date').aboveOrEqual(since).toArray(), [days]);
-  const stockOuts = useLiveQuery(async () => db.stockOuts.where('date').aboveOrEqual(since).toArray(), [days]);
+  const products = useLiveQuery(() => db.products.where('isDeleted').equals(0).toArray());
+  const stockIns = useLiveQuery(
+    async () => db.stockIns.where('date').between(start, end, true, true).toArray(),
+    [start.getTime(), end.getTime()],
+  );
+  const stockOuts = useLiveQuery(
+    async () => db.stockOuts.where('date').between(start, end, true, true).toArray(),
+    [start.getTime(), end.getTime()],
+  );
 
   if (!can('view_reports')) {
     return <LockedPage title={t('stockReport.locked.title')} permissionLabel={t('stockReport.locked.permissionLabel')} />;
@@ -42,9 +49,10 @@ export default function StockReport() {
     return acc;
   }, {} as Record<string, number>) ?? {};
 
-  const currentStock = products?.reduce((s, p) => s + p.stock, 0) ?? 0;
-  const lowStockProducts = products?.filter(p => p.stock > 0 && p.stock <= 5) ?? [];
-  const outOfStockProducts = products?.filter(p => p.stock === 0) ?? [];
+  const trackedProducts = getTrackedStockProducts(products ?? []);
+  const currentStock = trackedProducts.reduce((s, p) => s + p.stock, 0);
+  const lowStockProducts = trackedProducts.filter(p => p.stock > 0 && p.stock <= 5);
+  const outOfStockProducts = trackedProducts.filter(p => p.stock === 0);
 
   const getProductName = (pid: number) => products?.find(p => p.id === pid)?.name ?? '-';
 

@@ -791,6 +791,7 @@
       "billSaved": "Transaksi tertunda {{receiptNumber}} disimpan!",
       "billCancelled": "Transaksi tertunda {{receiptNumber}} dibatalkan",
       "transactionSuccess": "Transaksi berjaya! {{receiptNumber}}",
+      "checkoutFailed": "Transaksi gagal disimpan. Stok dan data transaksi tidak berubah.",
       "cartEmpty": "Troli kosong",
       "selectCustomerForDebt": "Pilih pelanggan dari senarai untuk transaksi hutang",
       "paymentAmountRange": "Jumlah bayar mesti antara {{symbol}}0 dan jumlah transaksi",

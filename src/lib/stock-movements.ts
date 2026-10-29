@@ -45,11 +45,18 @@ export async function applySaleStockDelta(
   input: SaleMovementInput & { delta: number },
 ): Promise<void> {
   if (input.delta === 0) return;
+  if (!Number.isFinite(input.delta)) {
+    throw new Error('Perubahan stok penjualan tidak valid.');
+  }
   await db.transaction('rw', [db.products, db.stockIns, db.stockOuts], async () => {
     const product = await db.products.get(input.productId);
     if (!product || !isStockManaged(product)) return;
+    const newStock = Math.round((product.stock - input.delta) * 1e6) / 1e6;
+    if (newStock < 0) {
+      throw new Error(`Stok ${product.name} tidak mencukupi. Tersedia ${product.stock}.`);
+    }
     await db.products.update(input.productId, {
-      stock: Math.round((product.stock - input.delta) * 1e6) / 1e6,
+      stock: newStock,
       updatedAt: input.date,
     });
     const movement = { ...input, quantity: Math.abs(input.delta) };

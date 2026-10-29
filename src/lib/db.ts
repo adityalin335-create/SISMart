@@ -222,6 +222,8 @@ export interface StockOpnameItem {
   productId: number;
   systemStock: number;
   systemStockUpdatedAt?: Date;
+  systemStockInId?: number;
+  systemStockOutId?: number;
   realStock: number;
   difference: number;
 }
