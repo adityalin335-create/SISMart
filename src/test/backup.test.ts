@@ -13,6 +13,10 @@ describe('Backup and Restore Logic', () => {
     await db.products.clear();
     await db.stockOpnames.clear();
     await db.stockOpnameItems.clear();
+    await db.purchaseReturns.clear();
+    await db.purchaseReturnItems.clear();
+    await db.salesReturns.clear();
+    await db.salesReturnItems.clear();
   });
 
   afterEach(async () => {
@@ -20,6 +24,10 @@ describe('Backup and Restore Logic', () => {
     await db.products.clear();
     await db.stockOpnames.clear();
     await db.stockOpnameItems.clear();
+    await db.purchaseReturns.clear();
+    await db.purchaseReturnItems.clear();
+    await db.salesReturns.clear();
+    await db.salesReturnItems.clear();
   });
 
   it('should include stockOpnames and stockOpnameItems in buildBackupData', async () => {
@@ -82,5 +90,54 @@ describe('Backup and Restore Logic', () => {
     expect(stockOpnames[0].date).toBeInstanceOf(Date);
     expect(stockOpnameItems).toHaveLength(1);
     expect(stockOpnameItems[0].difference).toBe(0);
+  });
+
+  it('clears local return records when restoring a legacy backup without return tables', async () => {
+    await db.purchaseReturns.add({
+      returnNumber: 'PR-LOCAL', supplierId: 1, supplierName: 'Supplier',
+      date: new Date(), status: 'confirmed', reason: 'other', notes: '',
+      totalValue: 10, createdByName: 'Owner', createdAt: new Date(),
+    });
+    await db.salesReturns.add({
+      returnNumber: 'SR-LOCAL', transactionId: 1, receiptNumber: 'TX-1',
+      customerName: 'Customer', date: new Date(), status: 'confirmed', reason: 'other',
+      notes: '', resolution: 'refund', totalValue: 10, refundValue: 10,
+      createdByName: 'Owner', createdAt: new Date(),
+    });
+
+    await restoreFromBackupData({
+      version: 9,
+      exportedAt: new Date().toISOString(),
+      categories: [{ id: 8, name: 'Legacy', isDeleted: 0 }],
+      products: [],
+    });
+
+    expect(await db.purchaseReturns.count()).toBe(0);
+    expect(await db.salesReturns.count()).toBe(0);
+  });
+
+  it('restores return audit dates as Date values', async () => {
+    const timestamp = '2026-10-29T10:00:00.000Z';
+    await restoreFromBackupData({
+      version: BACKUP_VERSION,
+      exportedAt: timestamp,
+      categories: [{ id: 9, name: 'Return test', isDeleted: 0 }],
+      products: [],
+      purchaseReturns: [{
+        id: 20, returnNumber: 'PR-20', supplierId: 1, supplierName: 'Supplier',
+        date: timestamp, status: 'confirmed', reason: 'other', notes: '', totalValue: 20,
+        createdByName: 'Owner', createdAt: timestamp, approvedAt: timestamp,
+      }],
+      salesReturns: [{
+        id: 30, returnNumber: 'SR-30', transactionId: 1, receiptNumber: 'TX-1',
+        customerName: 'Customer', date: timestamp, status: 'confirmed', reason: 'other',
+        notes: '', resolution: 'refund', totalValue: 10, refundValue: 10,
+        createdByName: 'Owner', createdAt: timestamp, approvedAt: timestamp,
+      }],
+    });
+
+    expect((await db.purchaseReturns.get(20))?.date).toBeInstanceOf(Date);
+    expect((await db.purchaseReturns.get(20))?.approvedAt).toBeInstanceOf(Date);
+    expect((await db.salesReturns.get(30))?.createdAt).toBeInstanceOf(Date);
   });
 });

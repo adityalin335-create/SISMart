@@ -45,6 +45,7 @@ import PurchaseOrderDetailPage from "./pages/PurchaseOrderDetail";
 import ReceivingsPage from "./pages/Receivings";
 import ReceivingFormPage from "./pages/ReceivingForm";
 import StockCardPage from "./pages/StockCard";
+import ReturnsPage from "./pages/Returns";
 import BackupRestoreSettings from "./pages/settings/BackupRestoreSettings";
 import NotFound from "./pages/NotFound";
 
@@ -183,6 +184,14 @@ const App = () => {
                     element={
                       <ErrorBoundary>
                         <TransactionHistory />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/returns"
+                    element={
+                      <ErrorBoundary>
+                        <ReturnsPage />
                       </ErrorBoundary>
                     }
                   />

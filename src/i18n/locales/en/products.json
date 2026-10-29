@@ -53,7 +53,10 @@
       "sale": "Penjualan",
       "stock_adjustment": "Penyesuaian Stok",
       "stock_opname": "Koreksi SO",
-      "return": "Retur"
+      "return": "Return",
+      "purchase_return": "Purchase Return",
+      "sales_return": "Sales Return",
+      "exchange": "Exchange Item"
     }
   },
   "dialog": {

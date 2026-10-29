@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowDownToLine, ArrowLeft, Building2, CalendarDays, Pencil, Printer, Send } from 'lucide-react';
@@ -10,6 +10,7 @@ import { db } from '@/lib/db';
 import { useAuth } from '@/hooks/use-auth';
 import { useTranslation } from 'react-i18next';
 import PurchaseOrderPrint from '@/components/PurchaseOrderPrint';
+import type { PrintSize } from '@/components/ReturnPrint';
 
 const LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
 
@@ -18,6 +19,7 @@ export default function PurchaseOrderDetailPage() {
   const orderId = routeId ? Number(routeId) : NaN;
   const { can } = useAuth();
   const { t, i18n } = useTranslation('settings');
+  const [printSize, setPrintSize] = useState<PrintSize>('A4');
   const details = useLiveQuery(async () => {
     if (!Number.isSafeInteger(orderId) || orderId <= 0) return null;
     const order = await db.purchaseOrders.get(orderId);
@@ -69,9 +71,15 @@ export default function PurchaseOrderDetailPage() {
         </Badge>
       </div>
 
-      <Button type="button" variant="outline" className="w-full sm:w-auto print:hidden" onClick={() => window.print()}>
-        <Printer className="w-4 h-4 mr-2" />{t('purchaseOrders.print.button')}
-      </Button>
+      <div className="flex flex-wrap gap-2 print:hidden">
+        <select value={printSize} onChange={event => setPrintSize(event.target.value as PrintSize)}
+          aria-label={t('returns.printSize')} className="h-10 rounded-md border bg-background px-3 text-sm">
+          <option value="58mm">58 mm</option><option value="80mm">80 mm</option><option value="A4">A4</option>
+        </select>
+        <Button type="button" variant="outline" onClick={() => window.print()}>
+          <Printer className="w-4 h-4 mr-2" />{t('purchaseOrders.print.button')}
+        </Button>
+      </div>
 
       {order.status === 'draft' && (
         <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -147,7 +155,7 @@ export default function PurchaseOrderDetailPage() {
         </div>
       )}
 
-      <PurchaseOrderPrint order={order} items={items} storeSettings={storeSettings} />
+      <PurchaseOrderPrint order={order} items={items} storeSettings={storeSettings} size={printSize} />
     </div>
   );
 }

@@ -115,6 +115,20 @@
     "printSuccess": "Report printed successfully!",
     "printFailed": "Failed to print. Make sure the Bluetooth printer is on."
   },
+  "returnReports": {
+    "financialSummary": "Return Financial Summary",
+    "grossSales": "Gross Sales",
+    "salesReturns": "Sales Returns",
+    "netSales": "Net Sales",
+    "grossPurchases": "Gross Purchases",
+    "purchaseReturns": "Purchase Returns",
+    "netPurchases": "Net Purchases",
+    "purchaseTitle": "Purchase Return Report",
+    "salesTitle": "Sales Return Report",
+    "empty": "No returns during this period.",
+    "walkIn": "Walk-in customer",
+    "resolution": { "refund": "Refund", "exchange": "Exchange" }
+  },
   "survey": {
     "title": "What type of business do you run with SISMart?",
     "description": "Help us understand your needs by choosing one.",

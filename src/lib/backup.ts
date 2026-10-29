@@ -9,9 +9,9 @@ import { ensureStockCardHistory } from '@/lib/stock-movements';
  * Dipisah dari komponen UI supaya logika yang sama tidak terduplikasi.
  */
 
-export const BACKUP_VERSION = 9;
+export const BACKUP_VERSION = 10;
 
-// Bentuk longgar — file backup bisa berasal dari versi lama (v1–v6).
+// Bentuk longgar — file backup bisa berasal dari versi lama (v1–v9).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type BackupData = Record<string, any> & { version?: number };
 
@@ -44,6 +44,10 @@ export async function buildBackupData() {
     stockOpnames: await db.stockOpnames.toArray(),
     stockOpnameItems: await db.stockOpnameItems.toArray(),
     deletedRecords: await db.deletedRecords.toArray(),
+    purchaseReturns: await db.purchaseReturns.toArray(),
+    purchaseReturnItems: await db.purchaseReturnItems.toArray(),
+    salesReturns: await db.salesReturns.toArray(),
+    salesReturnItems: await db.salesReturnItems.toArray(),
   };
 }
 
@@ -104,6 +108,10 @@ async function clearAllTables(includeConditional: BackupData) {
     await db.stockOpnameItems.clear();
   }
   await db.deletedRecords.clear();
+  await db.purchaseReturns.clear();
+  await db.purchaseReturnItems.clear();
+  await db.salesReturns.clear();
+  await db.salesReturnItems.clear();
 }
 
 /**
@@ -139,6 +147,10 @@ export async function restoreFromBackupData(data: unknown): Promise<void> {
     stockOpnames: await db.stockOpnames.toArray(),
     stockOpnameItems: await db.stockOpnameItems.toArray(),
     deletedRecords: await db.deletedRecords.toArray(),
+    purchaseReturns: await db.purchaseReturns.toArray(),
+    purchaseReturnItems: await db.purchaseReturnItems.toArray(),
+    salesReturns: await db.salesReturns.toArray(),
+    salesReturnItems: await db.salesReturnItems.toArray(),
   };
 
   try {
@@ -171,6 +183,10 @@ export async function restoreFromBackupData(data: unknown): Promise<void> {
     if (data.stockOpnames?.length) await db.stockOpnames.bulkAdd(data.stockOpnames);
     if (data.stockOpnameItems?.length) await db.stockOpnameItems.bulkAdd(data.stockOpnameItems);
     if (data.deletedRecords?.length) await db.deletedRecords.bulkAdd(data.deletedRecords);
+    if (data.purchaseReturns?.length) await db.purchaseReturns.bulkAdd(data.purchaseReturns);
+    if (data.purchaseReturnItems?.length) await db.purchaseReturnItems.bulkAdd(data.purchaseReturnItems);
+    if (data.salesReturns?.length) await db.salesReturns.bulkAdd(data.salesReturns);
+    if (data.salesReturnItems?.length) await db.salesReturnItems.bulkAdd(data.salesReturnItems);
 
     // Units (v3+ backup) atau diturunkan dari produk (backup v1/v2).
     if (Array.isArray(data.units) && data.units.length > 0) {
@@ -249,6 +265,8 @@ export async function restoreFromBackupData(data: unknown): Promise<void> {
       await db.stockOpnames.clear();
       await db.stockOpnameItems.clear();
       await db.deletedRecords.clear();
+      await db.purchaseReturns.clear(); await db.purchaseReturnItems.clear();
+      await db.salesReturns.clear(); await db.salesReturnItems.clear();
 
       if (snapshot.categories.length) await db.categories.bulkAdd(snapshot.categories);
       if (snapshot.products.length) await db.products.bulkAdd(snapshot.products);
@@ -274,6 +292,10 @@ export async function restoreFromBackupData(data: unknown): Promise<void> {
       if (snapshot.stockOpnames.length) await db.stockOpnames.bulkAdd(snapshot.stockOpnames);
       if (snapshot.stockOpnameItems.length) await db.stockOpnameItems.bulkAdd(snapshot.stockOpnameItems);
       if (snapshot.deletedRecords.length) await db.deletedRecords.bulkAdd(snapshot.deletedRecords);
+      if (snapshot.purchaseReturns.length) await db.purchaseReturns.bulkAdd(snapshot.purchaseReturns);
+      if (snapshot.purchaseReturnItems.length) await db.purchaseReturnItems.bulkAdd(snapshot.purchaseReturnItems);
+      if (snapshot.salesReturns.length) await db.salesReturns.bulkAdd(snapshot.salesReturns);
+      if (snapshot.salesReturnItems.length) await db.salesReturnItems.bulkAdd(snapshot.salesReturnItems);
     } catch {
       throw new Error('Import gagal dan rollback gagal. Coba restore dari file backup.');
     }

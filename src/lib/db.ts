@@ -13,7 +13,11 @@ export type PermissionKey =
   | 'manage_backup'
   | 'manage_store_settings'
   | 'manage_expenses'
-  | 'view_expenses';
+  | 'view_expenses'
+  | 'create_purchase_return'
+  | 'approve_purchase_return'
+  | 'create_sales_return'
+  | 'approve_sales_return';
 
 export const ALL_PERMISSIONS: PermissionKey[] = [
   'create_transaction',
@@ -28,6 +32,10 @@ export const ALL_PERMISSIONS: PermissionKey[] = [
   'manage_store_settings',
   'manage_expenses',
   'view_expenses',
+  'create_purchase_return',
+  'approve_purchase_return',
+  'create_sales_return',
+  'approve_sales_return',
 ];
 
 // === Interfaces ===
@@ -178,7 +186,7 @@ export interface StockIn {
   productId: number;
   supplierId: number;
   receivingId?: number;
-  movementType?: 'opening_stock' | 'receiving' | 'sale' | 'stock_adjustment' | 'stock_opname' | 'return';
+  movementType?: 'opening_stock' | 'receiving' | 'sale' | 'stock_adjustment' | 'stock_opname' | 'return' | 'purchase_return' | 'sales_return' | 'exchange';
   referenceNumber?: string;
   transactionId?: number;
   quantity: number;
@@ -194,7 +202,7 @@ export interface StockIn {
 export interface StockOut {
   id?: number;
   productId: number;
-  movementType?: 'opening_stock' | 'receiving' | 'sale' | 'stock_adjustment' | 'stock_opname' | 'return';
+  movementType?: 'opening_stock' | 'receiving' | 'sale' | 'stock_adjustment' | 'stock_opname' | 'return' | 'purchase_return' | 'sales_return' | 'exchange';
   referenceNumber?: string;
   transactionId?: number;
   quantity: number;
@@ -358,6 +366,88 @@ export interface DebtPayment {
   syncedAt?: Date | null;
 }
 
+export type ReturnStatus = 'pending_approval' | 'confirmed';
+export type ReturnReason = 'damaged' | 'expired' | 'wrong_item' | 'quality' | 'other';
+
+export interface PurchaseReturn {
+  id?: number;
+  returnNumber: string;
+  supplierId: number;
+  supplierName: string;
+  date: Date;
+  status: ReturnStatus;
+  reason: ReturnReason;
+  notes: string;
+  totalValue: number;
+  createdBy?: number;
+  createdByName: string;
+  createdAt: Date;
+  approvedBy?: number;
+  approvedByName?: string;
+  approvedAt?: Date;
+  reversalOfId?: number;
+}
+
+export interface PurchaseReturnItem {
+  id?: number;
+  purchaseReturnId: number;
+  receivingItemId: number;
+  receivingId: number;
+  productId: number;
+  productName: string;
+  sku: string;
+  unit: string;
+  quantity: number;
+  unitCost: number;
+  totalValue: number;
+}
+
+export type SalesReturnResolution = 'refund' | 'exchange';
+export type SalesReturnCondition = 'resellable' | 'damaged';
+
+export interface SalesReturn {
+  id?: number;
+  returnNumber: string;
+  transactionId: number;
+  receiptNumber: string;
+  customerId?: number;
+  customerName: string;
+  date: Date;
+  status: ReturnStatus;
+  reason: ReturnReason;
+  notes: string;
+  resolution: SalesReturnResolution;
+  totalValue: number;
+  refundValue: number;
+  exchangeValue?: number;
+  createdBy?: number;
+  createdByName: string;
+  createdAt: Date;
+  approvedBy?: number;
+  approvedByName?: string;
+  approvedAt?: Date;
+  reversalOfId?: number;
+}
+
+export interface SalesReturnItem {
+  id?: number;
+  salesReturnId: number;
+  transactionItemId: number;
+  productId: number;
+  productName: string;
+  sku: string;
+  unit: string;
+  quantity: number;
+  condition: SalesReturnCondition;
+  unitPrice: number;
+  unitCost: number;
+  totalValue: number;
+  exchangeProductId?: number;
+  exchangeProductName?: string;
+  exchangeQuantity?: number;
+  exchangeValue?: number;
+}
+
 export interface DeletedRecord {
   id?: number;
   tableName: string;
@@ -379,6 +469,7 @@ export interface StoreSettings {
   deviceId: string;
   multiUserEnabled?: boolean; // CR-multiuser: opt-in flag
   seenWhatsNewIds?: string[]; // IDs of "What's New" features the user has dismissed
+  returnApprovalRequired?: boolean;
   cloudAutoBackupInterval?: 'off' | 'hourly' | 'daily' | 'weekly'; // auto cloud backup cadence (default off)
   cloudAutoBackupHours?: number; // interval jam bila cloudAutoBackupInterval === 'hourly'
   lastCloudBackupAt?: Date | null; // last successful upload to cloud
@@ -415,6 +506,10 @@ class PosDatabase extends Dexie {
   stockOpnames!: Table<StockOpname>;
   stockOpnameItems!: Table<StockOpnameItem>;
   deletedRecords!: Table<DeletedRecord>;
+  purchaseReturns!: Table<PurchaseReturn>;
+  purchaseReturnItems!: Table<PurchaseReturnItem>;
+  salesReturns!: Table<SalesReturn>;
+  salesReturnItems!: Table<SalesReturnItem>;
 
   constructor() {
     super('kasirgratisan-db');
@@ -1110,6 +1205,42 @@ class PosDatabase extends Dexie {
         });
       }
     });
+
+    // Version 19 — Return Management.
+    this.version(19).stores({
+      categories:        '++id, name, isDeleted, updatedAt, syncedAt',
+      products:          '++id, name, &sku, categoryId, barcode, isDeleted, createdBy, updatedBy, unit, updatedAt, syncedAt',
+      suppliers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      purchaseOrders:    '++id, &poNumber, supplierId, status, orderDate, createdBy, updatedAt, syncedAt',
+      purchaseOrderItems:'++id, purchaseOrderId, productId, [purchaseOrderId+productId]',
+      receivings:        '++id, &receivingNumber, purchaseOrderId, supplierId, status, receivedAt, updatedAt, syncedAt',
+      receivingItems:    '++id, receivingId, purchaseOrderItemId, productId, [receivingId+purchaseOrderItemId]',
+      customers:         '++id, name, isDeleted, updatedAt, syncedAt',
+      stockIns:          '++id, productId, supplierId, receivingId, movementType, referenceNumber, transactionId, date, createdBy, updatedAt, syncedAt',
+      stockOuts:         '++id, productId, movementType, referenceNumber, transactionId, date, createdBy, updatedAt, syncedAt',
+      hppHistory:        '++id, productId, date, syncedAt',
+      paymentMethods:    '++id, name, category, updatedAt, syncedAt',
+      transactions:      '++id, date, &receiptNumber, paymentMethodId, status, orderNumber, createdBy, updatedAt, syncedAt',
+      transactionItems:  '++id, transactionId, productId',
+      storeSettings:     '++id',
+      users:             '++id, &username, role, isActive, updatedAt, syncedAt',
+      units:             '++id, &name, isDeleted, updatedAt, syncedAt',
+      expenseCategories: '++id, name, isDeleted, updatedAt, syncedAt',
+      expenses:          '++id, date, categoryId, paymentMethodId, createdBy, isDeleted, updatedAt, syncedAt',
+      debts:             '++id, &transactionId, customerId, status, createdAt, updatedAt, syncedAt',
+      debtPayments:      '++id, debtId, date, paymentMethodId, createdBy, updatedAt, syncedAt',
+      stockOpnames:      '++id, date, status, createdBy, updatedAt, syncedAt',
+      stockOpnameItems:  '++id, opnameId, productId, [opnameId+productId]',
+      deletedRecords:    '++id, tableName, recordId, deletedAt, syncedAt',
+      purchaseReturns:   '++id, &returnNumber, supplierId, date, status, createdBy, createdAt, approvedBy, approvedAt, reversalOfId',
+      purchaseReturnItems: '++id, purchaseReturnId, receivingItemId, receivingId, productId',
+      salesReturns:      '++id, &returnNumber, transactionId, date, status, createdBy, createdAt, approvedBy, approvedAt, reversalOfId',
+      salesReturnItems:  '++id, salesReturnId, transactionItemId, productId',
+    }).upgrade(async tx => {
+      await tx.table('storeSettings').toCollection().modify((settings: StoreSettings) => {
+        if (settings.returnApprovalRequired === undefined) settings.returnApprovalRequired = false;
+      });
+    });
   }
 }
 
@@ -1162,6 +1293,8 @@ export async function sanitizeDatabaseDates() {
   await sanitizeTableDates(db.stockOpnames, ['date', 'updatedAt', 'syncedAt']);
   await sanitizeTableDates(db.stockOpnameItems, ['systemStockUpdatedAt']);
   await sanitizeTableDates(db.deletedRecords, ['deletedAt', 'syncedAt']);
+  await sanitizeTableDates(db.purchaseReturns, ['date', 'createdAt', 'approvedAt']);
+  await sanitizeTableDates(db.salesReturns, ['date', 'createdAt', 'approvedAt']);
   await sanitizeTableDates(db.storeSettings, ['lastBackupAt', 'lastCloudBackupAt']);
 }
 

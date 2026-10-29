@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { format, startOfDay, endOfDay } from 'date-fns';
 import { id as idLocale, enUS, ms } from 'date-fns/locale';
 import type { Locale } from 'date-fns';
-import { ArrowLeft, Search, Receipt as ReceiptIcon, Calendar, ChevronRight, ShoppingBag, CalendarIcon, X, Trash2, ShoppingCart, UserCircle2 } from 'lucide-react';
+import { ArrowLeft, Search, Receipt as ReceiptIcon, Calendar, ChevronRight, ShoppingBag, CalendarIcon, X, Trash2, ShoppingCart, UserCircle2, RotateCcw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -516,10 +516,18 @@ export default function TransactionHistory() {
                   {t('transactionHistory.detail.continueInCashier')}
                 </Button>
               ) : (
-                <Button className="w-full h-11" onClick={openReceipt}>
-                  <ReceiptIcon className="w-4 h-4 mr-2" />
-                  {t('transactionHistory.detail.viewReceipt')}
-                </Button>
+                <>
+                  <Button className="w-full h-11" onClick={openReceipt}>
+                    <ReceiptIcon className="w-4 h-4 mr-2" />
+                    {t('transactionHistory.detail.viewReceipt')}
+                  </Button>
+                  {can('create_sales_return') && (
+                    <Button variant="outline" className="w-full h-11" onClick={() => navigate(`/returns?txId=${selectedTx.id}`)}>
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      {t('returns.startSalesReturn')}
+                    </Button>
+                  )}
+                </>
               )}
 
               <Button

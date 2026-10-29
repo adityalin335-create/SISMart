@@ -1,6 +1,7 @@
 import type { PurchaseOrder, PurchaseOrderItem, StoreSettings } from '@/lib/db';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import type { PrintSize } from '@/components/ReturnPrint';
 
 const LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
 
@@ -8,9 +9,10 @@ interface PurchaseOrderPrintProps {
   order: PurchaseOrder;
   items: PurchaseOrderItem[];
   storeSettings?: StoreSettings;
+  size?: PrintSize;
 }
 
-export default function PurchaseOrderPrint({ order, items, storeSettings }: PurchaseOrderPrintProps) {
+export default function PurchaseOrderPrint({ order, items, storeSettings, size = 'A4' }: PurchaseOrderPrintProps) {
   const { t, i18n } = useTranslation('settings');
   const locale = LOCALES[i18n.language] ?? 'id-ID';
   const currency = new Intl.NumberFormat(locale, {
@@ -21,7 +23,7 @@ export default function PurchaseOrderPrint({ order, items, storeSettings }: Purc
   const date = new Intl.DateTimeFormat(locale, { dateStyle: 'long' });
 
   return createPortal(
-    <article className="po-print-document" aria-hidden="true">
+    <article className={`po-print-document po-print-${size.replace('mm', '')}`} aria-hidden="true">
       <header className="po-print-header">
         <h1>{storeSettings?.storeName || t('purchaseOrders.print.storeFallback')}</h1>
         {storeSettings?.address && <p>{storeSettings.address}</p>}
@@ -81,6 +83,10 @@ export default function PurchaseOrderPrint({ order, items, storeSettings }: Purc
         <h3>{t('purchaseOrders.print.notes')}</h3>
         <p>{order.notes || t('purchaseOrders.print.noNotes')}</p>
       </section>
+      <footer className="po-print-signatures">
+        <span>{t('returns.createdBy')}</span>
+        <span>{t('returns.approvedBy')}</span>
+      </footer>
     </article>,
     document.body,
   );

@@ -123,6 +123,12 @@ export default function Pengaturan() {
     toast.success(enabled ? t('toast.debtEnabled') : t('toast.debtDisabled'));
   };
 
+  const handleToggleReturnApproval = async (enabled: boolean) => {
+    if (!storeSettings?.id) return;
+    await db.storeSettings.update(storeSettings.id, { returnApprovalRequired: enabled });
+    toast.success(enabled ? t('returns.approval.enabled') : t('returns.approval.disabled'));
+  };
+
   // Store edit
   const [storeDialog, setStoreDialog] = useState(false);
   const [storeName, setStoreName] = useState('');
@@ -461,6 +467,18 @@ export default function Pengaturan() {
             </Card>
           </Link>
         )}
+        {(can('create_purchase_return') || can('approve_purchase_return') ||
+          can('create_sales_return') || can('approve_sales_return')) && (
+          <Link to="/returns">
+            <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow mb-2">
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-warning/10 text-warning flex items-center justify-center"><ClipboardCheck className="w-4 h-4" /></div>
+                <div className="flex-1"><p className="text-sm font-semibold">{t('returns.title')}</p><p className="text-[10px] text-muted-foreground">{t('returns.menuDescription')}</p></div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
+        )}
         {can('manage_customers') && storeSettings?.allowDebt && (
           <Link to="/debts">
             <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow mb-2">
@@ -534,6 +552,22 @@ export default function Pengaturan() {
                 <p className="text-[10px] text-muted-foreground">{t('masterData.allowDebt.description')}</p>
               </div>
               <Switch checked={storeSettings?.allowDebt ?? false} onCheckedChange={handleToggleDebt} />
+            </CardContent>
+          </Card>
+        )}
+
+        {can('manage_store_settings') && (
+          <Card className="border-0 shadow-sm mb-2">
+            <CardContent className="p-3 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-warning/10 text-warning flex items-center justify-center"><ShieldCheck className="w-4 h-4" /></div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold">{t('returns.approval.title')}</p>
+                <p className="text-[10px] text-muted-foreground">{t('returns.approval.description')}</p>
+              </div>
+              <Switch
+                checked={storeSettings?.returnApprovalRequired ?? false}
+                onCheckedChange={handleToggleReturnApproval}
+              />
             </CardContent>
           </Card>
         )}

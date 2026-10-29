@@ -6,7 +6,10 @@ export type StockMovementType =
   | 'sale'
   | 'stock_adjustment'
   | 'stock_opname'
-  | 'return';
+  | 'return'
+  | 'purchase_return'
+  | 'sales_return'
+  | 'exchange';
 
 export interface StockCardMovement {
   id: string;
@@ -104,6 +107,9 @@ export async function getStockCardMovements(product: Product): Promise<StockCard
     const isOpname = stockOut.movementType === 'stock_opname' || stockOut.reason === 'opname' || /opname/i.test(stockOut.notes);
     const isOpening = stockOut.movementType === 'opening_stock';
     const isSale = stockOut.movementType === 'sale' || stockOut.reason === 'sales';
+    const isPurchaseReturn = stockOut.movementType === 'purchase_return';
+    const isSalesReturn = stockOut.movementType === 'sales_return';
+    const isExchange = stockOut.movementType === 'exchange';
     const isReturn = stockOut.movementType === 'return' || /retur|return/i.test(stockOut.reason);
     movements.push({
       id: `stock-out-${stockOut.id}`,
@@ -113,7 +119,9 @@ export async function getStockCardMovements(product: Product): Promise<StockCard
         : isOpname
         ? opnameReference(stockOut.notes, stockOut.id ?? 0)
         : `STOCK-OUT-${stockOut.id}`),
-      type: isOpening ? 'opening_stock' : isSale ? 'sale' : isOpname ? 'stock_opname' : isReturn ? 'return' : 'stock_adjustment',
+      type: isOpening ? 'opening_stock' : isSale ? 'sale' : isOpname ? 'stock_opname' :
+        isPurchaseReturn ? 'purchase_return' : isSalesReturn ? 'sales_return' :
+          isExchange ? 'exchange' : isReturn ? 'return' : 'stock_adjustment',
       delta: -stockOut.quantity,
     });
   }
@@ -185,9 +193,9 @@ export function getDailyStockCardSummaries(
     const sales = roundStock(dayMovements
       .filter(movement => movement.type === 'sale')
       .reduce((total, movement) => total + movement.stockOut - movement.stockIn, 0));
-    const returns = sumDelta(['return']);
+    const returns = sumDelta(['return', 'purchase_return', 'sales_return']);
     const stockOpnameAdjustment = sumDelta(['stock_opname']);
-    const reconciliationAdjustment = sumDelta(['stock_adjustment']);
+    const reconciliationAdjustment = sumDelta(['stock_adjustment', 'exchange']);
     const closingStock = roundStock(
       openingStock + receiving + returns + stockOpnameAdjustment - sales + reconciliationAdjustment,
     );

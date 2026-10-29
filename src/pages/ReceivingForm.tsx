@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, ClipboardList, PackageCheck } from 'lucide-react';
+import { ArrowLeft, Check, ClipboardList, PackageCheck, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,8 @@ import LockedPage from '@/components/LockedPage';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/db';
 import { confirmReceiving, getReceivingFormData, saveReceivingDraft } from '@/lib/receivings';
+import ReturnPrint, { type PrintSize } from '@/components/ReturnPrint';
+import type { ReturnPrintData } from '@/components/ReturnPrint';
 
 interface ItemValues {
   quantityReceived: string;
@@ -48,6 +50,9 @@ export default function ReceivingFormPage() {
   const [notes, setNotes] = useState('');
   const [values, setValues] = useState<Record<number, ItemValues>>({});
   const [saving, setSaving] = useState(false);
+  const [printSize, setPrintSize] = useState<PrintSize>('A4');
+  const [printData, setPrintData] = useState<ReturnPrintData | null>(null);
+  const storeSettings = useLiveQuery(() => db.storeSettings.toCollection().first());
   const formData = useLiveQuery(
     () => purchaseOrderId ? getReceivingFormData(Number(purchaseOrderId)) : Promise.resolve(null),
     [purchaseOrderId],
@@ -141,8 +146,31 @@ export default function ReceivingFormPage() {
   };
 
   const isEditable = !existing || existing.receiving.status === 'draft';
+  const printReceiving = () => {
+    if (!existing) return;
+    const acceptedItems = existing.items.map(item => ({
+      name: item.productName + (item.quantityDamaged > 0 ? ` (${t('receivings.damaged')}: ${item.quantityDamaged})` : ''),
+      sku: item.sku,
+      quantity: item.quantityReceived - item.quantityDamaged,
+      unit: item.unit,
+      value: (item.quantityReceived - item.quantityDamaged) * item.actualUnitCost,
+    }));
+    setPrintData({
+      title: t('receivings.title'),
+      number: existing.receiving.receivingNumber,
+      date: new Date(existing.receiving.receivedAt),
+      user: existing.receiving.createdByName,
+      partyLabel: t('returns.supplier'),
+      partyName: existing.receiving.supplierName,
+      notes: existing.receiving.notes,
+      total: acceptedItems.reduce((sum, item) => sum + item.value, 0),
+      rows: acceptedItems,
+    });
+    window.setTimeout(() => window.print(), 50);
+  };
   return (
     <div className="px-4 pt-6 pb-4 space-y-4">
+      <ReturnPrint data={printData} storeSettings={storeSettings} size={printSize} />
       <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="icon" className="h-8 w-8">
           <Link to="/receivings" aria-label={t('receivings.backToList')}><ArrowLeft className="w-4 h-4" /></Link>
@@ -157,6 +185,17 @@ export default function ReceivingFormPage() {
           <Badge variant={existing.receiving.status === 'confirmed' ? 'default' : 'secondary'}>
             {t(`receivings.status.${existing.receiving.status}`)}
           </Badge>
+        )}
+        {existing?.receiving.status === 'confirmed' && (
+          <div className="flex items-center gap-1 print:hidden">
+            <select value={printSize} onChange={event => setPrintSize(event.target.value as PrintSize)}
+              aria-label={t('returns.printSize')} className="h-9 rounded-md border bg-background px-2 text-xs">
+              <option value="58mm">58 mm</option><option value="80mm">80 mm</option><option value="A4">A4</option>
+            </select>
+            <Button type="button" size="sm" variant="outline" onClick={printReceiving}>
+              <Printer className="mr-1 h-4 w-4" />{t('purchaseOrders.print.button')}
+            </Button>
+          </div>
         )}
       </div>
 

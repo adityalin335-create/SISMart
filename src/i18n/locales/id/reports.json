@@ -115,6 +115,20 @@
     "printSuccess": "Laporan berhasil dicetak!",
     "printFailed": "Gagal mencetak. Pastikan printer Bluetooth menyala."
   },
+  "returnReports": {
+    "financialSummary": "Ringkasan Keuangan Retur",
+    "grossSales": "Penjualan Bruto",
+    "salesReturns": "Retur Penjualan",
+    "netSales": "Penjualan Neto",
+    "grossPurchases": "Pembelian Bruto",
+    "purchaseReturns": "Retur Pembelian",
+    "netPurchases": "Pembelian Neto",
+    "purchaseTitle": "Laporan Retur Pembelian",
+    "salesTitle": "Laporan Retur Penjualan",
+    "empty": "Belum ada retur pada periode ini.",
+    "walkIn": "Pelanggan umum",
+    "resolution": { "refund": "Refund", "exchange": "Tukar barang" }
+  },
   "survey": {
     "title": "Jenis usaha yang Anda jalankan menggunakan aplikasi SISMart ini",
     "description": "Bantu kami memahami kebutuhanmu dengan memilih salah satu.",

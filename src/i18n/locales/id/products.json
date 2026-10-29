@@ -53,7 +53,10 @@
       "sale": "Penjualan",
       "stock_adjustment": "Penyesuaian Stok",
       "stock_opname": "Koreksi SO",
-      "return": "Retur"
+      "return": "Retur",
+      "purchase_return": "Retur Pembelian",
+      "sales_return": "Retur Penjualan",
+      "exchange": "Barang Pengganti"
     }
   },
   "dialog": {

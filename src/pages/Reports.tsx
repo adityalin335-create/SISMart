@@ -21,6 +21,7 @@ import DailyReportReceipt from '@/components/reports/DailyReportReceipt';
 import { useTranslation } from 'react-i18next';
 import { calculateProductSales } from '@/lib/report-calculations';
 import { InAppReview } from '@capacitor-community/in-app-review';
+import { getReturnReportTotals } from '@/lib/returns';
 
 const CURRENCY_SYMBOL: Record<string, string> = { id: 'Rp', en: 'Rp', ms: 'Rp' };
 const NUMBER_LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
@@ -78,12 +79,42 @@ export default function Laporan() {
     () => db.debtPayments.where('date').between(dateRange.start, dateRange.end, true, true).toArray(),
     [dateRange.start.getTime(), dateRange.end.getTime()],
   );
+  const salesReturns = useLiveQuery(
+    () => db.salesReturns.where('date').between(dateRange.start, dateRange.end, true, true).toArray(),
+    [dateRange.start.getTime(), dateRange.end.getTime()],
+  );
+  const purchaseReturns = useLiveQuery(
+    () => db.purchaseReturns.where('date').between(dateRange.start, dateRange.end, true, true).toArray(),
+    [dateRange.start.getTime(), dateRange.end.getTime()],
+  );
+  const purchaseMovements = useLiveQuery(
+    () => db.stockIns.where('date').between(dateRange.start, dateRange.end, true, true).toArray(),
+    [dateRange.start.getTime(), dateRange.end.getTime()],
+  );
+  const purchaseReturnLines = useLiveQuery(async () => {
+    if (!purchaseReturns?.length) return [];
+    return db.purchaseReturnItems.where('purchaseReturnId').anyOf(purchaseReturns.map(item => item.id!)).toArray();
+  }, [purchaseReturns]);
+  const salesReturnLines = useLiveQuery(async () => {
+    if (!salesReturns?.length) return [];
+    return db.salesReturnItems.where('salesReturnId').anyOf(salesReturns.map(item => item.id!)).toArray();
+  }, [salesReturns]);
 
   const expenseCategories = useLiveQuery(() =>
     db.expenseCategories.where('isDeleted').equals(0).toArray(),
   );
 
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
+  const returnTotals = getReturnReportTotals(
+    (transactions ?? []).map(row => ({ total: row.total })),
+    (purchaseMovements ?? []).filter(row => row.movementType === 'receiving').map(row => ({ totalValue: row.totalPrice })),
+    salesReturns ?? [],
+    purchaseReturns ?? [],
+  );
+  const confirmedPurchaseReturns = (purchaseReturns ?? []).filter(row => row.status === 'confirmed');
+  const confirmedSalesReturns = (salesReturns ?? []).filter(row => row.status === 'confirmed');
+  const purchaseReturnById = new Map(confirmedPurchaseReturns.map(row => [row.id!, row]));
+  const salesReturnById = new Map(confirmedSalesReturns.map(row => [row.id!, row]));
 
   if (!can('view_reports')) {
     return <LockedPage title={t('locked.title')} permissionLabel={t('locked.permissionLabel')} />;
@@ -418,6 +449,53 @@ export default function Laporan() {
             <span>{t('pl.netMargin')}</span>
             <span className="font-semibold">{netMarginPercent.toFixed(1)}%</span>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">{t('returnReports.financialSummary')}</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <div className="flex justify-between"><span>{t('returnReports.grossSales')}</span><strong>{rp(returnTotals.grossSales)}</strong></div>
+          <div className="flex justify-between text-destructive"><span>{t('returnReports.salesReturns')}</span><strong>-{rp(returnTotals.salesReturns)}</strong></div>
+          <div className="flex justify-between border-t pt-2"><span>{t('returnReports.netSales')}</span><strong>{rp(returnTotals.netSales)}</strong></div>
+          <div className="flex justify-between border-t pt-2"><span>{t('returnReports.grossPurchases')}</span><strong>{rp(returnTotals.grossPurchases)}</strong></div>
+          <div className="flex justify-between text-destructive"><span>{t('returnReports.purchaseReturns')}</span><strong>-{rp(returnTotals.purchaseReturns)}</strong></div>
+          <div className="flex justify-between border-t pt-2"><span>{t('returnReports.netPurchases')}</span><strong>{rp(returnTotals.netPurchases)}</strong></div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">{t('returnReports.purchaseTitle')}</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {(purchaseReturnLines ?? []).filter(item => purchaseReturnById.has(item.purchaseReturnId)).map(item => {
+            const parent = purchaseReturnById.get(item.purchaseReturnId)!;
+            const direction = parent.reversalOfId ? -1 : 1;
+            return <div key={item.id} className="flex justify-between gap-2 border-b pb-2 text-xs">
+              <span>{parent.supplierName} · {item.productName} × {direction * item.quantity}<small className="block text-muted-foreground">{format(new Date(parent.date), 'dd/MM/yyyy')}</small></span>
+              <strong>{direction < 0 ? '-' : ''}{rp(item.totalValue)}</strong>
+            </div>;
+          })}
+          {confirmedPurchaseReturns.length === 0 && <p className="text-xs text-muted-foreground">{t('returnReports.empty')}</p>}
+        </CardContent>
+      </Card>
+
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">{t('returnReports.salesTitle')}</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {(salesReturnLines ?? []).filter(item => salesReturnById.has(item.salesReturnId)).map(item => {
+            const parent = salesReturnById.get(item.salesReturnId)!;
+            const direction = parent.reversalOfId ? -1 : 1;
+            const itemsForReturn = (salesReturnLines ?? []).filter(line => line.salesReturnId === parent.id);
+            const lineRefund = itemsForReturn.reduce((sum, line) => sum + line.totalValue, 0) > 0
+              ? parent.refundValue * item.totalValue / itemsForReturn.reduce((sum, line) => sum + line.totalValue, 0)
+              : 0;
+            return <div key={item.id} className="flex justify-between gap-2 border-b pb-2 text-xs">
+              <span>{parent.customerName || t('returnReports.walkIn')} · {item.productName} × {direction * item.quantity}
+                <small className="block text-muted-foreground">{t(`returnReports.resolution.${parent.resolution}`)} · {format(new Date(parent.date), 'dd/MM/yyyy')}</small></span>
+              <strong>{direction < 0 ? '-' : ''}{rp(lineRefund)}</strong>
+            </div>;
+          })}
+          {confirmedSalesReturns.length === 0 && <p className="text-xs text-muted-foreground">{t('returnReports.empty')}</p>}
         </CardContent>
       </Card>
 

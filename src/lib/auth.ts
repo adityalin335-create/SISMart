@@ -75,6 +75,22 @@ export const PERMISSION_LABELS: Record<PermissionKey, { title: string; desc: str
     title: 'Lihat Pengeluaran',
     desc: 'Lihat daftar dan total pengeluaran toko',
   },
+  create_purchase_return: {
+    title: 'Buat Retur Pembelian',
+    desc: 'Buat dokumen retur barang ke supplier',
+  },
+  approve_purchase_return: {
+    title: 'Setujui Retur Pembelian',
+    desc: 'Setujui retur pembelian yang menunggu persetujuan',
+  },
+  create_sales_return: {
+    title: 'Buat Retur Penjualan',
+    desc: 'Buat retur dari transaksi pelanggan',
+  },
+  approve_sales_return: {
+    title: 'Setujui Retur Penjualan',
+    desc: 'Setujui retur penjualan yang menunggu persetujuan',
+  },
 };
 
 // Default permission set for new staff: create transaction only.

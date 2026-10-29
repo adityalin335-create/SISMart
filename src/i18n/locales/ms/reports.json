@@ -115,6 +115,20 @@
     "printSuccess": "Laporan berjaya dicetak!",
     "printFailed": "Gagal mencetak. Pastikan pencetak Bluetooth dihidupkan."
   },
+  "returnReports": {
+    "financialSummary": "Ringkasan Kewangan Pemulangan",
+    "grossSales": "Jualan Kasar",
+    "salesReturns": "Pemulangan Jualan",
+    "netSales": "Jualan Bersih",
+    "grossPurchases": "Pembelian Kasar",
+    "purchaseReturns": "Pemulangan Pembelian",
+    "netPurchases": "Pembelian Bersih",
+    "purchaseTitle": "Laporan Pemulangan Pembelian",
+    "salesTitle": "Laporan Pemulangan Jualan",
+    "empty": "Tiada pemulangan dalam tempoh ini.",
+    "walkIn": "Pelanggan umum",
+    "resolution": { "refund": "Bayaran balik", "exchange": "Tukar barang" }
+  },
   "survey": {
     "title": "Apakah jenis perniagaan yang anda jalankan dengan SISMart?",
     "description": "Bantu kami memahami keperluan anda dengan memilih satu.",

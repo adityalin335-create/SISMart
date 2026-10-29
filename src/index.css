@@ -162,15 +162,31 @@
     padding: 0 !important;
   }
 
+  @page thermal58 {
+    size: 58mm auto;
+    margin: 2mm;
+  }
+
+  @page thermal80 {
+    size: 80mm auto;
+    margin: 3mm;
+  }
+
+  @page documentA4 {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
   body {
     margin: 0 !important;
   }
 
-  body > *:not(.po-print-document) {
+  body > *:not(.po-print-document):not(.return-print-document) {
     display: none !important;
   }
 
   .po-print-document {
+    page: documentA4;
     display: block !important;
     position: static !important;
     width: 100% !important;
@@ -178,6 +194,22 @@
     color: #111 !important;
     background: #fff !important;
     font: 10pt Arial, sans-serif !important;
+  }
+
+  .po-print-document.po-print-58 {
+    page: thermal58;
+    width: 54mm !important;
+    font-size: 7pt !important;
+  }
+
+  .po-print-document.po-print-80 {
+    page: thermal80;
+    width: 74mm !important;
+    font-size: 8pt !important;
+  }
+
+  .po-print-document.po-print-A4 {
+    page: documentA4;
   }
 
   .po-print-header {
@@ -247,6 +279,24 @@
     vertical-align: top;
   }
 
+  .po-print-58 .po-print-table th,
+  .po-print-58 .po-print-table td,
+  .po-print-80 .po-print-table th,
+  .po-print-80 .po-print-table td {
+    padding: 1mm;
+    font-size: inherit;
+  }
+
+  .po-print-58 .po-print-meta,
+  .po-print-80 .po-print-meta {
+    grid-template-columns: 1fr;
+    gap: 2mm;
+  }
+
+  .po-print-58 .po-print-title {
+    margin: 4mm 0;
+  }
+
   .po-print-table th {
     background: #f1f1f1 !important;
     font-weight: 700;
@@ -292,5 +342,135 @@
   .po-print-notes p {
     margin: 0;
     white-space: pre-wrap;
+  }
+
+  .po-print-signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25mm;
+    break-inside: avoid;
+  }
+
+  .po-print-58 .po-print-signatures,
+  .po-print-80 .po-print-signatures {
+    margin-top: 10mm;
+    font-size: 7pt;
+  }
+
+  .return-print-document {
+    display: block !important;
+    position: static !important;
+    box-sizing: border-box !important;
+    color: #111 !important;
+    background: #fff !important;
+    font: 10pt Arial, sans-serif !important;
+    width: 100% !important;
+  }
+
+  .return-print-document.return-print-58 {
+    page: thermal58;
+    width: 54mm !important;
+    font-size: 8pt !important;
+  }
+
+  .return-print-document.return-print-80 {
+    page: thermal80;
+    width: 74mm !important;
+    font-size: 9pt !important;
+  }
+
+  .return-print-document.return-print-A4 {
+    page: documentA4;
+  }
+
+  .return-print-document header,
+  .return-print-document h2 {
+    text-align: center;
+  }
+
+  .return-print-document header {
+    border-bottom: 1px solid #444;
+    padding-bottom: 5mm;
+  }
+
+  .return-print-document h1,
+  .return-print-document h2,
+  .return-print-document p {
+    margin: 2mm 0;
+  }
+
+  .return-print-document h1 {
+    font-size: 1.4em;
+  }
+
+  .return-print-document h2 {
+    margin-top: 5mm;
+    font-size: 1.25em;
+  }
+
+  .return-print-number {
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .return-print-document dl {
+    display: grid;
+    gap: 2mm;
+  }
+
+  .return-print-document dl div,
+  .return-print-document .return-print-total {
+    display: flex;
+    justify-content: space-between;
+    gap: 2mm;
+  }
+
+  .return-print-document dt {
+    color: #555;
+  }
+
+  .return-print-document dd {
+    margin: 0;
+    text-align: right;
+  }
+
+  .return-print-document table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4mm;
+  }
+
+  .return-print-document th,
+  .return-print-document td {
+    padding: 2mm 1mm;
+    border-bottom: 1px solid #bbb;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .return-print-document th:not(:first-child),
+  .return-print-document td:not(:first-child) {
+    text-align: right;
+  }
+
+  .return-print-document small {
+    display: block;
+    color: #555;
+  }
+
+  .return-print-document .return-print-total {
+    border-top: 1px solid #444;
+    padding-top: 3mm;
+  }
+
+  .return-print-document section {
+    margin-top: 5mm;
+    white-space: pre-wrap;
+  }
+
+  .return-print-document footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25mm;
   }
 }
