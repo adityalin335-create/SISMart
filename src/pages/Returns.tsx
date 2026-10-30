@@ -8,6 +8,16 @@ import { db, type PurchaseReturn, type SalesReturn } from '@/lib/db';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,7 +47,10 @@ export default function ReturnsPage() {
   const { t } = useTranslation('settings');
   const { can, currentUser } = useAuth();
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState(searchParams.get('txId') ? 'sales' : 'purchase');
+  const requestedTab = searchParams.get('tab');
+  const [tab, setTab] = useState(searchParams.get('txId')
+    ? 'sales'
+    : ['purchase', 'sales', 'approval'].includes(requestedTab ?? '') ? requestedTab! : 'purchase');
   const [supplierId, setSupplierId] = useState('');
   const [purchaseQuantities, setPurchaseQuantities] = useState<Record<number, string>>({});
   const [transactionId, setTransactionId] = useState(searchParams.get('txId') ?? '');
@@ -50,6 +63,10 @@ export default function ReturnsPage() {
   const [notes, setNotes] = useState('');
   const [printData, setPrintData] = useState<ReturnPrintData | null>(null);
   const [printSize, setPrintSize] = useState<PrintSize>('A4');
+  const [returnToReverse, setReturnToReverse] = useState<{
+    record: PurchaseReturn | SalesReturn;
+    type: 'purchase' | 'sales';
+  } | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>({});
   const bounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
 
@@ -105,8 +122,10 @@ export default function ReturnsPage() {
     if (txParam) {
       setTransactionId(txParam);
       setTab('sales');
+    } else if (['purchase', 'sales', 'approval'].includes(requestedTab ?? '')) {
+      setTab(requestedTab!);
     }
-  }, [searchParams]);
+  }, [searchParams, requestedTab]);
 
   const pendingPurchaseReturns = (purchaseReturns ?? []).filter(row => row.status === 'pending_approval');
   const pendingSalesReturns = (salesReturns ?? []).filter(row => row.status === 'pending_approval');
@@ -222,12 +241,18 @@ export default function ReturnsPage() {
     }
   };
 
-  const handleReverse = async (record: PurchaseReturn | SalesReturn, type: 'purchase' | 'sales') => {
-    if (!window.confirm(t('returns.reverseConfirm', { number: record.returnNumber }))) return;
+  const handleReverse = (record: PurchaseReturn | SalesReturn, type: 'purchase' | 'sales') => {
+    setReturnToReverse({ record, type });
+  };
+
+  const confirmReverse = async () => {
+    if (!returnToReverse) return;
     try {
+      const { record, type } = returnToReverse;
       if (type === 'purchase') await reversePurchaseReturn(record.id!, currentUser?.id, currentUser?.name ?? '');
       else await reverseSalesReturn(record.id!, currentUser?.id, currentUser?.name ?? '');
       toast.success(t('returns.reversalCreated'));
+      setReturnToReverse(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('returns.saveFailed'));
     }
@@ -239,6 +264,18 @@ export default function ReturnsPage() {
   return (
     <div className="px-4 pt-6 pb-24 space-y-4">
       <ReturnPrint data={printData} storeSettings={storeSettings} size={printSize} />
+      <AlertDialog open={returnToReverse !== null} onOpenChange={open => !open && setReturnToReverse(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('returns.cancelReturnTitle')}</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-line">{t('returns.cancelReturnDescription')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('returns.cancelReturnCancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmReverse}>{t('returns.cancelReturnContinue')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="h-8 w-8 print:hidden" onClick={() => window.history.back()}>
           <ArrowLeft className="h-4 w-4" />

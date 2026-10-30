@@ -9,7 +9,7 @@ import { format, subDays } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 import LockedPage from '@/components/LockedPage';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getTrackedStockProducts } from '@/lib/stock-report-period';
 import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
 import { getDateRangeBounds } from '@/lib/date-range';
@@ -17,15 +17,34 @@ import { getDateRangeBounds } from '@/lib/date-range';
 const CURRENCY_SYMBOL: Record<string, string> = { id: 'Rp', en: 'Rp', ms: 'Rp' };
 const NUMBER_LOCALES: Record<string, string> = { id: 'id-ID', en: 'en-US', ms: 'ms-MY' };
 
+function getQueryDate(value: string | null): Date | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return undefined;
+  return date;
+}
+
 export default function StockReport() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { can } = useAuth();
   const { t, i18n } = useTranslation('settings');
   const numberLocale = NUMBER_LOCALES[i18n.language] ?? 'id-ID';
   const currencySymbol = CURRENCY_SYMBOL[i18n.language] ?? 'Rp';
   const [dateRange, setDateRange] = useState<DateRange>(() => {
     const now = new Date();
-    return { from: subDays(now, 6), to: now };
+    if (searchParams.get('range') === 'all') return {};
+    if (searchParams.has('from') || searchParams.has('to')) {
+      return {
+        from: getQueryDate(searchParams.get('from')),
+        to: getQueryDate(searchParams.get('to')),
+      };
+    }
+    return {
+      from: subDays(now, 6),
+      to: now,
+    };
   });
   const bounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
 

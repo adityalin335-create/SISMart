@@ -1,6 +1,13 @@
 {
   "title": "Reports",
   "export": "Export",
+  "navigation": {
+    "title": "Report groups",
+    "sales": "Sales",
+    "purchases": "Purchases",
+    "returns": "Returns",
+    "stock": "Stock"
+  },
   "locked": {
     "title": "Reports",
     "permissionLabel": "View Reports & Profit"

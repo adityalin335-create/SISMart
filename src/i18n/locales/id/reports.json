@@ -1,6 +1,13 @@
 {
   "title": "Laporan",
   "export": "Ekspor",
+  "navigation": {
+    "title": "Kelompok laporan",
+    "sales": "Penjualan",
+    "purchases": "Pembelian",
+    "returns": "Retur",
+    "stock": "Stok"
+  },
   "locked": {
     "title": "Laporan",
     "permissionLabel": "Lihat Laporan & Profit"

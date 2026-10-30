@@ -25,6 +25,10 @@ export default function PurchaseOrderPrint({ order, items, storeSettings, size =
   return createPortal(
     <article className={`po-print-document po-print-${size.replace('mm', '')}`} aria-hidden="true">
       <header className="po-print-header">
+        <div className="po-print-brand">
+          {storeSettings?.logo && <img src={storeSettings.logo} alt="Logo SISMart" />}
+          <strong>SISMart</strong>
+        </div>
         <h1>{storeSettings?.storeName || t('purchaseOrders.print.storeFallback')}</h1>
         {storeSettings?.address && <p>{storeSettings.address}</p>}
         {storeSettings?.phone && <p>{storeSettings.phone}</p>}
@@ -43,6 +47,10 @@ export default function PurchaseOrderPrint({ order, items, storeSettings, size =
         <div>
           <span>{t('purchaseOrders.print.supplier')}</span>
           <strong>{order.supplierName}</strong>
+        </div>
+        <div>
+          <span>{t('purchaseOrders.print.user')}</span>
+          <strong>{order.createdByName}</strong>
         </div>
       </section>
 
@@ -84,8 +92,8 @@ export default function PurchaseOrderPrint({ order, items, storeSettings, size =
         <p>{order.notes || t('purchaseOrders.print.noNotes')}</p>
       </section>
       <footer className="po-print-signatures">
-        <span>{t('returns.createdBy')}</span>
-        <span>{t('returns.approvedBy')}</span>
+        <div><span>{t('returns.createdBy')}</span><strong>{order.createdByName}</strong></div>
+        <div><span>{t('returns.approvedBy')}</span></div>
       </footer>
     </article>,
     document.body,

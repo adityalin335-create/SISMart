@@ -5,10 +5,77 @@
   },
   "nav": {
     "home": "Home",
-    "products": "Products",
     "cashier": "Cashier",
+    "inventory": "Inventory",
     "reports": "Reports",
-    "more": "Settings"
+    "more": "More"
+  },
+  "workspaces": {
+    "cashier": {
+      "title": "Cashier",
+      "description": "Access sales, transactions, and customer returns."
+    },
+    "inventory": {
+      "title": "Inventory",
+      "description": "Manage purchasing, receiving, and stock movement."
+    },
+    "more": {
+      "title": "More",
+      "description": "Manage master data, users, and store settings."
+    },
+    "groups": {
+      "cashier": "Cashier Operations",
+      "inventory": "Inventory Operations",
+      "masterData": "Master Data",
+      "administration": "Administration",
+      "settings": "Settings"
+    },
+    "items": {
+      "cashier": "Cashier",
+      "transactionHistory": "Transaction History",
+      "salesReturn": "Sales Return",
+      "debts": "Customer Debts",
+      "purchaseOrders": "Purchase Orders (PO)",
+      "receivings": "Receiving",
+      "purchaseReturn": "Purchase Return",
+      "stockCard": "Stock Card",
+      "stockIn": "Stock In",
+      "stockOut": "Stock Out",
+      "stockOpname": "Stock Count",
+      "stockReport": "Stock Report",
+      "products": "Products",
+      "categories": "Categories",
+      "suppliers": "Suppliers",
+      "customers": "Customers",
+      "users": "Users & Access Rights",
+      "backupRestore": "Backup & Restore",
+      "storeSettings": "Store Settings",
+      "printer": "Printer",
+      "system": "System"
+    },
+    "descriptions": {
+      "cashier": "Start a sales transaction.",
+      "transactionHistory": "Find transactions and reprint receipts.",
+      "salesReturn": "Process a return from a customer transaction.",
+      "debts": "Manage customer payments and outstanding balances.",
+      "purchaseOrders": "Create and track purchase orders.",
+      "receivings": "Record goods received from suppliers.",
+      "purchaseReturn": "Record goods returned to a supplier.",
+      "stockCard": "Choose a product to view its stock card.",
+      "stockIn": "Record stock additions outside PO receiving.",
+      "stockOut": "Record stock reductions outside sales.",
+      "stockOpname": "Compare system and physical stock.",
+      "stockReport": "Review stock levels and movement.",
+      "products": "Manage products, prices, SKUs, and stock.",
+      "categories": "Manage product categories and payment methods.",
+      "suppliers": "Manage supplier records.",
+      "customers": "Manage store customer records.",
+      "users": "Manage user accounts, roles, and access rights.",
+      "backupRestore": "Save or restore store data.",
+      "storeSettings": "Manage store identity and information.",
+      "printer": "Choose a printer for printing.",
+      "system": "Manage language, appearance, and app preferences."
+    }
   },
   "common": {
     "save": "Save",

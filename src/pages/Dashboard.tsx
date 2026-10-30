@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, isStockManaged, type TransactionItemRecord } from '@/lib/db';
 import { useState, useEffect, useMemo } from 'react';
-import { ShoppingCart, Package, BarChart3, TrendingUp, AlertTriangle, Receipt, ChevronRight, ClipboardList, Wallet } from 'lucide-react';
+import { ShoppingCart, TrendingUp, AlertTriangle, Receipt, ChevronRight, ClipboardList, Wallet, PackageCheck, ClipboardCheck, CircleAlert, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -56,12 +56,36 @@ export default function Dashboard() {
     return all.filter(t => t.status !== 'open');
   }, []);
 
+  const todayPurchases = useLiveQuery(async () => {
+    const records = await db.stockIns.where('date').aboveOrEqual(today).toArray();
+    return records.filter(record => record.movementType === 'receiving');
+  }, []);
+
+  const todaySalesReturns = useLiveQuery(
+    () => db.salesReturns.where('date').aboveOrEqual(today).toArray(),
+    [],
+  );
+  const todayPurchaseReturns = useLiveQuery(
+    () => db.purchaseReturns.where('date').aboveOrEqual(today).toArray(),
+    [],
+  );
+  const pendingPurchaseReturns = useLiveQuery(
+    () => db.purchaseReturns.where('status').equals('pending_approval').count(),
+    [],
+  );
+  const pendingSalesReturns = useLiveQuery(
+    () => db.salesReturns.where('status').equals('pending_approval').count(),
+    [],
+  );
+
   const openBillsCount = useLiveQuery(async () => {
     const open = await db.transactions.where('status').equals('open').toArray();
     return open.length;
   }, []);
 
   const lowStockProducts = useLiveQuery(() => db.products.filter(p => p.isDeleted === 0 && isStockManaged(p) && p.stock <= 5).toArray());
+  const nearEmptyCount = lowStockProducts?.filter(product => product.stock <= 2).length ?? 0;
+  const lowStockCount = lowStockProducts?.filter(product => product.stock > 2).length ?? 0;
 
   const todayExpenses = useLiveQuery(async () => {
     const all = await db.expenses.where('date').aboveOrEqual(today).toArray();
@@ -92,6 +116,14 @@ export default function Dashboard() {
 
   const totalSales = todayTransactions?.reduce((sum, t) => sum + t.total, 0) ?? 0;
   const totalProfit = todayTransactions?.reduce((sum, t) => sum + t.profit, 0) ?? 0;
+  const purchaseTotal = todayPurchases?.reduce((sum, row) => sum + row.totalPrice, 0) ?? 0;
+  const salesReturnTotal = (todaySalesReturns ?? [])
+    .filter(row => row.status === 'confirmed')
+    .reduce((sum, row) => sum + row.totalValue * (row.reversalOfId ? -1 : 1), 0);
+  const purchaseReturnTotal = (todayPurchaseReturns ?? [])
+    .filter(row => row.status === 'confirmed')
+    .reduce((sum, row) => sum + row.totalValue * (row.reversalOfId ? -1 : 1), 0);
+  const pendingReturnCount = (pendingPurchaseReturns ?? 0) + (pendingSalesReturns ?? 0);
   const totalExpensesToday = todayExpenses?.reduce((sum, e) => sum + e.amount, 0) ?? 0;
   const txCount = todayTransactions?.length ?? 0;
   const expenseCount = todayExpenses?.length ?? 0;
@@ -100,8 +132,9 @@ export default function Dashboard() {
 
   const quickActions: { to: string; icon: typeof ShoppingCart; label: string; color: string; perm?: PermissionKey }[] = [
     { to: '/cashier', icon: ShoppingCart, label: t('quickActions.cashier'), color: 'bg-primary/10 text-primary', perm: 'create_transaction' },
-    { to: '/products', icon: Package, label: t('quickActions.products'), color: 'bg-accent/10 text-accent' },
-    { to: '/reports', icon: BarChart3, label: t('quickActions.reports'), color: 'bg-success/10 text-success', perm: 'view_reports' },
+    { to: '/purchase-orders', icon: ClipboardList, label: t('quickActions.purchaseOrders'), color: 'bg-accent/10 text-accent', perm: 'manage_stock_inout' },
+    { to: '/receivings', icon: PackageCheck, label: t('quickActions.receivings'), color: 'bg-success/10 text-success', perm: 'manage_stock_inout' },
+    { to: '/settings/stock-opname', icon: ClipboardCheck, label: t('quickActions.stockOpname'), color: 'bg-warning/10 text-warning', perm: 'manage_stock_inout' },
   ];
   const visibleActions = quickActions.filter((a) => !a.perm || can(a.perm));
 
@@ -122,8 +155,8 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Operational overview */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Card className="border-0 shadow-sm bg-primary text-primary-foreground">
           <CardContent className="p-4">
             <p className="text-xs opacity-80">{t('stats.salesToday')}</p>
@@ -131,32 +164,88 @@ export default function Dashboard() {
             <p className="text-xs opacity-70 mt-1">{t('stats.transactions', { count: txCount })}</p>
           </CardContent>
         </Card>
-        {can('view_reports') && (
-          <Card className="border-0 shadow-sm">
+        <Link to="/inventory" className="contents">
+          <Card className="border-0 shadow-sm transition-shadow hover:shadow-md">
             <CardContent className="p-4">
-              <div className="flex items-center gap-1.5 text-success">
-                <TrendingUp className="w-4 h-4" />
-                <p className="text-xs font-medium">{t('stats.profitToday')}</p>
-              </div>
-              <p className="text-xl font-bold mt-1">Rp {totalProfit.toLocaleString(numberLocale)}</p>
+              <p className="text-xs text-muted-foreground">{t('stats.purchasesToday')}</p>
+              <p className="mt-1 text-xl font-bold">Rp {purchaseTotal.toLocaleString(numberLocale)}</p>
             </CardContent>
           </Card>
-        )}
-        {(can('view_expenses') || can('manage_expenses')) && (
-          <Link to="/expenses" className="contents">
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+        </Link>
+        <Link to="/reports" className="contents">
+          <Card className="border-0 shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">{t('stats.returnsToday')}</p>
+              <p className="mt-1 text-xl font-bold">Rp {(salesReturnTotal + purchaseReturnTotal).toLocaleString(numberLocale)}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to="/stock-report" className="contents">
+          <Card className="border-0 shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-1.5 text-destructive">
+                <CircleAlert className="h-4 w-4" />
+                <p className="text-xs font-medium">{t('stats.nearlyOut')}</p>
+              </div>
+              <p className="mt-1 text-xl font-bold">{nearEmptyCount}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to="/stock-report" className="contents">
+          <Card className="border-0 shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-1.5 text-warning">
+                <AlertTriangle className="h-4 w-4" />
+                <p className="text-xs font-medium">{t('stats.lowStock')}</p>
+              </div>
+              <p className="mt-1 text-xl font-bold">{lowStockCount}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        {can('create_purchase_return') || can('approve_purchase_return') || can('create_sales_return') || can('approve_sales_return') ? (
+          <Link to="/returns?tab=approval" className="contents">
+            <Card className="border-0 shadow-sm transition-shadow hover:shadow-md">
               <CardContent className="p-4">
-                <div className="flex items-center gap-1.5 text-warning">
-                  <Wallet className="w-4 h-4" />
-                  <p className="text-xs font-medium">{t('stats.expensesToday')}</p>
+                <div className="flex items-center gap-1.5 text-accent">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <p className="text-xs font-medium">{t('stats.pendingReturnApproval')}</p>
                 </div>
-                <p className="text-xl font-bold mt-1">Rp {totalExpensesToday.toLocaleString(numberLocale)}</p>
-                <p className="text-xs text-muted-foreground mt-1">{t('stats.expenseNotes', { count: expenseCount })}</p>
+                <p className="mt-1 text-xl font-bold">{pendingReturnCount}</p>
               </CardContent>
             </Card>
           </Link>
-        )}
+        ) : null}
       </div>
+
+      {(can('view_reports') || can('view_expenses') || can('manage_expenses')) && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {can('view_reports') && (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-1.5 text-success">
+                  <TrendingUp className="h-4 w-4" />
+                  <p className="text-xs font-medium">{t('stats.profitToday')}</p>
+                </div>
+                <p className="mt-1 text-xl font-bold">Rp {totalProfit.toLocaleString(numberLocale)}</p>
+              </CardContent>
+            </Card>
+          )}
+          {(can('view_expenses') || can('manage_expenses')) && (
+            <Link to="/expenses" className="contents">
+              <Card className="border-0 shadow-sm transition-shadow hover:shadow-md">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-1.5 text-warning">
+                    <Wallet className="h-4 w-4" />
+                    <p className="text-xs font-medium">{t('stats.expensesToday')}</p>
+                  </div>
+                  <p className="mt-1 text-xl font-bold">Rp {totalExpensesToday.toLocaleString(numberLocale)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t('stats.expenseNotes', { count: expenseCount })}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* Open Bills */}
       {openBillsCount != null && openBillsCount > 0 && (
@@ -180,7 +269,7 @@ export default function Dashboard() {
       {visibleActions.length > 0 && (
         <div>
           <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('quickActions.title')}</h2>
-          <div className={`grid gap-3 ${visibleActions.length === 1 ? 'grid-cols-1' : visibleActions.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {visibleActions.map(({ to, icon: Icon, label, color }) => (
               <Link key={to} to={to}>
                 <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">

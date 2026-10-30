@@ -5,10 +5,77 @@
   },
   "nav": {
     "home": "Beranda",
-    "products": "Produk",
     "cashier": "Kasir",
+    "inventory": "Inventori",
     "reports": "Laporan",
-    "more": "Tetapan"
+    "more": "Lain-lain"
+  },
+  "workspaces": {
+    "cashier": {
+      "title": "Kasir",
+      "description": "Akses jualan, transaksi, dan pemulangan pelanggan."
+    },
+    "inventory": {
+      "title": "Inventori",
+      "description": "Urus pembelian, penerimaan, dan pergerakan stok."
+    },
+    "more": {
+      "title": "Lain-lain",
+      "description": "Urus data induk, pengguna, dan tetapan kedai."
+    },
+    "groups": {
+      "cashier": "Operasi Kasir",
+      "inventory": "Operasi Inventori",
+      "masterData": "Data Induk",
+      "administration": "Pentadbiran",
+      "settings": "Tetapan"
+    },
+    "items": {
+      "cashier": "Kasir",
+      "transactionHistory": "Riwayat Transaksi",
+      "salesReturn": "Retur Penjualan",
+      "debts": "Daftar Hutang",
+      "purchaseOrders": "Pesanan Pembelian (PO)",
+      "receivings": "Penerimaan Barang",
+      "purchaseReturn": "Retur Pembelian",
+      "stockCard": "Kartu Stok",
+      "stockIn": "Barang Masuk",
+      "stockOut": "Barang Keluar",
+      "stockOpname": "Stok Opname",
+      "stockReport": "Laporan Stok",
+      "products": "Produk",
+      "categories": "Kategori",
+      "suppliers": "Supplier",
+      "customers": "Pelanggan",
+      "users": "Pengguna & Hak Akses",
+      "backupRestore": "Backup & Restore",
+      "storeSettings": "Pengaturan Toko",
+      "printer": "Printer",
+      "system": "Sistem"
+    },
+    "descriptions": {
+      "cashier": "Mulai transaksi penjualan.",
+      "transactionHistory": "Cari transaksi dan cetak ulang struk.",
+      "salesReturn": "Proses retur dari transaksi pelanggan.",
+      "debts": "Kelola pembayaran dan saldo hutang pelanggan.",
+      "purchaseOrders": "Buat dan pantau Pesanan Pembelian (PO).",
+      "receivings": "Catat barang yang diterima dari Supplier.",
+      "purchaseReturn": "Catat pengembalian barang kepada Supplier.",
+      "stockCard": "Pilih produk untuk melihat Kartu Stok.",
+      "stockIn": "Catat penambahan stok di luar penerimaan PO.",
+      "stockOut": "Catat pengurangan stok selain penjualan.",
+      "stockOpname": "Cocokkan stok sistem dengan stok fisik.",
+      "stockReport": "Pantau posisi dan pergerakan stok.",
+      "products": "Kelola produk, harga, SKU, dan stok.",
+      "categories": "Atur kategori produk dan metode pembayaran.",
+      "suppliers": "Kelola data Supplier.",
+      "customers": "Kelola data pelanggan toko.",
+      "users": "Kelola akun, peran, dan hak akses pengguna.",
+      "backupRestore": "Simpan atau pulihkan data toko.",
+      "storeSettings": "Atur identitas dan informasi toko.",
+      "printer": "Pilih printer untuk pencetakan.",
+      "system": "Atur bahasa, tampilan, dan preferensi aplikasi."
+    }
   },
   "common": {
     "save": "Simpan",

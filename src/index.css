@@ -218,6 +218,24 @@
     text-align: center;
   }
 
+  .po-print-brand,
+  .return-print-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5pt;
+    margin-bottom: 5pt;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .po-print-brand img,
+  .return-print-brand img {
+    width: 18mm;
+    height: 18mm;
+    object-fit: contain;
+  }
+
   .po-print-header h1 {
     margin: 0 0 4pt;
     font-size: 18pt;
@@ -247,7 +265,7 @@
 
   .po-print-meta {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12pt;
     margin-bottom: 18pt;
   }
@@ -291,6 +309,11 @@
   .po-print-80 .po-print-meta {
     grid-template-columns: 1fr;
     gap: 2mm;
+  }
+
+  .po-print-58 .po-print-title,
+  .po-print-80 .po-print-title {
+    margin: 4mm 0;
   }
 
   .po-print-58 .po-print-title {
@@ -347,14 +370,32 @@
   .po-print-signatures {
     display: flex;
     justify-content: space-between;
+    gap: 12mm;
     margin-top: 25mm;
     break-inside: avoid;
+  }
+
+  .po-print-signatures > div,
+  .return-print-document footer > div {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    border-top: 1px solid #444;
+    padding-top: 2mm;
+    text-align: center;
+  }
+
+  .po-print-signatures strong,
+  .return-print-document footer strong {
+    font-weight: 400;
   }
 
   .po-print-58 .po-print-signatures,
   .po-print-80 .po-print-signatures {
     margin-top: 10mm;
     font-size: 7pt;
+    gap: 2mm;
   }
 
   .return-print-document {
@@ -391,6 +432,15 @@
   .return-print-document header {
     border-bottom: 1px solid #444;
     padding-bottom: 5mm;
+  }
+
+  .return-print-brand {
+    margin-bottom: 2mm;
+  }
+
+  .return-print-brand img {
+    width: 14mm;
+    height: 14mm;
   }
 
   .return-print-document h1,
@@ -471,6 +521,16 @@
   .return-print-document footer {
     display: flex;
     justify-content: space-between;
-    margin-top: 25mm;
+    gap: 12mm;
+    margin-top: 20mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .return-print-document.return-print-58 footer,
+  .return-print-document.return-print-80 footer {
+    margin-top: 10mm;
+    font-size: 7pt;
+    gap: 2mm;
   }
 }

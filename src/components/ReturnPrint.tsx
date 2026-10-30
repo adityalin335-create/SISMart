@@ -32,6 +32,10 @@ export default function ReturnPrint({
   return createPortal(
     <article className={`return-print-document return-print-${size.replace('mm', '')}`} aria-hidden="true">
       <header>
+        <div className="return-print-brand">
+          {storeSettings?.logo && <img src={storeSettings.logo} alt="Logo SISMart" />}
+          <strong>SISMart</strong>
+        </div>
         <h1>{storeSettings?.storeName || 'SISMart'}</h1>
         {storeSettings?.address && <p>{storeSettings.address}</p>}
         {storeSettings?.phone && <p>{storeSettings.phone}</p>}
@@ -58,7 +62,10 @@ export default function ReturnPrint({
       </table>
       <p className="return-print-total"><strong>Total</strong><strong>{currency.format(data.total)}</strong></p>
       <section><strong>Catatan</strong><p>{data.notes || '-'}</p></section>
-      {size === 'A4' && <footer><span>Dibuat oleh</span><span>Disetujui oleh</span></footer>}
+      <footer>
+        <div><span>Dibuat oleh</span><strong>{data.user}</strong></div>
+        <div><span>Disetujui oleh</span></div>
+      </footer>
     </article>,
     document.body,
   );

@@ -4,6 +4,11 @@
   },
   "stats": {
     "salesToday": "Today's Sales",
+    "purchasesToday": "Today's Purchases",
+    "returnsToday": "Today's Returns",
+    "nearlyOut": "Products Nearly Out",
+    "lowStock": "Low Stock",
+    "pendingReturnApproval": "Return Approval Pending",
     "transactions": "{{count}} transactions",
     "profitToday": "Today's Profit",
     "expensesToday": "Today's Expenses",
@@ -16,8 +21,9 @@
   "quickActions": {
     "title": "Quick Access",
     "cashier": "Cashier",
-    "products": "Products",
-    "reports": "Reports"
+    "purchaseOrders": "Purchase Orders (PO)",
+    "receivings": "Receiving",
+    "stockOpname": "Stock Count"
   },
   "recentTransactions": {
     "title": "Recent Transactions",

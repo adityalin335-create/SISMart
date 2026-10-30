@@ -4,6 +4,11 @@
   },
   "stats": {
     "salesToday": "Jualan Hari Ini",
+    "purchasesToday": "Pembelian Hari Ini",
+    "returnsToday": "Pemulangan Hari Ini",
+    "nearlyOut": "Produk Hampir Habis",
+    "lowStock": "Stok Menipis",
+    "pendingReturnApproval": "Menunggu Kelulusan Pemulangan",
     "transactions": "{{count}} transaksi",
     "profitToday": "Untung Hari Ini",
     "expensesToday": "Perbelanjaan Hari Ini",
@@ -16,8 +21,9 @@
   "quickActions": {
     "title": "Akses Pantas",
     "cashier": "Kasir",
-    "products": "Produk",
-    "reports": "Laporan"
+    "purchaseOrders": "Pesanan Pembelian (PO)",
+    "receivings": "Penerimaan Barang",
+    "stockOpname": "Kiraan Stok"
   },
   "recentTransactions": {
     "title": "Transaksi Terkini",

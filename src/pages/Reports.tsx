@@ -19,6 +19,7 @@ import DailyReportReceipt from '@/components/reports/DailyReportReceipt';
 import { useTranslation } from 'react-i18next';
 import { calculateProductSales } from '@/lib/report-calculations';
 import { InAppReview } from '@capacitor-community/in-app-review';
+import { Link } from 'react-router-dom';
 import { getReturnReportTotals } from '@/lib/returns';
 import DateRangeFilter, { type DateRange } from '@/components/DateRangeFilter';
 import { formatRetailDate, getDateRangeBounds, queryDateRange } from '@/lib/date-range';
@@ -37,6 +38,12 @@ export default function Laporan() {
     return { from: today, to: today };
   });
   const dateBounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
+  const stockReportParams = new URLSearchParams();
+  if (dateRange.from) stockReportParams.set('from', format(dateRange.from, 'yyyy-MM-dd'));
+  if (dateRange.to) stockReportParams.set('to', format(dateRange.to, 'yyyy-MM-dd'));
+  if (!dateRange.from && !dateRange.to) stockReportParams.set('range', 'all');
+  const stockReportQuery = stockReportParams.toString();
+  const stockReportHref = `/stock-report${stockReportQuery ? `?${stockReportQuery}` : ''}`;
   const isSingleDay = Boolean(dateRange.from && dateRange.to &&
     format(dateRange.from, 'yyyy-MM-dd') === format(dateRange.to, 'yyyy-MM-dd'));
   const selectedDate = dateRange.from ?? dateRange.to ?? new Date();
@@ -273,8 +280,39 @@ export default function Laporan() {
 
       <DateRangeFilter value={dateRange} onApply={setDateRange} onReset={() => setDateRange({})} />
 
+      <nav aria-label={t('navigation.title')} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <a href="#report-sales" className="rounded-lg border bg-card px-3 py-2 text-center text-xs font-medium text-foreground hover:bg-muted">
+          {t('navigation.sales')}
+        </a>
+        <a href="#report-purchases" className="rounded-lg border bg-card px-3 py-2 text-center text-xs font-medium text-foreground hover:bg-muted">
+          {t('navigation.purchases')}
+        </a>
+        <a href="#report-returns" className="rounded-lg border bg-card px-3 py-2 text-center text-xs font-medium text-foreground hover:bg-muted">
+          {t('navigation.returns')}
+        </a>
+        <Link to={stockReportHref} className="rounded-lg border bg-card px-3 py-2 text-center text-xs font-medium text-foreground hover:bg-muted">
+          {t('navigation.stock')}
+        </Link>
+      </nav>
+
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {[
+          { key: 'returnReports.grossSales', value: returnTotals.grossSales },
+          { key: 'returnReports.netSales', value: returnTotals.netSales },
+          { key: 'returnReports.grossPurchases', value: returnTotals.grossPurchases },
+          { key: 'returnReports.netPurchases', value: returnTotals.netPurchases },
+        ].map(metric => (
+          <Card key={metric.key} className="border-0 shadow-sm">
+            <CardContent className="p-3">
+              <p className="text-[11px] text-muted-foreground">{t(metric.key)}</p>
+              <p className="mt-1 text-sm font-bold sm:text-base">{rp(metric.value)}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       {isSingleDay && (
-        <Card className="border-0 shadow-sm">
+        <Card id="report-sales" className="border-0 shadow-sm scroll-mt-4">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
               <div>
@@ -364,7 +402,7 @@ export default function Laporan() {
         </Card>
       )}
 
-      <Card className="border-0 shadow-sm">
+      <Card id="report-sales" className="border-0 shadow-sm scroll-mt-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-1.5">
             <DollarSign className="w-4 h-4" />
@@ -427,7 +465,7 @@ export default function Laporan() {
         </CardContent>
       </Card>
 
-      <Card className="border-0 shadow-sm">
+      <Card id="report-purchases" className="border-0 shadow-sm scroll-mt-4">
         <CardHeader className="pb-2"><CardTitle className="text-sm">{t('returnReports.financialSummary')}</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="flex justify-between"><span>{t('returnReports.grossSales')}</span><strong>{rp(returnTotals.grossSales)}</strong></div>
@@ -439,7 +477,7 @@ export default function Laporan() {
         </CardContent>
       </Card>
 
-      <Card className="border-0 shadow-sm">
+      <Card id="report-returns" className="border-0 shadow-sm scroll-mt-4">
         <CardHeader className="pb-2"><CardTitle className="text-sm">{t('returnReports.purchaseTitle')}</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {(purchaseReturnLines ?? []).filter(item => purchaseReturnById.has(item.purchaseReturnId)).map(item => {

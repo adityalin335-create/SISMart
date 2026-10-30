@@ -47,6 +47,9 @@ import ReceivingFormPage from "./pages/ReceivingForm";
 import StockCardPage from "./pages/StockCard";
 import ReturnsPage from "./pages/Returns";
 import BackupRestoreSettings from "./pages/settings/BackupRestoreSettings";
+import CashierWorkspace from "./pages/CashierWorkspace";
+import InventoryWorkspace from "./pages/InventoryWorkspace";
+import MoreWorkspace from "./pages/MoreWorkspace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -99,6 +102,30 @@ const App = () => {
                 <AnalyticsTracker />
               <Routes>
                 <Route element={<AppLayout />}>
+                  <Route
+                    path="/cashier-workspace"
+                    element={
+                      <ErrorBoundary>
+                        <CashierWorkspace />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/inventory"
+                    element={
+                      <ErrorBoundary>
+                        <InventoryWorkspace />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/more"
+                    element={
+                      <ErrorBoundary>
+                        <MoreWorkspace />
+                      </ErrorBoundary>
+                    }
+                  />
                   <Route
                     path="/"
                     element={
@@ -200,6 +227,14 @@ const App = () => {
                     element={
                       <ErrorBoundary>
                         <StockReport />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/stock-opname"
+                    element={
+                      <ErrorBoundary>
+                        <StockOpname />
                       </ErrorBoundary>
                     }
                   />
