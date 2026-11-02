@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, seedDefaultData } from '@/lib/db';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import BottomNav from './BottomNav';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useCloudAutoBackup } from '@/hooks/use-cloud-auto-backup';
@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useTranslation } from 'react-i18next';
 
 export default function AppLayout() {
-  const {} = useTranslation();
+  const { t } = useTranslation('common');
   useThemeColor(); // Apply saved theme color on mount
   useCloudAutoBackup(); // Auto cloud backup on app open (if enabled & subscribed)
   const { multiUserEnabled, currentUser, loading } = useAuth();
@@ -37,9 +37,18 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background max-w-lg md:max-w-6xl mx-auto relative">
+    <div className="min-h-[100dvh] bg-background max-w-lg md:max-w-6xl mx-auto relative">
       <main className="pb-20">
-        <Outlet />
+        <Suspense
+          fallback={
+            <div role="status" aria-label={t('loading')} className="flex min-h-[50vh] items-center justify-center">
+              <span className="sr-only">{t('loading')}</span>
+              <span aria-hidden="true" className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
       </main>
       <BottomNav />
       <PushPermissionModal />

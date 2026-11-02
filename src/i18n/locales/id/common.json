@@ -24,10 +24,14 @@
       "description": "Kelola data utama, pengguna, dan pengaturan toko."
     },
     "groups": {
-      "cashier": "Operasional Kasir",
-      "inventory": "Operasional Inventori",
-      "masterData": "Data Master",
-      "administration": "Administrasi",
+      "sales": "Penjualan",
+      "customerService": "Layanan Pelanggan",
+      "procurement": "Pengadaan Barang",
+      "stockMovement": "Pergerakan Stok",
+      "stockControl": "Kontrol & Laporan Stok",
+      "masterData": "Produk & Kategori",
+      "businessRelations": "Supplier & Pelanggan",
+      "administration": "Administrasi & Data",
       "settings": "Pengaturan"
     },
     "items": {
@@ -49,6 +53,7 @@
       "customers": "Pelanggan",
       "users": "Pengguna & Hak Akses",
       "backupRestore": "Backup & Restore",
+      "cloudBackup": "Backup Cloud",
       "storeSettings": "Pengaturan Toko",
       "printer": "Printer",
       "system": "Sistem"
@@ -72,6 +77,7 @@
       "customers": "Kelola data pelanggan toko.",
       "users": "Kelola akun, peran, dan hak akses pengguna.",
       "backupRestore": "Simpan atau pulihkan data toko.",
+      "cloudBackup": "Kelola langganan dan cadangan cloud.",
       "storeSettings": "Atur identitas dan informasi toko.",
       "printer": "Pilih printer untuk pencetakan.",
       "system": "Atur bahasa, tampilan, dan preferensi aplikasi."

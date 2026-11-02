@@ -1464,7 +1464,6 @@
     "footerLabel": "Teks Footer Struk",
     "hideWatermarkLabel": "Sembunyikan Watermark Aplikasi",
     "hideWatermarkDescActive": "Sembunyikan tulisan \"Dicetak Dari Aplikasi SISMart\" di bagian bawah struk.",
-    "hideWatermarkDescRequired": "Watermark hanya dapat dinonaktifkan jika SISMart Cloud aktif.",
     "saveSuccess": "Pengaturan struk berhasil disimpan",
     "saveFailed": "Gagal menyimpan pengaturan struk"
   },

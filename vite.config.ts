@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "kasirgratisan-icon.png"],
+      includeAssets: ["favicon.ico", "apple-touch-icon.png", "android-chrome-192x192.png", "android-chrome-512x512.png"],
       manifest: {
         name: "SISMart - Sistem Kasir Minimarket",
         short_name: "SISMart",
@@ -26,20 +26,20 @@ export default defineConfig(({ mode }) => ({
         start_url: "/",
         display: "standalone",
         background_color: "#FFFFFF",
-        theme_color: "#F97316",
+        theme_color: "#0169ff",
         orientation: "any",
         icons: [
           {
-            src: "/kasirgratisan-icon.png",
+            src: "/android-chrome-192x192.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any"
           },
           {
-            src: "/kasirgratisan-icon.png",
+            src: "/android-chrome-512x512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable",
+            purpose: "any maskable"
           },
         ],
       },

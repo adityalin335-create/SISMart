@@ -24,10 +24,14 @@
       "description": "Urus data induk, pengguna, dan tetapan kedai."
     },
     "groups": {
-      "cashier": "Operasi Kasir",
-      "inventory": "Operasi Inventori",
-      "masterData": "Data Induk",
-      "administration": "Pentadbiran",
+      "sales": "Jualan",
+      "customerService": "Khidmat Pelanggan",
+      "procurement": "Perolehan Barang",
+      "stockMovement": "Pergerakan Stok",
+      "stockControl": "Kawalan & Laporan Stok",
+      "masterData": "Produk & Kategori",
+      "businessRelations": "Pembekal & Pelanggan",
+      "administration": "Pentadbiran & Data",
       "settings": "Tetapan"
     },
     "items": {
@@ -49,6 +53,7 @@
       "customers": "Pelanggan",
       "users": "Pengguna & Hak Akses",
       "backupRestore": "Backup & Restore",
+      "cloudBackup": "Sandaran Awan",
       "storeSettings": "Pengaturan Toko",
       "printer": "Printer",
       "system": "Sistem"
@@ -72,6 +77,7 @@
       "customers": "Kelola data pelanggan toko.",
       "users": "Kelola akun, peran, dan hak akses pengguna.",
       "backupRestore": "Simpan atau pulihkan data toko.",
+      "cloudBackup": "Urus langganan dan sandaran awan.",
       "storeSettings": "Atur identitas dan informasi toko.",
       "printer": "Pilih printer untuk pencetakan.",
       "system": "Atur bahasa, tampilan, dan preferensi aplikasi."

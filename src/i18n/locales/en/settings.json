@@ -1465,7 +1465,6 @@
     "footerLabel": "Receipt Footer Text",
     "hideWatermarkLabel": "Hide Application Watermark",
     "hideWatermarkDescActive": "Hide the \"Printed From SISMart\" watermark at the bottom of the receipt.",
-    "hideWatermarkDescRequired": "Watermark can only be disabled if SISMart Cloud is active.",
     "saveSuccess": "Receipt settings saved successfully",
     "saveFailed": "Failed to save receipt settings"
   },

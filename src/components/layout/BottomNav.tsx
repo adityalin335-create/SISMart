@@ -19,20 +19,22 @@ export default function BottomNav() {
     const { pathname, search } = location;
     if (to === '/') return pathname === '/';
     if (to === '/cashier-workspace') {
-      return ['/cashier-workspace', '/cashier', '/history'].includes(pathname) ||
+      return ['/cashier-workspace', '/cashier', '/history', '/debts'].includes(pathname) ||
         (pathname === '/returns' && new URLSearchParams(search).get('tab') === 'sales');
     }
     if (to === '/inventory') {
       return pathname === '/inventory' || pathname.startsWith('/purchase-orders') ||
-        pathname.startsWith('/receivings') || pathname === '/stock-report' ||
+        pathname.startsWith('/receivings') || pathname === '/stock-in' ||
+        pathname === '/stock-out' || pathname === '/stock-report' ||
         pathname === '/stock-opname' || pathname === '/settings/stock-opname' ||
         (pathname === '/returns' && new URLSearchParams(search).get('tab') !== 'sales') ||
         /^\/products\/\d+\/stock-card$/.test(pathname);
     }
-    if (to === '/reports') return pathname === '/reports';
+    if (to === '/reports') return pathname === '/reports' || pathname === '/expenses';
     return pathname === '/more' || pathname === '/settings' ||
       (pathname.startsWith('/settings/') && pathname !== '/settings/stock-opname') ||
-      pathname === '/users' || pathname === '/products' || pathname === '/supplier';
+      pathname === '/users' || pathname === '/products' || pathname === '/supplier' ||
+      pathname === '/customers';
   };
 
   return (

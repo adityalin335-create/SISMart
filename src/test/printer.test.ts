@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getESCPOSData } from '../lib/printer';
+import { getDailyReportESCPOSData, getESCPOSData } from '../lib/printer';
 import type { Transaction, StoreSettings, TransactionItemRecord } from '../lib/db';
 
 describe('getESCPOSData formatting', () => {
@@ -72,6 +72,10 @@ describe('getESCPOSData formatting', () => {
     expect(totalLine?.length).toBe(32);
     expect(totalLine?.endsWith('Rp 65.000')).toBe(true);
 
+    const paymentMethodLine = lines.find(line => line.startsWith('Metode:'));
+    expect(paymentMethodLine).toBeDefined();
+    expect(paymentMethodLine).toContain('Tunai');
+
     // Find the Bayar line: "Bayar:                 Rp 65.000"
     const bayarLine = lines.find(line => line.startsWith('Bayar:'));
     expect(bayarLine).toBeDefined();
@@ -137,7 +141,7 @@ describe('getESCPOSData formatting', () => {
     expect(output).toContain('SISMart');
   });
 
-  it('should hide the watermark when cloudStoreId is set and hideWatermark is true', () => {
+  it('should hide the watermark when hideWatermark is true', () => {
     const mockStoreSettings: StoreSettings = {
       storeName: 'Toko Test',
       address: 'Alamat',
@@ -161,7 +165,34 @@ describe('getESCPOSData formatting', () => {
     expect(output).not.toContain('SISMart');
   });
 
-  it('should still print the watermark if hideWatermark is true but cloudStoreId is not set', () => {
+  it('should apply the watermark setting to daily report receipts without cloud access', () => {
+    const output = getDailyReportESCPOSData({
+      dateStr: '2026-06-30',
+      periodStr: '00:00 - 23:59',
+      txCount: 0,
+      itemCount: 0,
+      grossSales: 0,
+      discount: 0,
+      netSales: 0,
+      paymentBreakdown: [],
+      topProducts: [],
+      storeSettings: {
+        storeName: 'Toko Test',
+        address: 'Alamat',
+        phone: '123',
+        receiptFooter: 'Terima kasih!',
+        onboardingDone: true,
+        lastBackupAt: null,
+        deviceId: 'test-device',
+        hideWatermark: true,
+      },
+    });
+
+    expect(output).not.toContain('Dicetak Dari Aplikasi');
+    expect(output).not.toContain('SISMart');
+  });
+
+  it('should hide the watermark when hideWatermark is true and no cloud store is linked', () => {
     const mockStoreSettings: StoreSettings = {
       storeName: 'Toko Test',
       address: 'Alamat',
@@ -181,8 +212,8 @@ describe('getESCPOSData formatting', () => {
       paymentMethodName: 'Tunai',
     });
 
-    expect(output).toContain('Dicetak Dari Aplikasi');
-    expect(output).toContain('SISMart');
+    expect(output).not.toContain('Dicetak Dari Aplikasi');
+    expect(output).not.toContain('SISMart');
   });
 
   it('does not print legacy table numbers on retail receipts', () => {

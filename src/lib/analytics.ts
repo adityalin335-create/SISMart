@@ -1,6 +1,6 @@
 // Google Analytics 4 (gtag.js) — thin wrapper.
 //
-// Design goals (mirrors version-check.ts):
+// Design goals:
 //   * Fire-and-forget, never throws into the app.
 //   * No-op when no measurement ID is configured (dev / build without env).
 //   * Respects the user's opt-out preference stored in localStorage.

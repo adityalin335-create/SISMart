@@ -3,8 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
-import { checkVersion } from "@/lib/version-check";
+import { lazy, useEffect } from "react";
 import { initAnalytics } from "@/lib/analytics";
 import { Capacitor } from "@capacitor/core";
 import { StatusBar } from "@capacitor/status-bar";
@@ -17,40 +16,46 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 import AppLayout from "./components/layout/AppLayout";
-import Dashboard from "./pages/Dashboard";
-import Cashier from "./pages/Cashier";
-import Products from "./pages/Products";
-import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
-import SupplierPage from "./pages/Supplier";
-import CustomersPage from "./pages/Customers";
-import StockInPage from "./pages/StockIn";
-import StockOutPage from "./pages/StockOut";
-import TransactionHistory from "./pages/TransactionHistory";
-import StockReport from "./pages/StockReport";
-import UsersPage from "./pages/Users";
-import ExpensesPage from "./pages/Expenses";
-import DebtsPage from "./pages/Debts";
-import PaymentMethodsSettings from "./pages/settings/PaymentMethodsSettings";
-import ProductCategoriesSettings from "./pages/settings/ProductCategoriesSettings";
-import ExpenseCategoriesSettings from "./pages/settings/ExpenseCategoriesSettings";
-import UnitsSettings from "./pages/settings/UnitsSettings";
-import ThemeSettings from "./pages/settings/ThemeSettings";
-import ReceiptSettings from "./pages/settings/ReceiptSettings";
-import IssueReport from "./pages/settings/IssueReport";
-import StockOpname from "./pages/settings/StockOpname";
-import PurchaseOrdersPage from "./pages/PurchaseOrders";
-import PurchaseOrderFormPage from "./pages/PurchaseOrderForm";
-import PurchaseOrderDetailPage from "./pages/PurchaseOrderDetail";
-import ReceivingsPage from "./pages/Receivings";
-import ReceivingFormPage from "./pages/ReceivingForm";
-import StockCardPage from "./pages/StockCard";
-import ReturnsPage from "./pages/Returns";
-import BackupRestoreSettings from "./pages/settings/BackupRestoreSettings";
-import CashierWorkspace from "./pages/CashierWorkspace";
-import InventoryWorkspace from "./pages/InventoryWorkspace";
-import MoreWorkspace from "./pages/MoreWorkspace";
 import NotFound from "./pages/NotFound";
+
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Cashier = lazy(() => import("./pages/Cashier"));
+const Products = lazy(() => import("./pages/Products"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Settings = lazy(() => import("./pages/Settings"));
+const SupplierPage = lazy(() => import("./pages/Supplier"));
+const CustomersPage = lazy(() => import("./pages/Customers"));
+const StockInPage = lazy(() => import("./pages/StockIn"));
+const StockOutPage = lazy(() => import("./pages/StockOut"));
+const TransactionHistory = lazy(() => import("./pages/TransactionHistory"));
+const StockReport = lazy(() => import("./pages/StockReport"));
+const UsersPage = lazy(() => import("./pages/Users"));
+const ExpensesPage = lazy(() => import("./pages/Expenses"));
+const DebtsPage = lazy(() => import("./pages/Debts"));
+const PaymentMethodsSettings = lazy(() => import("./pages/settings/PaymentMethodsSettings"));
+const ProductCategoriesSettings = lazy(() => import("./pages/settings/ProductCategoriesSettings"));
+const ExpenseCategoriesSettings = lazy(() => import("./pages/settings/ExpenseCategoriesSettings"));
+const UnitsSettings = lazy(() => import("./pages/settings/UnitsSettings"));
+const ThemeSettings = lazy(() => import("./pages/settings/ThemeSettings"));
+const ReceiptSettings = lazy(() => import("./pages/settings/ReceiptSettings"));
+const IssueReport = lazy(() => import("./pages/settings/IssueReport"));
+const StockOpname = lazy(() => import("./pages/settings/StockOpname"));
+const PurchaseOrdersPage = lazy(() => import("./pages/PurchaseOrders"));
+const PurchaseOrderFormPage = lazy(() => import("./pages/PurchaseOrderForm"));
+const PurchaseOrderDetailPage = lazy(() => import("./pages/PurchaseOrderDetail"));
+const ReceivingsPage = lazy(() => import("./pages/Receivings"));
+const ReceivingFormPage = lazy(() => import("./pages/ReceivingForm"));
+const StockCardPage = lazy(() => import("./pages/StockCard"));
+const ReturnsPage = lazy(() => import("./pages/Returns"));
+const BackupRestoreSettings = lazy(() => import("./pages/settings/BackupRestoreSettings"));
+const CashierWorkspace = lazy(() => import("./pages/CashierWorkspace"));
+const InventoryWorkspace = lazy(() => import("./pages/InventoryWorkspace"));
+const MoreWorkspace = lazy(() => import("./pages/MoreWorkspace"));
+const CloudBackupSettings = lazy(() => import("./pages/settings/CloudBackupSettings"));
+const CloudStoreSettings = lazy(() => import("./pages/settings/CloudStoreSettings"));
+const CloudOnlineStoreSettings = lazy(() => import("./pages/settings/CloudOnlineStoreSettings"));
+const CloudAutoBackupSettings = lazy(() => import("./pages/settings/CloudAutoBackupSettings"));
+const CloudHistorySettings = lazy(() => import("./pages/settings/CloudHistorySettings"));
 
 const queryClient = new QueryClient();
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
@@ -60,7 +65,6 @@ const App = () => {
   useAppUpdate();
 
   useEffect(() => {
-    checkVersion();
     initAnalytics();
 
     if (Capacitor.isNativePlatform()) {
@@ -387,6 +391,46 @@ const App = () => {
                     element={
                       <ErrorBoundary>
                         <BackupRestoreSettings />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/settings/cloud-backup"
+                    element={
+                      <ErrorBoundary>
+                        <CloudBackupSettings />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/settings/cloud-backup/stores"
+                    element={
+                      <ErrorBoundary>
+                        <CloudStoreSettings />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/settings/cloud-backup/online-store"
+                    element={
+                      <ErrorBoundary>
+                        <CloudOnlineStoreSettings />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/settings/cloud-backup/auto"
+                    element={
+                      <ErrorBoundary>
+                        <CloudAutoBackupSettings />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/settings/cloud-backup/history"
+                    element={
+                      <ErrorBoundary>
+                        <CloudHistorySettings />
                       </ErrorBoundary>
                     }
                   />

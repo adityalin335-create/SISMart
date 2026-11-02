@@ -1020,7 +1020,6 @@
     "footerLabel": "Teks Footer Resit",
     "hideWatermarkLabel": "Sembunyikan Watermark Aplikasi",
     "hideWatermarkDescActive": "Sembunyikan tulisan \"Dicetak Daripada Aplikasi SISMart\" di bahagian bawah resit.",
-    "hideWatermarkDescRequired": "Watermark hanya boleh dinyahaktifkan jika SISMart Cloud aktif.",
     "saveSuccess": "Tetapan resit berjaya disimpan",
     "saveFailed": "Gagal menyimpan tetapan resit"
   },

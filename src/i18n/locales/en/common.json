@@ -24,10 +24,14 @@
       "description": "Manage master data, users, and store settings."
     },
     "groups": {
-      "cashier": "Cashier Operations",
-      "inventory": "Inventory Operations",
-      "masterData": "Master Data",
-      "administration": "Administration",
+      "sales": "Sales",
+      "customerService": "Customer Service",
+      "procurement": "Procurement",
+      "stockMovement": "Stock Movement",
+      "stockControl": "Stock Control & Reports",
+      "masterData": "Products & Categories",
+      "businessRelations": "Suppliers & Customers",
+      "administration": "Administration & Data",
       "settings": "Settings"
     },
     "items": {
@@ -49,6 +53,7 @@
       "customers": "Customers",
       "users": "Users & Access Rights",
       "backupRestore": "Backup & Restore",
+      "cloudBackup": "Cloud Backup",
       "storeSettings": "Store Settings",
       "printer": "Printer",
       "system": "System"
@@ -72,6 +77,7 @@
       "customers": "Manage store customer records.",
       "users": "Manage user accounts, roles, and access rights.",
       "backupRestore": "Save or restore store data.",
+      "cloudBackup": "Manage cloud backup and sync subscriptions.",
       "storeSettings": "Manage store identity and information.",
       "printer": "Choose a printer for printing.",
       "system": "Manage language, appearance, and app preferences."

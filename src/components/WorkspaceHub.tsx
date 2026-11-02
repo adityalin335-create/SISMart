@@ -49,9 +49,12 @@ export default function WorkspaceHub({
 
         return (
           <section key={group.key} aria-labelledby={`workspace-${group.key}`}>
-            <h2 id={`workspace-${group.key}`} className="mb-3 text-sm font-semibold text-muted-foreground">
-              {t(`workspaces.groups.${group.key}`)}
-            </h2>
+            <div className="mb-3 flex items-center gap-3">
+              <h2 id={`workspace-${group.key}`} className="shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t(`workspaces.groups.${group.key}`)}
+              </h2>
+              <div aria-hidden="true" className="h-px flex-1 bg-border/70" />
+            </div>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
               {items.map(item => {
                 const Icon = item.icon;

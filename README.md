@@ -67,8 +67,8 @@ SISMart is a free, offline-first, open source Point of Sale (POS) Progressive We
 
 ```bash
 # Clone the repository
-git clone https://github.com/user/kasirgratisan.git
-cd kasirgratisan
+git clone https://github.com/adityalin335-create/SISMart.git
+cd SISMart
 
 # Install dependencies
 npm install
