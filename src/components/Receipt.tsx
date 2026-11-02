@@ -9,7 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type { Transaction, StoreSettings, TransactionItemRecord } from '@/lib/db';
-import { isNativePlatform, printNativeBluetooth, getESCPOSData } from '@/lib/printer';
+import {
+  getPrinterMode,
+  isNativePlatform,
+  prepareTransactionESCPOS,
+  printElementInBrowser,
+  printNativeBluetooth,
+  printRawInternalMasung,
+  getESCPOSData,
+} from '@/lib/printer';
 import { Capacitor } from '@capacitor/core';
 import { downloadOrShareFile } from '@/lib/file-utils';
 
@@ -30,6 +38,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
   const { t, i18n } = useTranslation('settings');
   const receiptRef = useRef<HTMLDivElement>(null);
   const [generating, setGenerating] = useState(false);
+  const [printing, setPrinting] = useState(false);
 
   const dateLocale = LOCALES[i18n.language] || id;
   const numberLocale = NUMBER_LOCALES[i18n.language] || 'id-ID';
@@ -124,7 +133,9 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
     }
   };
 
-  const handleBluetoothPrint = async () => {
+  const handlePrint = async () => {
+    if (printing) return;
+    setPrinting(true);
     const printData = { 
       transaction, 
       items, 
@@ -134,17 +145,24 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
       language: i18n.language
     };
 
-    if (isNativePlatform()) {
-      await printNativeBluetooth(printData, toast);
-      return;
-    }
-
-    if (!('bluetooth' in navigator)) {
-      toast.error(t('receipt.toast.bluetoothUnavailable'));
-      return;
-    }
-
     try {
+      if (isNativePlatform() && getPrinterMode() === 'masung-usb') {
+        const prepared = await prepareTransactionESCPOS(printData);
+        await printRawInternalMasung(prepared.text, prepared.logoBytes);
+        toast.success(t('receipt.toast.printSuccess'));
+        return;
+      }
+
+      if (isNativePlatform()) {
+        await printNativeBluetooth(printData, toast);
+        return;
+      }
+
+      if (!('bluetooth' in navigator)) {
+        toast.error(t('receipt.toast.bluetoothUnavailable'));
+        return;
+      }
+
       toast.info(t('receipt.toast.searchingPrinter'));
       // @ts-expect-error Web Bluetooth API is not fully typed in TypeScript
       const device = await navigator.bluetooth.requestDevice({
@@ -166,8 +184,17 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
       await server.disconnect();
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== 'NotFoundError') {
+        console.error('Receipt printing failed:', err);
         toast.error(t('receipt.toast.printFailed'));
       }
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  const handleBrowserPrint = () => {
+    if (!printElementInBrowser(receiptRef.current)) {
+      toast.error(t('receipt.toast.printFailed'));
     }
   };
 
@@ -287,7 +314,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
         </div>
 
         {/* Action buttons */}
-        <div className="grid grid-cols-3 gap-1 mt-3">
+        <div className={`grid ${isNativePlatform() ? 'grid-cols-3' : 'grid-cols-4'} gap-1 mt-3`}>
           <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-1" onClick={handleDownload} disabled={generating}>
             <Download className="w-4 h-4" />
             <span className="text-[9px]">{t('receipt.download')}</span>
@@ -296,10 +323,16 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
             <Share2 className="w-4 h-4" />
             <span className="text-[9px]">{t('receipt.share')}</span>
           </Button>
-          <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-1" onClick={handleBluetoothPrint} disabled={generating}>
+          <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-1" onClick={handlePrint} disabled={generating || printing}>
             <Printer className="w-4 h-4" />
-            <span className="text-[9px]">{t('receipt.print')}</span>
+            <span className="text-[9px]">{printing ? t('receipt.toast.searchingPrinter') : t('receipt.print')}</span>
           </Button>
+          {!isNativePlatform() && (
+            <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-1" onClick={handleBrowserPrint} disabled={generating || printing}>
+              <Printer className="w-4 h-4" />
+              <span className="text-[9px]">{t('receipt.browserPrint')}</span>
+            </Button>
+          )}
         </div>
 
         <Button variant="secondary" className="w-full mt-1" onClick={onClose}>

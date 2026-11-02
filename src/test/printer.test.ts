@@ -1,8 +1,28 @@
 import { describe, it, expect } from 'vitest';
-import { getDailyReportESCPOSData, getESCPOSData } from '../lib/printer';
+import { getDailyReportESCPOSData, getESCPOSData, getPrinterMode, setPrinterMode } from '../lib/printer';
 import type { Transaction, StoreSettings, TransactionItemRecord } from '../lib/db';
 
 describe('getESCPOSData formatting', () => {
+  it('defaults to Bluetooth mode and persists the selected internal printer mode', () => {
+    const previousMode = localStorage.getItem('kg_printer_mode');
+    try {
+      localStorage.removeItem('kg_printer_mode');
+      expect(getPrinterMode()).toBe('bluetooth');
+
+      setPrinterMode('masung-usb');
+      expect(getPrinterMode()).toBe('masung-usb');
+
+      localStorage.setItem('kg_printer_mode', 'unknown');
+      expect(getPrinterMode()).toBe('bluetooth');
+    } finally {
+      if (previousMode === null) {
+        localStorage.removeItem('kg_printer_mode');
+      } else {
+        localStorage.setItem('kg_printer_mode', previousMode);
+      }
+    }
+  });
+
   it('should format item lines and totals to be exactly 32 characters wide, aligning numbers to the right', () => {
     const mockTransaction: Transaction = {
       subtotal: 65000,

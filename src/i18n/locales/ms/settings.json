@@ -278,6 +278,20 @@
     "unnamed": "Tanpa Nama",
     "hint": "Pastikan pencetak telah dipasangkan melalui Tetapan Bluetooth Android terlebih dahulu."
   },
+  "printerMode": {
+    "title": "Mod Pencetak",
+    "masung": "Pencetak Dalaman MASUNG",
+    "masungDescription": "Cetak terus melalui USB Host pada pencetak POS dalaman.",
+    "bluetooth": "Pencetak Bluetooth",
+    "bluetoothDescription": "Gunakan pencetak Bluetooth lalai yang dipilih di bawah.",
+    "scan": "Kesan Pencetak Dalaman",
+    "scanning": "Mengesan...",
+    "detected": "Pencetak dalaman dikesan",
+    "notDetected": "Pencetak dalaman MASUNG tidak ditemui.",
+    "saved": "Mod pencetak disimpan.",
+    "saveFailed": "Gagal menyimpan mod pencetak.",
+    "scanFailed": "Gagal mengesan peranti USB."
+  },
   "privacyAnalytics": {
     "title": "Privasi & Analitik",
     "label": "Bantu Kami dengan Data Tanpa Nama",
@@ -851,6 +865,7 @@
     "download": "Muat Turun",
     "share": "Kongsi",
     "print": "Cetak",
+    "browserPrint": "Cetak Pelayar",
     "watermarkLine1": "Dicetak Daripada Aplikasi",
     "watermarkLine2": "SISMart",
     "done": "Selesai",
@@ -861,7 +876,7 @@
       "bluetoothUnavailable": "Bluetooth tidak tersedia dalam pelayar ini. Gunakan Chrome pada Android.",
       "searchingPrinter": "Mencari pencetak Bluetooth...",
       "printSuccess": "Resit berjaya dicetak!",
-      "printFailed": "Gagal mencetak. Pastikan pencetak Bluetooth dihidupkan."
+      "printFailed": "Gagal mencetak. Periksa pencetak dan sambungannya."
     },
     "shareTitle": "Resit {{receiptNumber}}",
     "shareText": "Resit daripada {{storeName}}",

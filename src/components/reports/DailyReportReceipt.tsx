@@ -5,7 +5,15 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { isNativePlatform, printRawNativeBluetooth, getDailyReportESCPOSData, type DailyReportPrintData } from '@/lib/printer';
+import {
+  getDailyReportESCPOSData,
+  getPrinterMode,
+  isNativePlatform,
+  printElementInBrowser,
+  printRawInternalMasung,
+  printRawNativeBluetooth,
+  type DailyReportPrintData,
+} from '@/lib/printer';
 import { Capacitor } from '@capacitor/core';
 import { downloadOrShareFile } from '@/lib/file-utils';
 
@@ -127,6 +135,11 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
       });
 
       if (isNativePlatform()) {
+        if (getPrinterMode() === 'masung-usb') {
+          await printRawInternalMasung(rawText);
+          toast.success(t('dailyReceipt.printSuccess'));
+          return;
+        }
         await printRawNativeBluetooth(rawText, toast);
         return;
       }
@@ -158,10 +171,17 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
       await server.disconnect();
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Daily report printing failed:', err);
         toast.error(t('dailyReceipt.printFailed'));
       }
     } finally {
       setPrinting(false);
+    }
+  };
+
+  const handleBrowserPrint = () => {
+    if (!printElementInBrowser(receiptRef.current)) {
+      toast.error(t('dailyReceipt.printFailed'));
     }
   };
 
@@ -303,7 +323,7 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
         </div>
 
         {/* Action buttons */}
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div className={`grid ${isNativePlatform() ? 'grid-cols-3' : 'grid-cols-4'} gap-2 mt-2`}>
           <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-2.5" onClick={handleDownload} disabled={generating || printing}>
             <Download className="w-4 h-4" />
             <span className="text-[9px]">{t('dailyReceipt.download')}</span>
@@ -316,6 +336,12 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
             <Printer className="w-4 h-4" />
             <span className="text-[9px]">{t('dailyReceipt.print')}</span>
           </Button>
+          {!isNativePlatform() && (
+            <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-2.5" onClick={handleBrowserPrint} disabled={generating || printing}>
+              <Printer className="w-4 h-4" />
+              <span className="text-[9px]">{t('dailyReceipt.browserPrint')}</span>
+            </Button>
+          )}
         </div>
 
         <Button variant="secondary" className="w-full mt-2" onClick={onClose}>

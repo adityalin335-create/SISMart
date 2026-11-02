@@ -106,6 +106,7 @@
     "download": "Muat Turun",
     "share": "Kongsi",
     "print": "Cetak",
+    "browserPrint": "Cetak Pelayar",
     "done": "Selesai",
     "storeFallback": "Kedai",
     "logoAlt": "Logo",
@@ -120,7 +121,7 @@
     "bluetoothUnavailable": "Bluetooth tidak tersedia dalam pelayar ini. Gunakan Chrome pada Android.",
     "searchingPrinter": "Mencari pencetak Bluetooth...",
     "printSuccess": "Laporan berjaya dicetak!",
-    "printFailed": "Gagal mencetak. Pastikan pencetak Bluetooth dihidupkan."
+    "printFailed": "Gagal mencetak. Periksa pencetak dan sambungannya."
   },
   "returnReports": {
     "financialSummary": "Ringkasan Kewangan Pemulangan",

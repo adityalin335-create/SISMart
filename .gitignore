@@ -45,6 +45,8 @@ android/.idea/
 *.aab
 *.keystore
 *.jks
+*.zip
+*.bundle
 keystore.properties
 
 # Knowledge base files (do not commit)

@@ -19,7 +19,17 @@ import { useAuth } from '@/hooks/use-auth';
 import { createUser, isValidPin, isValidUsername, saveSession } from '@/lib/auth';
 import { isAnalyticsEnabled, setAnalyticsEnabled } from '@/lib/analytics';
 import { usePWAInstall } from '@/hooks/use-pwa-install';
-import { isNativePlatform, getDefaultBluetoothPrinter, setDefaultBluetoothPrinter, listPairedBluetoothDevices, type BluetoothPrinter } from '@/lib/printer';
+import {
+  getDefaultBluetoothPrinter,
+  getPrinterMode,
+  isNativePlatform,
+  listMasungUsbDevices,
+  listPairedBluetoothDevices,
+  setDefaultBluetoothPrinter,
+  setPrinterMode,
+  type BluetoothPrinter,
+  type PrinterMode,
+} from '@/lib/printer';
 import { Printer } from 'lucide-react';
 import { APP_VERSION } from '@/lib/app-version';
 import { useTranslation, Trans } from 'react-i18next';
@@ -92,6 +102,9 @@ export default function Pengaturan() {
   const [defaultPrinter, setDefaultPrinter] = useState<BluetoothPrinter | null>(() => getDefaultBluetoothPrinter());
   const [pairedPrinters, setPairedPrinters] = useState<BluetoothPrinter[]>([]);
   const [loadingPrinters, setLoadingPrinters] = useState(false);
+  const [printerMode, setPrinterModeState] = useState<PrinterMode>(() => getPrinterMode());
+  const [masungDevices, setMasungDevices] = useState<Awaited<ReturnType<typeof listMasungUsbDevices>>>([]);
+  const [loadingMasungDevices, setLoadingMasungDevices] = useState(false);
 
   const refreshPairedPrinters = async () => {
     setLoadingPrinters(true);
@@ -118,6 +131,31 @@ export default function Pengaturan() {
     setDefaultBluetoothPrinter(null);
     setDefaultPrinter(null);
     toast.success(t('toast.printerDefaultCleared'));
+  };
+
+  const selectPrinterMode = (mode: PrinterMode) => {
+    try {
+      setPrinterMode(mode);
+      setPrinterModeState(mode);
+      toast.success(t('printerMode.saved'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('printerMode.saveFailed'));
+    }
+  };
+
+  const refreshMasungDevices = async () => {
+    setLoadingMasungDevices(true);
+    try {
+      const devices = await listMasungUsbDevices();
+      setMasungDevices(devices);
+      if (!devices.some(device => device.supported)) {
+        toast.info(t('printerMode.notDetected'));
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('printerMode.scanFailed'));
+    } finally {
+      setLoadingMasungDevices(false);
+    }
   };
 
   const handleToggleAnalytics = (enabled: boolean) => {
@@ -575,6 +613,57 @@ export default function Pengaturan() {
         </Link>
 
       </div>
+
+      {/* Native printer selection */}
+      {isNative && can('manage_store_settings') && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-1.5"><Printer className="w-4 h-4" /> {t('printerMode.title')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              {([
+                ['masung-usb', t('printerMode.masung'), t('printerMode.masungDescription')],
+                ['bluetooth', t('printerMode.bluetooth'), t('printerMode.bluetoothDescription')],
+              ] as const).map(([mode, label, description]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={printerMode === mode}
+                  onClick={() => selectPrinterMode(mode)}
+                  className={`flex w-full items-start justify-between gap-3 rounded-lg border p-3 text-left transition-colors ${printerMode === mode ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'}`}
+                >
+                  <span>
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="mt-0.5 block text-[10px] text-muted-foreground">{description}</span>
+                  </span>
+                  {printerMode === mode && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />}
+                </button>
+              ))}
+            </div>
+            <Button variant="outline" className="w-full h-10 text-sm gap-2" onClick={refreshMasungDevices} disabled={loadingMasungDevices}>
+              <Printer className="w-4 h-4" />
+              {loadingMasungDevices ? t('printerMode.scanning') : t('printerMode.scan')}
+            </Button>
+            {masungDevices.length > 0 && (
+              <div className="rounded-lg bg-muted/60 p-3 text-[11px]">
+                {masungDevices.filter(device => device.supported).length > 0 ? (
+                  masungDevices.filter(device => device.supported).map(device => (
+                    <p key={device.deviceName} className="font-medium">
+                        {t('printerMode.detected')}: {' '}
+                        {device.productName || device.manufacturerName || t('printerMode.masung')}
+                      {' · VID 0x'}{device.vendorId.toString(16).padStart(4, '0')}
+                      {' / PID 0x'}{device.productId.toString(16).padStart(4, '0')}
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">{t('printerMode.notDetected')}</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Bluetooth Printer (APK only) */}
       {isNative && can('manage_store_settings') && (

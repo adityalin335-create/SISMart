@@ -305,6 +305,20 @@
     "unnamed": "Tanpa Nama",
     "hint": "Pastikan printer sudah dipasangkan (paired) lewat Pengaturan Bluetooth Android terlebih dahulu."
   },
+  "printerMode": {
+    "title": "Mode Printer",
+    "masung": "Printer Internal MASUNG",
+    "masungDescription": "Cetak langsung melalui USB Host pada printer POS internal.",
+    "bluetooth": "Printer Bluetooth",
+    "bluetoothDescription": "Gunakan printer Bluetooth default yang dipilih di bawah.",
+    "scan": "Deteksi Printer Internal",
+    "scanning": "Mendeteksi...",
+    "detected": "Printer internal terdeteksi",
+    "notDetected": "Printer internal MASUNG tidak ditemukan.",
+    "saved": "Mode printer disimpan.",
+    "saveFailed": "Gagal menyimpan mode printer.",
+    "scanFailed": "Gagal mendeteksi perangkat USB."
+  },
   "privacyAnalytics": {
     "title": "Privasi & Analitik",
     "label": "Bantu Kami dengan Data Anonim",
@@ -1295,6 +1309,7 @@
     "download": "Unduh",
     "share": "Bagikan",
     "print": "Cetak",
+    "browserPrint": "Cetak Browser",
     "watermarkLine1": "Dicetak Dari Aplikasi",
     "watermarkLine2": "SISMart",
     "done": "Selesai",
@@ -1305,7 +1320,7 @@
       "bluetoothUnavailable": "Bluetooth tidak tersedia di browser ini. Gunakan Chrome di Android.",
       "searchingPrinter": "Mencari printer Bluetooth...",
       "printSuccess": "Struk berhasil dicetak!",
-      "printFailed": "Gagal mencetak. Pastikan printer Bluetooth menyala."
+      "printFailed": "Gagal mencetak. Periksa koneksi dan printer."
     },
     "shareTitle": "Struk {{receiptNumber}}",
     "shareText": "Struk dari {{storeName}}",

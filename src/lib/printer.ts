@@ -1,4 +1,4 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { format } from 'date-fns';
 import type { Transaction, StoreSettings, TransactionItemRecord } from './db';
 
@@ -30,6 +30,26 @@ interface PrintData {
 }
 
 const DEFAULT_PRINTER_KEY = 'kg_default_bluetooth_printer';
+const PRINTER_MODE_KEY = 'kg_printer_mode';
+
+export type PrinterMode = 'bluetooth' | 'masung-usb';
+
+export interface MasungUsbDevice {
+  deviceName: string;
+  manufacturerName?: string;
+  productName?: string;
+  vendorId: number;
+  productId: number;
+  supported: boolean;
+  hasPermission: boolean;
+}
+
+interface MasungPrinterPlugin {
+  getDevices(): Promise<{ devices: MasungUsbDevice[] }>;
+  print(options: { text: string; imageBase64?: string }): Promise<void>;
+}
+
+const masungPrinter = registerPlugin<MasungPrinterPlugin>('MasungPrinter');
 
 export const isNativePlatform = (): boolean => {
   return Capacitor.isNativePlatform();
@@ -54,6 +74,65 @@ export const setDefaultBluetoothPrinter = (printer: BluetoothPrinter | null): vo
   } catch {
     // ignore storage errors
   }
+};
+
+export const getPrinterMode = (): PrinterMode => {
+  try {
+    return localStorage.getItem(PRINTER_MODE_KEY) === 'masung-usb' ? 'masung-usb' : 'bluetooth';
+  } catch {
+    return 'bluetooth';
+  }
+};
+
+export const setPrinterMode = (mode: PrinterMode): void => {
+  localStorage.setItem(PRINTER_MODE_KEY, mode);
+};
+
+export const listMasungUsbDevices = async (): Promise<MasungUsbDevice[]> => {
+  if (!Capacitor.isNativePlatform()) {
+    throw new Error('Printer USB internal hanya tersedia di aplikasi Android.');
+  }
+  const result = await masungPrinter.getDevices();
+  return result.devices;
+};
+
+const bytesToBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+  return btoa(binary);
+};
+
+export const printRawInternalMasung = async (text: string, imageBytes?: Uint8Array): Promise<void> => {
+  if (!Capacitor.isNativePlatform()) {
+    throw new Error('Printer USB internal hanya tersedia di aplikasi Android.');
+  }
+  await masungPrinter.print({
+    text,
+    imageBase64: imageBytes ? bytesToBase64(imageBytes) : undefined,
+  });
+};
+
+export const printElementInBrowser = (element: HTMLElement | null): boolean => {
+  if (!element) return false;
+
+  const printDocument = element.cloneNode(true) as HTMLElement;
+  printDocument.classList.add('receipt-print-document');
+  printDocument.removeAttribute('id');
+  document.body.appendChild(printDocument);
+
+  let cleanupTimer = 0;
+  const cleanup = () => {
+    window.removeEventListener('afterprint', cleanup);
+    window.clearTimeout(cleanupTimer);
+    printDocument.remove();
+  };
+  window.addEventListener('afterprint', cleanup, { once: true });
+  cleanupTimer = window.setTimeout(cleanup, 30000);
+  window.requestAnimationFrame(() => window.print());
+  return true;
 };
 
 export const listPairedBluetoothDevices = async (): Promise<BluetoothPrinter[]> => {
@@ -438,36 +517,44 @@ export const printRawNativeBluetooth = async (
   });
 };
 
-export const printNativeBluetooth = async (
-  printData: PrintData,
-  toast: { info: (m: string) => void; success: (m: string) => void; error: (m: string) => void }
-): Promise<boolean> => {
-  const rawText = getESCPOSData(printData);
-  const textBytes = new TextEncoder().encode(rawText);
-
-  // Check if store logo printing is enabled and logo exists
+export const prepareTransactionESCPOS = async (
+  printData: PrintData
+): Promise<{ text: string; logoBytes?: Uint8Array }> => {
   if (printData.storeSettings?.printLogo && printData.storeSettings?.logo) {
     try {
       const logoBytes = await convertBase64ToEscPosImage(printData.storeSettings.logo);
       if (logoBytes) {
-        // Center alignment = [27, 97, 1] (ESC a 1), line feed = [10] (\n)
-        const alignCenter = new Uint8Array([27, 97, 1]);
-        const lineFeed = new Uint8Array([10]);
-
-        const finalBytes = new Uint8Array(
-          alignCenter.length + logoBytes.length + lineFeed.length + textBytes.length
-        );
-        finalBytes.set(alignCenter, 0);
-        finalBytes.set(logoBytes, alignCenter.length);
-        finalBytes.set(lineFeed, alignCenter.length + logoBytes.length);
-        finalBytes.set(textBytes, alignCenter.length + logoBytes.length + lineFeed.length);
-
-        return printRawNativeBluetooth(finalBytes, toast);
+        return { text: getESCPOSData(printData), logoBytes };
       }
     } catch (err) {
       console.error('Failed to convert and print logo:', err);
     }
   }
 
-  return printRawNativeBluetooth(textBytes, toast);
+  return { text: getESCPOSData(printData) };
+};
+
+export const getTransactionESCPOSBytes = async (printData: PrintData): Promise<Uint8Array> => {
+  const prepared = await prepareTransactionESCPOS(printData);
+  const textBytes = new TextEncoder().encode(prepared.text);
+  if (!prepared.logoBytes) return textBytes;
+
+  const alignCenter = new Uint8Array([27, 97, 1]);
+  const lineFeed = new Uint8Array([10]);
+  const finalBytes = new Uint8Array(
+    alignCenter.length + prepared.logoBytes.length + lineFeed.length + textBytes.length
+  );
+  finalBytes.set(alignCenter, 0);
+  finalBytes.set(prepared.logoBytes, alignCenter.length);
+  finalBytes.set(lineFeed, alignCenter.length + prepared.logoBytes.length);
+  finalBytes.set(textBytes, alignCenter.length + prepared.logoBytes.length + lineFeed.length);
+  return finalBytes;
+};
+
+export const printNativeBluetooth = async (
+  printData: PrintData,
+  toast: { info: (m: string) => void; success: (m: string) => void; error: (m: string) => void }
+): Promise<boolean> => {
+  const bytes = await getTransactionESCPOSBytes(printData);
+  return printRawNativeBluetooth(bytes, toast);
 };

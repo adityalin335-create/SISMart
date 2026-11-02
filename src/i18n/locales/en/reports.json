@@ -106,6 +106,7 @@
     "download": "Download",
     "share": "Share",
     "print": "Print",
+    "browserPrint": "Browser Print",
     "done": "Done",
     "storeFallback": "Store",
     "logoAlt": "Logo",
@@ -120,7 +121,7 @@
     "bluetoothUnavailable": "Bluetooth is not available in this browser. Use Chrome on Android.",
     "searchingPrinter": "Searching for Bluetooth printer...",
     "printSuccess": "Report printed successfully!",
-    "printFailed": "Failed to print. Make sure the Bluetooth printer is on."
+    "printFailed": "Failed to print. Check the printer and its connection."
   },
   "returnReports": {
     "financialSummary": "Return Financial Summary",

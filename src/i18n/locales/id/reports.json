@@ -106,6 +106,7 @@
     "download": "Unduh",
     "share": "Bagikan",
     "print": "Cetak",
+    "browserPrint": "Cetak Browser",
     "done": "Selesai",
     "storeFallback": "Toko",
     "logoAlt": "Logo",
@@ -120,7 +121,7 @@
     "bluetoothUnavailable": "Bluetooth tidak tersedia di browser ini. Gunakan Chrome di Android.",
     "searchingPrinter": "Mencari printer Bluetooth...",
     "printSuccess": "Laporan berhasil dicetak!",
-    "printFailed": "Gagal mencetak. Pastikan printer Bluetooth menyala."
+    "printFailed": "Gagal mencetak. Periksa koneksi dan printer."
   },
   "returnReports": {
     "financialSummary": "Ringkasan Keuangan Retur",

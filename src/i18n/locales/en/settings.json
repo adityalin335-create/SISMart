@@ -305,6 +305,20 @@
     "unnamed": "Unnamed",
     "hint": "Make sure the printer is paired via Android Bluetooth Settings first."
   },
+  "printerMode": {
+    "title": "Printer Mode",
+    "masung": "Internal MASUNG Printer",
+    "masungDescription": "Print directly through USB Host to the built-in POS printer.",
+    "bluetooth": "Bluetooth Printer",
+    "bluetoothDescription": "Use the default Bluetooth printer selected below.",
+    "scan": "Detect Internal Printer",
+    "scanning": "Detecting...",
+    "detected": "Internal printer detected",
+    "notDetected": "Internal MASUNG printer was not found.",
+    "saved": "Printer mode saved.",
+    "saveFailed": "Could not save printer mode.",
+    "scanFailed": "Could not detect USB devices."
+  },
   "privacyAnalytics": {
     "title": "Privacy & Analytics",
     "label": "Help Us with Anonymous Data",
@@ -1296,6 +1310,7 @@
     "download": "Download",
     "share": "Share",
     "print": "Print",
+    "browserPrint": "Browser Print",
     "watermarkLine1": "Printed From",
     "watermarkLine2": "SISMart",
     "done": "Done",
@@ -1306,7 +1321,7 @@
       "bluetoothUnavailable": "Bluetooth is not available in this browser. Use Chrome on Android.",
       "searchingPrinter": "Searching for Bluetooth printer...",
       "printSuccess": "Receipt printed successfully!",
-      "printFailed": "Failed to print. Make sure the Bluetooth printer is on."
+      "printFailed": "Failed to print. Check the printer and its connection."
     },
     "shareTitle": "Receipt {{receiptNumber}}",
     "shareText": "Receipt from {{storeName}}",

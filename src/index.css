@@ -144,6 +144,10 @@
   display: none;
 }
 
+.receipt-print-document {
+  display: none;
+}
+
 @media print {
   @page {
     size: A4 portrait;
@@ -181,8 +185,20 @@
     margin: 0 !important;
   }
 
-  body > *:not(.po-print-document):not(.return-print-document) {
+  body > *:not(.po-print-document):not(.return-print-document):not(.receipt-print-document) {
     display: none !important;
+  }
+
+  .receipt-print-document {
+    display: block !important;
+    width: 74mm !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    color: #111 !important;
+    background: #fff !important;
+    font-family: monospace !important;
+    box-sizing: border-box !important;
   }
 
   .po-print-document {
