@@ -1,3 +1,5 @@
+import "core-js/actual/array/at";
+import "core-js/actual/object/from-entries";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
