@@ -89,6 +89,16 @@
 </head>
 
 <body>
+  <section id="pre-react-diagnostic" style="position: fixed; top: 8px; left: 8px; z-index: 2147483647; max-width: calc(100vw - 32px); padding: 12px; border: 2px solid #0169ff; border-radius: 8px; background: #fff; color: #111; font: 14px/1.4 sans-serif;">
+    <strong>SISMart Pre-React Diagnostic</strong>
+    <p style="margin: 4px 0 0;">If you can read this text, index.html loaded successfully.</p>
+  </section>
+  <script>
+    const scriptStatus = document.createElement('p');
+    scriptStatus.textContent = 'Script tag reached.';
+    scriptStatus.style.cssText = 'position: fixed; top: 72px; left: 8px; z-index: 2147483647; margin: 0; padding: 8px; background: #e8f0ff; color: #111; font: 14px/1.4 sans-serif;';
+    document.body.append(scriptStatus);
+  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
