@@ -100,7 +100,35 @@
     document.body.append(scriptStatus);
   </script>
   <div id="root"></div>
+  <script>
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div id="before-bundle">Before Bundle</div>'
+    );
+
+    function showBundleError(message) {
+      const errorOutput = document.createElement('div');
+      errorOutput.style.cssText = 'position: fixed; top: 110px; left: 8px; z-index: 2147483647; max-width: calc(100vw - 32px); padding: 8px; background: #fee; color: #900; font: 14px/1.4 sans-serif;';
+      errorOutput.textContent = message;
+      document.body.append(errorOutput);
+    }
+
+    window.addEventListener('error', (event) => {
+      showBundleError(`JavaScript error: ${event.message || 'Unknown error'} (${event.filename || 'unknown file'}:${event.lineno || 0}:${event.colno || 0})`);
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      const reason = event.reason;
+      showBundleError(`Unhandled promise rejection: ${reason instanceof Error ? `${reason.name}: ${reason.message}` : String(reason)}`);
+    });
+  </script>
   <script type="module" src="/src/main.tsx"></script>
+  <script>
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div id="after-bundle">After Bundle Tag</div>'
+    );
+  </script>
 </body>
 
 </html>
