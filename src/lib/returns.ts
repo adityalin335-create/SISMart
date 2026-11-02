@@ -9,10 +9,11 @@ import {
   type SalesReturnItem,
   type SalesReturnResolution,
 } from '@/lib/db';
+import { generateUuid } from '@/lib/uuid';
 
 const roundMoney = (value: number) => Math.round(value);
 const makeReturnNumber = (prefix: 'PR' | 'SR') =>
-  `${prefix}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  `${prefix}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${generateUuid().slice(0, 8).toUpperCase()}`;
 
 function assertPositiveQuantity(quantity: number) {
   if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('Kuantitas retur harus lebih dari nol.');

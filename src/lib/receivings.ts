@@ -6,6 +6,7 @@ import {
   type Receiving,
   type ReceivingItem,
 } from '@/lib/db';
+import { generateUuid } from '@/lib/uuid';
 
 export interface ReceivingItemInput {
   purchaseOrderItemId: number;
@@ -33,7 +34,7 @@ function newReceivingNumber(date: Date): string {
   const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' })
     .format(date)
     .replace(/-/g, '');
-  return `RCV-${dateKey}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  return `RCV-${dateKey}-${generateUuid().slice(0, 8).toUpperCase()}`;
 }
 
 function assertValidQuantity(value: number, label: string): void {

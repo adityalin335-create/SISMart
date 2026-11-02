@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, isStockManaged } from '@/lib/db';
+import { generateUuid } from '@/lib/uuid';
 import { useState, useMemo } from 'react';
 import { ArrowUpFromLine, Plus, ChevronLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -73,7 +74,7 @@ export default function StockOutPage() {
 
     try {
       const movementDate = new Date();
-      const referenceNumber = `STOCK-OUT-${movementDate.getTime()}-${crypto.randomUUID().slice(0, 6)}`;
+      const referenceNumber = `STOCK-OUT-${movementDate.getTime()}-${generateUuid().slice(0, 6)}`;
       await db.transaction('rw', [db.stockOuts, db.products], async () => {
         const current = await db.products.get(product.id!);
         if (!current) throw new Error('Produk tidak ditemukan.');

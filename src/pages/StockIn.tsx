@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, isStockManaged } from '@/lib/db';
+import { generateUuid } from '@/lib/uuid';
 import { useState } from 'react';
 import { ArrowDownToLine, Plus, ChevronLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -70,7 +71,7 @@ export default function StockInPage() {
       const product = products?.find(p => p.id === Number(productId));
       if (!product?.id) return;
       const movementDate = new Date();
-      const referenceNumber = `STOCK-IN-${movementDate.getTime()}-${crypto.randomUUID().slice(0, 6)}`;
+      const referenceNumber = `STOCK-IN-${movementDate.getTime()}-${generateUuid().slice(0, 6)}`;
       let resultingHpp = product.hpp;
       await db.transaction('rw', [db.stockIns, db.products, db.hppHistory], async () => {
         const current = await db.products.get(product.id!);

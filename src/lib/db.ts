@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import { generateUuid } from './uuid';
 
 // === Permission keys (CR-multiuser) ===
 export type PermissionKey =
@@ -562,7 +563,7 @@ class PosDatabase extends Dexie {
       // CR-1: Generate deviceId for existing storeSettings
       const storeTable = tx.table('storeSettings');
       await storeTable.toCollection().modify((s: any) => {
-        s.deviceId = crypto.randomUUID();
+        s.deviceId = generateUuid();
       });
 
       // CR-5: Migrate embedded items[] from transactions to transactionItems table
@@ -1417,13 +1418,13 @@ export async function seedDefaultData() {
       printLogo: false,
       onboardingDone: false,
       lastBackupAt: null,
-      deviceId: crypto.randomUUID(),
+      deviceId: generateUuid(),
     });
   } else {
     // Fallback: if storeSettings exists but has no deviceId, generate one
     const settings = await db.storeSettings.toCollection().first();
     if (settings && !settings.deviceId) {
-      await db.storeSettings.update(settings.id!, { deviceId: crypto.randomUUID() });
+      await db.storeSettings.update(settings.id!, { deviceId: generateUuid() });
     }
   }
 

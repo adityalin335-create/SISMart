@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, isStockManaged, type Product, type Category } from '@/lib/db';
+import { generateUuid } from '@/lib/uuid';
 import { useState, useRef } from 'react';
 import { Plus, Search, Edit2, Trash2, Package as PackageIcon, Camera, X, Copy, Infinity as InfinityIcon, ScanLine, Upload, Download, AlertTriangle, CheckCircle2, XCircle, Loader2, FileSpreadsheet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -206,7 +207,7 @@ export default function Produk() {
             productId: editProduct.id!,
             supplierId: 0,
             movementType: 'stock_adjustment',
-            referenceNumber: `ADJ-${movementDate.getTime()}-${crypto.randomUUID().slice(0, 6)}`,
+            referenceNumber: `ADJ-${movementDate.getTime()}-${generateUuid().slice(0, 6)}`,
             quantity: difference,
             buyPrice: data.hpp,
             totalPrice: difference * data.hpp,
@@ -218,7 +219,7 @@ export default function Produk() {
           await db.stockOuts.add({
             productId: editProduct.id!,
             movementType: 'stock_adjustment',
-            referenceNumber: `ADJ-${movementDate.getTime()}-${crypto.randomUUID().slice(0, 6)}`,
+            referenceNumber: `ADJ-${movementDate.getTime()}-${generateUuid().slice(0, 6)}`,
             quantity: Math.abs(difference),
             reason: 'adjustment',
             date: movementDate,

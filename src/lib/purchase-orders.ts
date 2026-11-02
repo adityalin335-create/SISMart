@@ -4,6 +4,7 @@ import {
   type PurchaseOrderItem,
   type PurchaseOrderStatus,
 } from '@/lib/db';
+import { generateUuid } from '@/lib/uuid';
 
 export interface PurchaseOrderItemInput {
   productId: number;
@@ -72,7 +73,7 @@ export async function savePurchaseOrder(
 
   const now = new Date();
   const dateKey = getIndonesiaDateKey(input.orderDate);
-  const newPoNumber = `PO-${dateKey}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  const newPoNumber = `PO-${dateKey}-${generateUuid().slice(0, 8).toUpperCase()}`;
 
   return db.transaction('rw', [db.purchaseOrders, db.purchaseOrderItems, db.suppliers, db.products], async () => {
     const supplier = await db.suppliers.get(input.supplierId);

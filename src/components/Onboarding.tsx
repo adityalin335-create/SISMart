@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { db, type Product } from '@/lib/db';
+import { generateUuid } from '@/lib/uuid';
 import { markAllFeaturesSeen } from '@/lib/whats-new';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -214,7 +215,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         printLogo: false,
         onboardingDone: true,
         lastBackupAt: null,
-        deviceId: crypto.randomUUID(),
+        deviceId: generateUuid(),
       });
     }
     await markAllFeaturesSeen();
