@@ -128,21 +128,10 @@
     });
   </script>
   <script type="module">
-    import("/src/main.tsx")
-      .then(() => {
-        document.body.insertAdjacentHTML(
-          "beforeend",
-          "<div style='color:green'>MODULE LOADED</div>"
-        );
-      })
-      .catch((err) => {
-        document.body.insertAdjacentHTML(
-          "beforeend",
-          "<pre style='color:red'>" +
-            String(err && err.stack || err) +
-            "</pre>"
-        );
-      });
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      "<h1 style='color:green'>MODULE EXECUTED</h1>"
+    );
   </script>
   <script>
     document.body.insertAdjacentHTML(
