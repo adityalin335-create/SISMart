@@ -62,6 +62,107 @@
       __magic__.globalThis = __magic__;
       delete Object.prototype.__magic__;
     }
+
+    if (typeof queueMicrotask !== 'function') {
+      definePolyfill(window, 'queueMicrotask', function(callback) {
+        if (typeof callback !== 'function') {
+          throw new TypeError('queueMicrotask callback must be a function');
+        }
+
+        Promise.resolve().then(callback).catch(function(error) {
+          setTimeout(function() {
+            throw error;
+          });
+        });
+      });
+    }
+
+    if (typeof Promise.allSettled !== 'function') {
+      definePolyfill(Promise, 'allSettled', function(iterable) {
+        return Promise.all(Array.from(iterable, function(value) {
+          return Promise.resolve(value).then(
+            function(result) {
+              return { status: 'fulfilled', value: result };
+            },
+            function(reason) {
+              return { status: 'rejected', reason: reason };
+            }
+          );
+        }));
+      });
+    }
+
+    function definePolyfill(target, name, implementation) {
+      Object.defineProperty(target, name, {
+        configurable: true,
+        writable: true,
+        value: implementation
+      });
+    }
+
+    function flattenInto(target, source, depth) {
+      for (var index = 0; index < source.length; index += 1) {
+        if (!(index in source)) {
+          continue;
+        }
+
+        var value = source[index];
+        if (depth > 0 && Array.isArray(value)) {
+          flattenInto(target, value, depth - 1);
+        } else {
+          target.push(value);
+        }
+      }
+    }
+
+    if (typeof Array.prototype.flat !== 'function') {
+      definePolyfill(Array.prototype, 'flat', function(depth) {
+        var result = [];
+        var normalizedDepth = depth === undefined ? 1 : Math.max(Math.floor(Number(depth)) || 0, 0);
+        flattenInto(result, Object(this), normalizedDepth);
+        return result;
+      });
+    }
+
+    if (typeof Array.prototype.flatMap !== 'function') {
+      definePolyfill(Array.prototype, 'flatMap', function(callback, thisArg) {
+        if (typeof callback !== 'function') {
+          throw new TypeError('flatMap callback must be a function');
+        }
+
+        var result = [];
+        var source = Object(this);
+        for (var index = 0; index < source.length; index += 1) {
+          if (index in source) {
+            flattenInto(result, [callback.call(thisArg, source[index], index, source)], 1);
+          }
+        }
+        return result;
+      });
+    }
+
+    if (typeof Object.fromEntries !== 'function') {
+      definePolyfill(Object, 'fromEntries', function(iterable) {
+        var result = {};
+        var iterator = iterable[Symbol.iterator]();
+        var step;
+
+        while (!(step = iterator.next()).done) {
+          var entry = step.value;
+          if (Object(entry) !== entry) {
+            throw new TypeError('Iterator value is not an entry object');
+          }
+          Object.defineProperty(result, entry[0], {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: entry[1]
+          });
+        }
+
+        return result;
+      });
+    }
   </script>
   
   <!-- Structured Data (JSON-LD) -->
