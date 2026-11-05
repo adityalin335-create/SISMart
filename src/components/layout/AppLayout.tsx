@@ -57,18 +57,30 @@ export default function AppLayout() {
     };
   }, []);
 
-  const storeSettings = useLiveQuery(async () => {
+  const storeSettingsQuery = useLiveQuery(async () => {
     try {
-      const settings = await db.storeSettings.toCollection().first();
-      setStoreSettingsStatus(settings ? 'found' : 'missing');
-      return settings;
+      return {
+        settings: await db.storeSettings.toCollection().first(),
+        error: null as string | null,
+      };
     } catch (error) {
       console.error('[StartupDiagnostics] Failed to read store settings:', error);
-      setStoreSettingsStatus('failed');
-      setStartupError(getErrorMessage(error));
-      return undefined;
+      return { settings: undefined, error: getErrorMessage(error) };
     }
   });
+  const storeSettings = storeSettingsQuery?.settings;
+
+  useEffect(() => {
+    if (!storeSettingsQuery) return;
+
+    if (storeSettingsQuery.error) {
+      setStoreSettingsStatus('failed');
+      setStartupError(storeSettingsQuery.error);
+      return;
+    }
+
+    setStoreSettingsStatus(storeSettingsQuery.settings ? 'found' : 'missing');
+  }, [storeSettingsQuery]);
 
   const onboardingVisible = Boolean(storeSettings && !storeSettings.onboardingDone);
   const startupReady =
