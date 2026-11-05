@@ -197,11 +197,11 @@ export const getESCPOSData = ({
     if (line) result.push(line);
     return result;
   };
-  const formatRow = (left: string, right: string) => {
-    if (left.length + right.length > RECEIPT_COLUMNS) {
-      return `${wrapText(left, RECEIPT_COLUMNS).join('\n')}\n${right.padStart(RECEIPT_COLUMNS)}\n`;
+  const formatRow = (left: string, right: string, width = RECEIPT_COLUMNS) => {
+    if (left.length + right.length > width) {
+      return `${wrapText(left, width).join('\n')}\n${right.padStart(width)}\n`;
     }
-    return `${left}${' '.repeat(RECEIPT_COLUMNS - left.length - right.length)}${right}\n`;
+    return `${left}${' '.repeat(width - left.length - right.length)}${right}\n`;
   };
 
   lines.push('\x1B\x61\x01'); // Center align
@@ -230,13 +230,13 @@ export const getESCPOSData = ({
   if (transaction.discountAmount > 0) {
     lines.push(formatRow('Diskon:', `-${rp(transaction.discountAmount)}`));
   }
-  lines.push(`\x1B\x45\x01\x1D\x21\x10${formatRow('TOTAL', rp(transaction.total))}\x1B\x45\x00\x1D\x21\x00`);
+  lines.push(`\x1B\x45\x01\x1D\x21\x11${formatRow('TOTAL', rp(transaction.total), RECEIPT_COLUMNS / 2)}\x1B\x45\x00\x1D\x21\x00`);
   lines.push(formatRow('Metode:', paymentMethodName));
   lines.push(formatRow('Bayar:', rp(transaction.paymentAmount)));
   if (transaction.debtAmount && transaction.debtAmount > 0) {
     lines.push(formatRow('Hutang:', rp(transaction.debtAmount)));
   } else {
-    lines.push(`\x1B\x45\x01\x1D\x21\x10${formatRow('KEMBALI', rp(transaction.change))}\x1B\x45\x00\x1D\x21\x00`);
+    lines.push(`\x1B\x45\x01\x1D\x21\x11${formatRow('KEMBALI', rp(transaction.change), RECEIPT_COLUMNS / 2)}\x1B\x45\x00\x1D\x21\x00`);
   }
   lines.push(`${'-'.repeat(RECEIPT_COLUMNS)}\n`);
   lines.push('\x1B\x61\x01'); // Center
@@ -479,7 +479,8 @@ export const printRawNativeBluetooth = async (
   rawText: string | Uint8Array,
   toast: { info: (m: string) => void; success: (m: string) => void; error: (m: string) => void }
 ): Promise<boolean> => {
-  if (!window.bluetoothSerial) {
+  const bluetooth = window.bluetoothSerial;
+  if (!bluetooth) {
     toast.error('Plugin Bluetooth tidak tersedia.');
     return false;
   }
@@ -490,65 +491,94 @@ export const printRawNativeBluetooth = async (
     return false;
   }
 
-  return new Promise((resolve) => {
-    window.bluetoothSerial?.isEnabled(
-      () => {
-        toast.info('Mencari printer Bluetooth berpasangan...');
-        window.bluetoothSerial?.list(
-          async (devices) => {
-            if (devices.length === 0) {
-              toast.error('Tidak ada printer Bluetooth yang dipasangkan (paired). Hubungkan di Pengaturan Android dulu.');
-              resolve(false);
-              return;
-            }
-
-            const printer = devices.find(d => d.address === defaultPrinter.address);
-            if (!printer) {
-              toast.error(`Printer "${defaultPrinter.name}" tidak terdeteksi. Pastikan printer menyala dan terhubung.`);
-              resolve(false);
-              return;
-            }
-
-            toast.info(`Menghubungkan ke ${printer.name}...`);
-            window.bluetoothSerial?.connect(
-              printer.address,
-              () => {
-                toast.info('Mencetak...');
-                const data = typeof rawText === 'string'
-                  ? new TextEncoder().encode(rawText)
-                  : rawText;
-
-                window.bluetoothSerial?.write(
-                  data,
-                  () => {
-                    toast.success('Berhasil dicetak!');
-                    window.bluetoothSerial?.disconnect(() => {}, () => {});
-                    resolve(true);
-                  },
-                  (err) => {
-                    toast.error(`Gagal mencetak: ${err}`);
-                    window.bluetoothSerial?.disconnect(() => {}, () => {});
-                    resolve(false);
-                  }
-                );
-              },
-              (err) => {
-                toast.error(`Koneksi gagal: ${err}`);
-                resolve(false);
-              }
-            );
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = (success: boolean) => {
+      if (settled) return;
+      settled = true;
+      resolve(success);
+    };
+    const fail = (message: string, error?: unknown) => {
+      if (error) console.error('[Printer] Bluetooth printing failed:', error);
+      toast.error(message);
+      finish(false);
+    };
+    const disconnect = (success: boolean) => {
+      try {
+        bluetooth.disconnect(
+          () => finish(success),
+          error => {
+            console.warn('[Printer] Bluetooth disconnect failed:', error);
+            finish(success);
           },
-          (err) => {
-            toast.error(`Gagal mendapatkan daftar printer: ${err}`);
-            resolve(false);
-          }
         );
-      },
-      () => {
-        toast.error('Bluetooth tidak aktif. Silakan aktifkan Bluetooth.');
-        resolve(false);
+      } catch (error) {
+        console.warn('[Printer] Bluetooth disconnect failed:', error);
+        finish(success);
       }
-    );
+    };
+
+    try {
+      bluetooth.isEnabled(
+        () => {
+          try {
+            toast.info('Mencari printer Bluetooth berpasangan...');
+            bluetooth.list(
+              devices => {
+                try {
+                  if (devices.length === 0) {
+                    fail('Tidak ada printer Bluetooth yang dipasangkan (paired). Hubungkan di Pengaturan Android dulu.');
+                    return;
+                  }
+
+                  const printer = devices.find(device => device.address === defaultPrinter.address);
+                  if (!printer) {
+                    fail(`Printer "${defaultPrinter.name}" tidak terdeteksi. Pastikan printer menyala dan terhubung.`);
+                    return;
+                  }
+
+                  toast.info(`Menghubungkan ke ${printer.name}...`);
+                  bluetooth.connect(
+                    printer.address,
+                    () => {
+                      try {
+                        toast.info('Mencetak...');
+                        const data = typeof rawText === 'string'
+                          ? new TextEncoder().encode(rawText)
+                          : rawText;
+                        bluetooth.write(
+                          data,
+                          () => {
+                            toast.success('Berhasil dicetak!');
+                            disconnect(true);
+                          },
+                          error => {
+                            fail(`Gagal mencetak: ${error}`);
+                            disconnect(false);
+                          },
+                        );
+                      } catch (error) {
+                        fail('Gagal menyiapkan data cetak.', error);
+                        disconnect(false);
+                      }
+                    },
+                    error => fail(`Koneksi gagal: ${error}`),
+                  );
+                } catch (error) {
+                  fail('Gagal memulai pencetakan Bluetooth.', error);
+                }
+              },
+              error => fail(`Gagal mendapatkan daftar printer: ${error}`),
+            );
+          } catch (error) {
+            fail('Gagal mendapatkan daftar printer Bluetooth.', error);
+          }
+        },
+        () => fail('Bluetooth tidak aktif. Silakan aktifkan Bluetooth.'),
+      );
+    } catch (error) {
+      fail('Gagal memulai koneksi Bluetooth.', error);
+    }
   });
 };
 

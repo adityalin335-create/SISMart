@@ -31,6 +31,8 @@ public class MasungPrinterPlugin extends Plugin {
     private static final int MASUNG_PRODUCT_ID = 0x2013;
     private static final int TRANSFER_CHUNK_SIZE = 4096;
     private static final int TRANSFER_TIMEOUT_MS = 5000;
+    private static final byte[] RECEIPT_FEED = new byte[] { 0x0A, 0x0A, 0x0A };
+    private static final byte[] RECEIPT_CUT = new byte[] { 0x1D, 0x56, 0x00 };
 
     private final Object jobLock = new Object();
     private final ExecutorService printExecutor = Executors.newSingleThreadExecutor();
@@ -179,8 +181,31 @@ public class MasungPrinterPlugin extends Plugin {
             output.write(Base64.decode(imageBase64, Base64.DEFAULT));
             output.write(0x0A);
         }
-        output.write(text.getBytes(Charset.forName("GB2312")));
+        byte[] textBytes = text.getBytes(Charset.forName("GB2312"));
+        int textLength = textBytes.length;
+        if (endsWith(textBytes, RECEIPT_CUT)) {
+            textLength -= RECEIPT_CUT.length;
+        }
+        while (textLength > 0 && textBytes[textLength - 1] == 0x0A) {
+            textLength--;
+        }
+        output.write(textBytes, 0, textLength);
+        output.write(RECEIPT_FEED);
+        output.write(RECEIPT_CUT);
         return output.toByteArray();
+    }
+
+    private boolean endsWith(byte[] value, byte[] suffix) {
+        if (value.length < suffix.length) {
+            return false;
+        }
+        int offset = value.length - suffix.length;
+        for (int index = 0; index < suffix.length; index++) {
+            if (value[offset + index] != suffix[index]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void startPrint(PluginCall call, UsbDevice device, byte[] bytes) {
@@ -225,26 +250,41 @@ public class MasungPrinterPlugin extends Plugin {
                 throw new IllegalStateException("Printer tidak menyediakan endpoint USB bulk OUT.");
             }
 
-            int offset = 0;
-            while (offset < bytes.length) {
-                int length = Math.min(TRANSFER_CHUNK_SIZE, bytes.length - offset);
-                int transferred = connection.bulkTransfer(
-                    outputEndpoint,
-                    bytes,
-                    offset,
-                    length,
-                    TRANSFER_TIMEOUT_MS
-                );
-                if (transferred <= 0) {
-                    throw new IllegalStateException("Transfer data ke printer gagal.");
-                }
-                offset += transferred;
-            }
+            int receiptTailLength = RECEIPT_FEED.length + RECEIPT_CUT.length;
+            int receiptLength = bytes.length - receiptTailLength;
+            transferBytes(connection, outputEndpoint, bytes, 0, receiptLength);
+            transferBytes(connection, outputEndpoint, RECEIPT_FEED, 0, RECEIPT_FEED.length);
+            transferBytes(connection, outputEndpoint, RECEIPT_CUT, 0, RECEIPT_CUT.length);
         } finally {
             if (claimedInterface != null) {
                 connection.releaseInterface(claimedInterface);
             }
             connection.close();
+        }
+    }
+
+    private void transferBytes(
+        UsbDeviceConnection connection,
+        UsbEndpoint endpoint,
+        byte[] bytes,
+        int start,
+        int length
+    ) {
+        int offset = start;
+        int end = start + length;
+        while (offset < end) {
+            int chunkLength = Math.min(TRANSFER_CHUNK_SIZE, end - offset);
+            int transferred = connection.bulkTransfer(
+                endpoint,
+                bytes,
+                offset,
+                chunkLength,
+                TRANSFER_TIMEOUT_MS
+            );
+            if (transferred <= 0) {
+                throw new IllegalStateException("Transfer data ke printer gagal.");
+            }
+            offset += transferred;
         }
     }
 

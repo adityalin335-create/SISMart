@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Transaction, type TransactionItemRecord } from '@/lib/db';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { format } from 'date-fns';
 import { id as idLocale, enUS, ms } from 'date-fns/locale';
 import type { Locale } from 'date-fns';
@@ -38,12 +38,19 @@ export default function TransactionHistory() {
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const receiptTimerRef = useRef<number | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>({});
   const bounds = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [restoreStock, setRestoreStock] = useState(true);
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'open'>('all');
   const [filterCashier, setFilterCashier] = useState<string>('all');
+
+  useEffect(() => () => {
+    if (receiptTimerRef.current !== null) {
+      window.clearTimeout(receiptTimerRef.current);
+    }
+  }, []);
 
   const transactions = useLiveQuery(() => {
     if (bounds.start && bounds.end) {
@@ -141,7 +148,13 @@ export default function TransactionHistory() {
 
   const openReceipt = () => {
     setDetailOpen(false);
-    setTimeout(() => setReceiptOpen(true), 200);
+    if (receiptTimerRef.current !== null) {
+      window.clearTimeout(receiptTimerRef.current);
+    }
+    receiptTimerRef.current = window.setTimeout(() => {
+      receiptTimerRef.current = null;
+      setReceiptOpen(true);
+    }, 200);
   };
 
   const handleDeleteTransaction = async () => {
@@ -180,7 +193,8 @@ export default function TransactionHistory() {
       setDetailOpen(false);
       setSelectedTx(null);
       toast.success(t('transactionHistory.toast.deleteSuccess'));
-    } catch {
+    } catch (error) {
+      console.error('[TransactionHistory] Gagal menghapus transaksi:', error);
       toast.error(t('transactionHistory.toast.deleteFailed'));
     }
   };

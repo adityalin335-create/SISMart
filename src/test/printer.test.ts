@@ -94,7 +94,7 @@ describe('getESCPOSData formatting', () => {
 
     const totalLine = lines.find(line => line.startsWith('TOTAL'));
     expect(totalLine).toBeDefined();
-    expect(totalLine?.length).toBe(32);
+    expect(totalLine?.length).toBe(16);
     expect(totalLine?.endsWith('65.000')).toBe(true);
 
     const paymentMethodLine = lines.find(line => line.startsWith('Metode:'));
@@ -108,10 +108,12 @@ describe('getESCPOSData formatting', () => {
 
     const kembaliLine = lines.find(line => line.startsWith('KEMBALI'));
     expect(kembaliLine).toBeDefined();
-    expect(kembaliLine?.length).toBe(32);
+    expect(kembaliLine?.length).toBe(16);
     expect(kembaliLine?.endsWith('0')).toBe(true);
     expect(output.endsWith('\n\n\n\x1D\x56\x00')).toBe(true);
     expect(output).toContain('\x1B\x45\x01\x1D\x21\x11');
+    expect(output).toContain('\x1B\x45\x01\x1D\x21\x11TOTAL');
+    expect(output).toContain('\x1B\x45\x01\x1D\x21\x11KEMBALI');
   });
 
   const baseTransaction: Transaction = {

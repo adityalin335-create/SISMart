@@ -166,13 +166,14 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
       }
 
       toast.info(t('receipt.toast.searchingPrinter'));
+      let server: BluetoothRemoteGATTServer | null = null;
       // @ts-expect-error Web Bluetooth API is not fully typed in TypeScript
       const device = await navigator.bluetooth.requestDevice({
         filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
         optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'],
       });
 
-      const server = await device.gatt.connect();
+      server = await device.gatt.connect();
       const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
       const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
       const data = new TextEncoder().encode(getESCPOSData(printData));
@@ -183,14 +184,21 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
       }
 
       toast.success(t('receipt.toast.printSuccess'));
-      await server.disconnect();
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== 'NotFoundError') {
         console.error('Receipt printing failed:', err);
         toast.error(t('receipt.toast.printFailed'));
       }
     } finally {
-      setPrinting(false);
+      try {
+        if (server?.connected) {
+          server.disconnect();
+        }
+      } catch (error) {
+        console.warn('Failed to disconnect from Bluetooth printer:', error);
+      } finally {
+        setPrinting(false);
+      }
     }
   };
 

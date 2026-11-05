@@ -68,6 +68,8 @@ export default function Kasir() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [editingTxId, setEditingTxId] = useState<number | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutProcessing, setCheckoutProcessing] = useState(false);
+  const checkoutInProgressRef = useRef(false);
   const checkoutHistoryEntryRef = useRef(false);
   const checkoutHistoryStateRef = useRef<unknown>(null);
   const checkoutHistoryUrlRef = useRef('');
@@ -352,35 +354,41 @@ export default function Kasir() {
       }
       doFullReset();
     } catch (error) {
+      console.error('[Cashier] Gagal menyimpan tagihan:', error);
       toast.error(error instanceof Error ? error.message : 'Gagal menyimpan tagihan.');
     }
   };
 
   const loadOpenBill = async (tx: Transaction) => {
     if (!tx.id) return;
-    const items = await db.transactionItems.where('transactionId').equals(tx.id).toArray();
-    const allProducts = await db.products.where('isDeleted').equals(0).toArray();
+    try {
+      const items = await db.transactionItems.where('transactionId').equals(tx.id).toArray();
+      const allProducts = await db.products.where('isDeleted').equals(0).toArray();
 
-    const cartItems: CartItem[] = items.map(item => {
-      const product = allProducts.find(p => p.id === item.productId);
-      if (!product) throw new Error(t('cashier.toast.productNotFoundLoadBill', { name: item.productName }));
-      return {
-        product,
-        qty: item.quantity,
-        discountType: item.discountType as 'percentage' | 'nominal' | null,
-        discountValue: item.discountValue,
-      };
-    });
+      const cartItems: CartItem[] = items.map(item => {
+        const product = allProducts.find(p => p.id === item.productId);
+        if (!product) throw new Error(t('cashier.toast.productNotFoundLoadBill', { name: item.productName }));
+        return {
+          product,
+          qty: item.quantity,
+          discountType: item.discountType as 'percentage' | 'nominal' | null,
+          discountValue: item.discountValue,
+        };
+      });
 
-    setCart(cartItems);
-    setDraftReceiptNumber(tx.receiptNumber);
-    setEditingTxId(tx.id);
-    setTxDiscountType(tx.discountType);
-    setTxDiscountValue(tx.discountType ? String(tx.discountValue) : '');
-    setCustomerName(tx.customerName || '');
-    setCustomerId(tx.customerId);
-    setRemarks(tx.remarks || '');
-    setOpenBillsOpen(false);
+      setCart(cartItems);
+      setDraftReceiptNumber(tx.receiptNumber);
+      setEditingTxId(tx.id);
+      setTxDiscountType(tx.discountType);
+      setTxDiscountValue(tx.discountType ? String(tx.discountValue) : '');
+      setCustomerName(tx.customerName || '');
+      setCustomerId(tx.customerId);
+      setRemarks(tx.remarks || '');
+      setOpenBillsOpen(false);
+    } catch (error) {
+      console.error('[Cashier] Gagal memuat tagihan:', error);
+      toast.error(error instanceof Error ? error.message : 'Gagal memuat tagihan.');
+    }
   };
 
   const cancelOpenBill = async (tx: Transaction) => {
@@ -414,6 +422,7 @@ export default function Kasir() {
       setCancelTargetTx(null);
       if (editingTxId === tx.id) doFullReset();
     } catch (error) {
+      console.error('[Cashier] Gagal membatalkan tagihan:', error);
       toast.error(error instanceof Error ? error.message : 'Gagal membatalkan tagihan.');
     }
   };
@@ -451,6 +460,10 @@ export default function Kasir() {
     } else if (!paymentMethodId || paidAmount < total) {
       return;
     }
+
+    if (checkoutInProgressRef.current) return;
+    checkoutInProgressRef.current = true;
+    setCheckoutProcessing(true);
 
     const completedAt = new Date();
     try {
@@ -612,6 +625,9 @@ export default function Kasir() {
       console.error('[Cashier] Gagal menyelesaikan transaksi:', error);
       toast.error(t('cashier.toast.checkoutFailed'));
       return;
+    } finally {
+      checkoutInProgressRef.current = false;
+      setCheckoutProcessing(false);
     }
 
     doFullReset();
@@ -664,13 +680,23 @@ export default function Kasir() {
 
     let active = true;
     let removeBackButtonListener: (() => void) | undefined;
-    void CapacitorApp.addListener('backButton', () => setCheckoutOpen(false)).then(handle => {
-      if (active) {
-        removeBackButtonListener = () => { void handle.remove(); };
-      } else {
-        void handle.remove();
-      }
-    });
+    void CapacitorApp.addListener('backButton', () => setCheckoutOpen(false))
+      .then(handle => {
+        if (active) {
+          removeBackButtonListener = () => {
+            void handle.remove().catch(error => {
+              console.warn('[Cashier] Failed to remove native back-button listener:', error);
+            });
+          };
+        } else {
+          void handle.remove().catch(error => {
+            console.warn('[Cashier] Failed to remove stale native back-button listener:', error);
+          });
+        }
+      })
+      .catch(error => {
+        console.error('[Cashier] Failed to register native back-button listener:', error);
+      });
 
     return () => {
       active = false;
@@ -1146,9 +1172,9 @@ export default function Kasir() {
               className="w-full h-12 text-base font-semibold shrink-0"
               onClick={handleCheckout}
               disabled={
-                useDebt
+                        checkoutProcessing || (useDebt
                   ? !customerId || paidAmount < 0 || paidAmount > total || (checkoutPaidAmount > 0 && !paymentMethodId)
-                  : !paymentMethodId || paidAmount < total
+                          : !paymentMethodId || paidAmount < total)
               }
             >
               <Check className="w-5 h-5 mr-2" />
