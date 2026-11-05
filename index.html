@@ -49,6 +49,20 @@
   <meta name="application-name" content="SISMart" />
   <meta name="msapplication-TileColor" content="#0169ff" />
   <meta name="msapplication-config" content="/browserconfig.xml" />
+
+  <script>
+    if (typeof globalThis === 'undefined') {
+      Object.defineProperty(Object.prototype, '__magic__', {
+        get: function() {
+          return this;
+        },
+        configurable: true
+      });
+
+      __magic__.globalThis = __magic__;
+      delete Object.prototype.__magic__;
+    }
+  </script>
   
   <!-- Structured Data (JSON-LD) -->
   <script type="application/ld+json">
