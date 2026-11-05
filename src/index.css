@@ -190,8 +190,9 @@
   }
 
   .receipt-print-document {
+    page: thermal58;
     display: block !important;
-    width: 74mm !important;
+    width: 54mm !important;
     max-width: 100% !important;
     margin: 0 auto !important;
     padding: 0 !important;

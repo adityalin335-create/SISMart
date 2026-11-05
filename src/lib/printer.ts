@@ -31,6 +31,8 @@ interface PrintData {
 
 const DEFAULT_PRINTER_KEY = 'kg_default_bluetooth_printer';
 const PRINTER_MODE_KEY = 'kg_printer_mode';
+const RECEIPT_COLUMNS = 32;
+const CUT_COMMAND = '\x1D\x56\x00';
 
 export type PrinterMode = 'bluetooth' | 'masung-usb';
 
@@ -59,7 +61,8 @@ export const getDefaultBluetoothPrinter = (): BluetoothPrinter | null => {
   try {
     const value = localStorage.getItem(DEFAULT_PRINTER_KEY);
     return value ? JSON.parse(value) as BluetoothPrinter : null;
-  } catch {
+  } catch (error) {
+    console.warn('[Printer] Failed to read the default Bluetooth printer:', error);
     return null;
   }
 };
@@ -71,15 +74,16 @@ export const setDefaultBluetoothPrinter = (printer: BluetoothPrinter | null): vo
     } else {
       localStorage.removeItem(DEFAULT_PRINTER_KEY);
     }
-  } catch {
-    // ignore storage errors
+  } catch (error) {
+    console.warn('[Printer] Failed to save the default Bluetooth printer:', error);
   }
 };
 
 export const getPrinterMode = (): PrinterMode => {
   try {
     return localStorage.getItem(PRINTER_MODE_KEY) === 'masung-usb' ? 'masung-usb' : 'bluetooth';
-  } catch {
+  } catch (error) {
+    console.warn('[Printer] Failed to read printer mode:', error);
     return 'bluetooth';
   }
 };
@@ -164,49 +168,80 @@ export const getESCPOSData = ({
   language,
 }: PrintData): string => {
   const lines: string[] = [];
-  
-  lines.push('\x1B\x61\x01'); // Center align
-  lines.push(`${storeSettings?.storeName || 'Toko'}\n`);
-  if (storeSettings?.address) lines.push(`${storeSettings.address}\n`);
-  if (storeSettings?.phone) lines.push(`${storeSettings.phone}\n`);
-  lines.push('--------------------------------\n');
-  lines.push(`No: ${transaction.receiptNumber}\n`);
-  lines.push(`${format(new Date(transaction.date), 'dd/MM/yyyy HH:mm')}\n`);
-  if (cashierName) lines.push(`Kasir: ${cashierName}\n`);
-  if (transaction.customerName) lines.push(`Pelanggan: ${transaction.customerName}\n`);
-  if (transaction.remarks) lines.push(`Catatan: ${transaction.remarks}\n`);
-  lines.push('--------------------------------\n');
-  
-  lines.push('\x1B\x61\x00'); // Left align
-  const rp = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
+  const rp = (n: number) => n.toLocaleString('id-ID');
+  const wrapText = (value: string, width: number) => {
+    const words = value.trim().split(/\s+/);
+    const result: string[] = [];
+    let line = '';
+
+    for (const word of words) {
+      if (!word) continue;
+      if (word.length > width) {
+        if (line) {
+          result.push(line);
+          line = '';
+        }
+        for (let offset = 0; offset < word.length; offset += width) {
+          result.push(word.slice(offset, offset + width));
+        }
+      } else if (!line) {
+        line = word;
+      } else if (line.length + word.length + 1 <= width) {
+        line += ` ${word}`;
+      } else {
+        result.push(line);
+        line = word;
+      }
+    }
+
+    if (line) result.push(line);
+    return result;
+  };
   const formatRow = (left: string, right: string) => {
-    const spaceCount = 32 - left.length - right.length;
-    return `${left}${' '.repeat(Math.max(1, spaceCount))}${right}\n`;
+    if (left.length + right.length > RECEIPT_COLUMNS) {
+      return `${wrapText(left, RECEIPT_COLUMNS).join('\n')}\n${right.padStart(RECEIPT_COLUMNS)}\n`;
+    }
+    return `${left}${' '.repeat(RECEIPT_COLUMNS - left.length - right.length)}${right}\n`;
   };
 
+  lines.push('\x1B\x61\x01'); // Center align
+  lines.push('\x1B\x45\x01\x1D\x21\x11');
+  lines.push(`${wrapText(storeSettings?.storeName || 'Toko', 16).join('\n')}\n`);
+  lines.push('\x1B\x45\x00\x1D\x21\x00');
+  if (storeSettings?.address) lines.push(`${wrapText(storeSettings.address, RECEIPT_COLUMNS).join('\n')}\n`);
+  if (storeSettings?.phone) lines.push(`${wrapText(storeSettings.phone, RECEIPT_COLUMNS).join('\n')}\n`);
+  lines.push(`${'-'.repeat(RECEIPT_COLUMNS)}\n`);
+  lines.push(`No: ${transaction.receiptNumber}\n`);
+  lines.push(`${format(new Date(transaction.date), 'dd/MM/yyyy HH:mm')}\n`);
+  if (cashierName) lines.push(`${wrapText(`Kasir: ${cashierName}`, RECEIPT_COLUMNS).join('\n')}\n`);
+  if (transaction.customerName) lines.push(`${wrapText(`Pelanggan: ${transaction.customerName}`, RECEIPT_COLUMNS).join('\n')}\n`);
+  if (transaction.remarks) lines.push(`${wrapText(`Catatan: ${transaction.remarks}`, RECEIPT_COLUMNS).join('\n')}\n`);
+  lines.push(`${'-'.repeat(RECEIPT_COLUMNS)}\n`);
+
+  lines.push('\x1B\x61\x00'); // Left align
   for (const item of items) {
-    lines.push(`${item.productName}\n`);
-    if (item.notes) lines.push(`  ${item.notes}\n`);
-    lines.push(formatRow(`  ${item.quantity} x ${rp(item.price)}`, rp(item.subtotal)));
+    lines.push(`\x1B\x45\x01\x1D\x21\x10${wrapText(item.productName, RECEIPT_COLUMNS).join('\n')}\n\x1B\x45\x00\x1D\x21\x00`);
+    if (item.notes) lines.push(`${wrapText(`  ${item.notes}`, RECEIPT_COLUMNS).join('\n')}\n`);
+    lines.push(formatRow(`${item.quantity} x ${rp(item.price)}`, rp(item.subtotal)));
   }
-  
-  lines.push('--------------------------------\n');
+
+  lines.push(`${'-'.repeat(RECEIPT_COLUMNS)}\n`);
   lines.push(formatRow('Subtotal:', rp(transaction.subtotal)));
   if (transaction.discountAmount > 0) {
     lines.push(formatRow('Diskon:', `-${rp(transaction.discountAmount)}`));
   }
-  lines.push(formatRow('TOTAL:', rp(transaction.total)));
+  lines.push(`\x1B\x45\x01\x1D\x21\x10${formatRow('TOTAL', rp(transaction.total))}\x1B\x45\x00\x1D\x21\x00`);
   lines.push(formatRow('Metode:', paymentMethodName));
   lines.push(formatRow('Bayar:', rp(transaction.paymentAmount)));
   if (transaction.debtAmount && transaction.debtAmount > 0) {
     lines.push(formatRow('Hutang:', rp(transaction.debtAmount)));
   } else {
-    lines.push(formatRow('Kembali:', rp(transaction.change)));
+    lines.push(`\x1B\x45\x01\x1D\x21\x10${formatRow('KEMBALI', rp(transaction.change))}\x1B\x45\x00\x1D\x21\x00`);
   }
-  lines.push('--------------------------------\n');
+  lines.push(`${'-'.repeat(RECEIPT_COLUMNS)}\n`);
   lines.push('\x1B\x61\x01'); // Center
-  lines.push(`${storeSettings?.receiptFooter || 'Terima kasih!'}\n`);
-  
+  lines.push(`${wrapText(storeSettings?.receiptFooter || 'Terima kasih!', RECEIPT_COLUMNS).join('\n')}\n`);
+
   if (!storeSettings?.hideWatermark) {
     const lang = language || 'id';
     let line1 = 'Dicetak Dari Aplikasi';
@@ -218,9 +253,9 @@ export const getESCPOSData = ({
       line1 = 'Dicetak Daripada Aplikasi';
       line2 = 'SISMart';
     }
-    lines.push(`\n${line1}\n${line2}\n`);
+    lines.push(`${line1}\n${line2}\n`);
   }
-  lines.push('\n\n\n');
+  lines.push(`\n\n\n${CUT_COMMAND}`);
 
   return lines.join('');
 };
@@ -352,7 +387,7 @@ export const getDailyReportESCPOSData = ({
     lines.push(`\n${line1}\n${line2}\n`);
   }
   
-  lines.push('================================\n\n\n\n');
+  lines.push(`================================\n\n\n\n${CUT_COMMAND}`);
 
   return lines.join('');
 };

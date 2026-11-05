@@ -1,36 +1,13 @@
 import "core-js/actual/array/at";
+import "core-js/actual/array/flat";
 import "core-js/actual/object/from-entries";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./i18n";
 
-// Global handlers for errors that React's ErrorBoundary cannot catch:
-//  - unhandled promise rejections (async code)
-//  - uncaught runtime errors (event handlers, setTimeout, etc.)
-// For now we log to the console; this is also where a remote logger would hook in.
-if (typeof window !== "undefined") {
-  window.addEventListener("unhandledrejection", (event) => {
-    console.error("[UnhandledRejection]", event.reason);
-  });
-
-  window.addEventListener("error", (event) => {
-    console.error("[WindowError]", event.message, {
-      filename: event.filename,
-      lineno: event.lineno,
-      colno: event.colno,
-      error: event.error,
-    });
-  });
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Missing application root element.");
 }
-
-const rootElement = document.getElementById("root")!;
-const startupObserver = new MutationObserver(() => {
-  if (rootElement.childNodes.length > 0) {
-    document.getElementById("startup-fallback")?.remove();
-    startupObserver.disconnect();
-  }
-});
-startupObserver.observe(rootElement, { childList: true });
-
 createRoot(rootElement).render(<App />);

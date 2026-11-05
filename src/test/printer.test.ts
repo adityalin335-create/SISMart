@@ -72,41 +72,46 @@ describe('getESCPOSData formatting', () => {
       cashierName: 'Joko',
     });
 
-    const lines = output.split('\n');
+    const lines = output
+      .replaceAll('\x1B\x45\x01', '')
+      .replaceAll('\x1B\x45\x00', '')
+      .replaceAll('\x1D\x21\x11', '')
+      .replaceAll('\x1D\x21\x10', '')
+      .replaceAll('\x1D\x21\x00', '')
+      .split('\n');
 
-    // Find the item quantity and subtotal line: "  1 x Rp 15.000        Rp 15.000"
-    const itemLine = lines.find(line => line.includes('1 x Rp 15.000'));
+    // Quantity and unit price stay left-aligned while the item subtotal stays right-aligned.
+    const itemLine = lines.find(line => line.includes('1 x 15.000'));
     expect(itemLine).toBeDefined();
     expect(itemLine?.length).toBe(32); // Must be exactly 32 characters
-    expect(itemLine?.endsWith('Rp 15.000')).toBe(true);
+    expect(itemLine?.endsWith('15.000')).toBe(true);
 
-    // Find the Subtotal line: "Subtotal:              Rp 65.000"
+    // Monetary totals occupy the right edge of the receipt.
     const subtotalLine = lines.find(line => line.startsWith('Subtotal:'));
     expect(subtotalLine).toBeDefined();
     expect(subtotalLine?.length).toBe(32);
-    expect(subtotalLine?.endsWith('Rp 65.000')).toBe(true);
+    expect(subtotalLine?.endsWith('65.000')).toBe(true);
 
-    // Find the TOTAL line: "TOTAL:                 Rp 65.000"
-    const totalLine = lines.find(line => line.startsWith('TOTAL:'));
+    const totalLine = lines.find(line => line.startsWith('TOTAL'));
     expect(totalLine).toBeDefined();
     expect(totalLine?.length).toBe(32);
-    expect(totalLine?.endsWith('Rp 65.000')).toBe(true);
+    expect(totalLine?.endsWith('65.000')).toBe(true);
 
     const paymentMethodLine = lines.find(line => line.startsWith('Metode:'));
     expect(paymentMethodLine).toBeDefined();
     expect(paymentMethodLine).toContain('Tunai');
 
-    // Find the Bayar line: "Bayar:                 Rp 65.000"
     const bayarLine = lines.find(line => line.startsWith('Bayar:'));
     expect(bayarLine).toBeDefined();
     expect(bayarLine?.length).toBe(32);
-    expect(bayarLine?.endsWith('Rp 65.000')).toBe(true);
+    expect(bayarLine?.endsWith('65.000')).toBe(true);
 
-    // Find the Kembali line: "Kembali:                    Rp 0"
-    const kembaliLine = lines.find(line => line.startsWith('Kembali:'));
+    const kembaliLine = lines.find(line => line.startsWith('KEMBALI'));
     expect(kembaliLine).toBeDefined();
     expect(kembaliLine?.length).toBe(32);
-    expect(kembaliLine?.endsWith('Rp 0')).toBe(true);
+    expect(kembaliLine?.endsWith('0')).toBe(true);
+    expect(output.endsWith('\n\n\n\x1D\x56\x00')).toBe(true);
+    expect(output).toContain('\x1B\x45\x01\x1D\x21\x11');
   });
 
   const baseTransaction: Transaction = {
@@ -210,6 +215,7 @@ describe('getESCPOSData formatting', () => {
 
     expect(output).not.toContain('Dicetak Dari Aplikasi');
     expect(output).not.toContain('SISMart');
+    expect(output.endsWith('\n\n\n\n\x1D\x56\x00')).toBe(true);
   });
 
   it('should hide the watermark when hideWatermark is true and no cloud store is linked', () => {

@@ -41,10 +41,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const user = await restoreSession();
-      if (!cancelled) {
-        setCurrentUser(user);
-        setSessionRestored(true);
+      try {
+        const user = await restoreSession();
+        if (!cancelled) {
+          setCurrentUser(user);
+          setSessionRestored(true);
+        }
+      } catch (error) {
+        console.error('[Auth] Failed to restore session:', error);
+        if (!cancelled) {
+          setCurrentUser(null);
+          setSessionRestored(true);
+        }
       }
     })();
     return () => {
@@ -57,22 +65,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!currentUser?.id) return;
     const id = currentUser.id;
+    let active = true;
     const sub = db.users.hook('updating', (mods, primKey) => {
       if (primKey === id) {
         // Defer so the update is committed first, then re-read.
         queueMicrotask(async () => {
-          const fresh = await db.users.get(id);
-          if (!fresh || !fresh.isActive) {
-            // Account deactivated → kick out
-            clearStoredSession();
-            setCurrentUser(null);
-            return;
+          try {
+            const fresh = await db.users.get(id);
+            if (!active) return;
+            if (!fresh || !fresh.isActive) {
+              clearStoredSession();
+              setCurrentUser(null);
+              return;
+            }
+            setCurrentUser(fresh);
+          } catch (error) {
+            console.error('[Auth] Failed to refresh the active user:', error);
           }
-          setCurrentUser(fresh);
         });
       }
     });
     return () => {
+      active = false;
       db.users.hook('updating').unsubscribe(sub);
     };
   }, [currentUser?.id]);

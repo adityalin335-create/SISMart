@@ -58,7 +58,8 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
         logging: false,
       });
       return canvas;
-    } catch {
+    } catch (error) {
+      console.error('Receipt capture failed:', error);
       toast.error(t('receipt.toast.captureError'));
       return null;
     } finally {
@@ -128,6 +129,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Receipt sharing failed:', err);
         toast.error(t('receipt.toast.shareFailed'));
       }
     }
@@ -206,13 +208,13 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
         </DialogHeader>
 
         {/* Receipt preview - this gets captured as image */}
-        <div ref={receiptRef} className="bg-white text-black p-4 rounded-lg mx-auto" style={{ width: '280px', fontFamily: 'monospace', fontSize: '12px' }}>
+        <div ref={receiptRef} className="bg-white text-black p-3 rounded-lg mx-auto" style={{ width: '215px', fontFamily: 'monospace', fontSize: '11px', lineHeight: '1.25' }}>
           {/* Store Header */}
           <div className="text-center mb-2">
             {storeSettings?.logo && (
               <img src={storeSettings.logo} alt={t('receipt.logoAlt')} className="w-16 h-16 object-contain mx-auto mb-1" />
             )}
-            <p className="font-bold text-sm">{storeName}</p>
+            <p className="font-bold text-base">{storeName}</p>
             {storeSettings?.address && <p className="text-[10px]">{storeSettings.address}</p>}
             {storeSettings?.phone && <p className="text-[10px]">{storeSettings.phone}</p>}
           </div>
@@ -248,7 +250,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
           {/* Items */}
           {items.map((item, i) => (
             <div key={i} className="mb-1">
-              <p className="text-[11px] font-medium">{item.productName}</p>
+              <p className="text-xs font-semibold">{item.productName}</p>
               <div className="flex justify-between text-[10px]">
                 <span>{item.quantity} x {rp(item.price)}</span>
                 <span>{rp(item.subtotal)}</span>
@@ -276,11 +278,11 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
                 <span>-{rp(transaction.discountAmount)}</span>
               </div>
             )}
-            <div className="flex justify-between font-bold text-xs border-t border-dashed border-gray-400 pt-1 mt-1">
+            <div className="flex justify-between font-bold text-sm border-t border-dashed border-gray-400 pt-1 mt-1">
               <span>{t('receipt.total')}</span>
               <span>{rp(transaction.total)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between font-bold text-sm">
               <span>{t('receipt.paid')}</span>
               <span>{rp(transaction.paymentAmount)}</span>
             </div>

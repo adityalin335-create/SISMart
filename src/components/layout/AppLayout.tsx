@@ -42,7 +42,7 @@ export default function AppLayout() {
         await seedDefaultData();
         if (active) setSeedStatus('success');
       } catch (error) {
-        console.error('[StartupDiagnostics] Database initialization failed:', error);
+        console.error('[Startup] Database initialization failed:', error);
         if (active) {
           setDatabaseStatus(current => current === 'running' ? 'failed' : current);
           setSeedStatus(current => current === 'pending' ? 'skipped' : 'failed');
@@ -64,7 +64,7 @@ export default function AppLayout() {
         error: null as string | null,
       };
     } catch (error) {
-      console.error('[StartupDiagnostics] Failed to read store settings:', error);
+      console.error('[Startup] Failed to read store settings:', error);
       return { settings: undefined, error: getErrorMessage(error) };
     }
   });
@@ -82,7 +82,6 @@ export default function AppLayout() {
     setStoreSettingsStatus(storeSettingsQuery.settings ? 'found' : 'missing');
   }, [storeSettingsQuery]);
 
-  const onboardingVisible = Boolean(storeSettings && !storeSettings.onboardingDone);
   const startupReady =
     databaseStatus === 'success' &&
     seedStatus === 'success' &&
@@ -90,16 +89,7 @@ export default function AppLayout() {
     !loading;
 
   if (!startupReady || startupError) {
-    return (
-      <StartupDiagnostics
-        databaseStatus={databaseStatus}
-        seedStatus={seedStatus}
-        storeSettingsStatus={storeSettingsStatus}
-        authLoading={loading}
-        onboardingVisible={onboardingVisible}
-        error={startupError}
-      />
-    );
+    return <StartupScreen failed={Boolean(startupError)} />;
   }
 
   // Show onboarding if not done yet
@@ -132,53 +122,24 @@ export default function AppLayout() {
   );
 }
 
-function StartupDiagnostics({
-  databaseStatus,
-  seedStatus,
-  storeSettingsStatus,
-  authLoading,
-  onboardingVisible,
-  error,
-}: {
-  databaseStatus: StartupStepStatus;
-  seedStatus: StartupStepStatus;
-  storeSettingsStatus: StoreSettingsStatus;
-  authLoading: boolean;
-  onboardingVisible: boolean;
-  error: string | null;
-}) {
-  const rows = [
-    ['React started', 'Yes'],
-    ['Dexie initialized', 'Yes'],
-    ['Database open', databaseStatus],
-    ['storeSettings', storeSettingsStatus],
-    ['seedDefaultData', seedStatus],
-    ['Auth loading', authLoading ? 'Yes' : 'No'],
-    ['Onboarding visible', onboardingVisible ? 'Yes' : 'No'],
-  ] as const;
-
+function StartupScreen({ failed }: { failed: boolean }) {
   return (
-    <main className="min-h-screen bg-white px-5 py-8 text-slate-900">
-      <section className="mx-auto w-full max-w-lg space-y-5">
-        <div>
-          <h1 className="text-xl font-bold">SISMart startup diagnostics</h1>
-          <p className="mt-1 text-sm text-slate-600">Status pemeriksaan startup aplikasi</p>
-        </div>
-
-        <dl className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
-          {rows.map(([label, value]) => (
-            <div key={label} className="flex items-center justify-between gap-4 px-4 py-3">
-              <dt className="text-sm font-medium">{label}</dt>
-              <dd className="break-all text-right text-sm">{value}</dd>
-            </div>
-          ))}
-        </dl>
-
-        {error && (
-          <section role="alert" className="space-y-2 rounded-lg border border-red-300 bg-red-50 p-4 text-red-900">
-            <h2 className="font-semibold">Startup error</h2>
-            <pre className="whitespace-pre-wrap break-words text-sm">{error}</pre>
-          </section>
+    <main className="flex min-h-screen items-center justify-center bg-background px-5 text-foreground">
+      <section className="w-full max-w-sm space-y-4 text-center" role={failed ? 'alert' : 'status'}>
+        <h1 className="text-xl font-bold">SISMart</h1>
+        {failed ? (
+          <>
+            <p className="text-sm text-muted-foreground">Aplikasi belum dapat dimulai. Silakan coba muat ulang.</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            >
+              Muat ulang
+            </button>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">Memuat aplikasi...</p>
         )}
       </section>
     </main>

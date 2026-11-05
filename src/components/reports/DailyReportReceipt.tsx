@@ -45,7 +45,8 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
         logging: false,
       });
       return canvas;
-    } catch {
+    } catch (error) {
+      console.error('Daily report capture failed:', error);
       toast.error(t('dailyReceipt.captureError'));
       return null;
     } finally {
@@ -121,6 +122,7 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Daily report sharing failed:', err);
         toast.error(t('dailyReceipt.shareFailed'));
       }
     }

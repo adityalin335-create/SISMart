@@ -65,7 +65,11 @@ const App = () => {
   useAppUpdate();
 
   useEffect(() => {
-    initAnalytics();
+    try {
+      initAnalytics();
+    } catch (err) {
+      console.error("[Analytics] Initialization failed:", err);
+    }
 
     if (Capacitor.isNativePlatform()) {
       StatusBar.setOverlaysWebView({ overlay: false }).catch(err => {
@@ -75,14 +79,18 @@ const App = () => {
     }
 
     // Pemicu awal background sync saat startup
-    import('@/lib/sync').then(({ triggerBackgroundSync }) => {
+    void import('@/lib/sync').then(({ triggerBackgroundSync }) => {
       triggerBackgroundSync();
+    }).catch(error => {
+      console.error('[Sync] Failed to initialize background sync:', error);
     });
 
     const handleOnline = () => {
       console.log('[Sync] Jaringan kembali online, memicu sync...');
-      import('@/lib/sync').then(({ triggerBackgroundSync }) => {
+      void import('@/lib/sync').then(({ triggerBackgroundSync }) => {
         triggerBackgroundSync();
+      }).catch(error => {
+        console.error('[Sync] Failed to start background sync:', error);
       });
     };
 
