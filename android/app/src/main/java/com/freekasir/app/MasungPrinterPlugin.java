@@ -252,6 +252,9 @@ public class MasungPrinterPlugin extends Plugin {
 
             int receiptTailLength = RECEIPT_FEED.length + RECEIPT_CUT.length;
             int receiptLength = bytes.length - receiptTailLength;
+            if (receiptLength < 0) {
+                throw new IllegalStateException("Data struk tidak lengkap untuk dicetak.");
+            }
             transferBytes(connection, outputEndpoint, bytes, 0, receiptLength);
             transferBytes(connection, outputEndpoint, RECEIPT_FEED, 0, RECEIPT_FEED.length);
             transferBytes(connection, outputEndpoint, RECEIPT_CUT, 0, RECEIPT_CUT.length);

@@ -37,6 +37,7 @@ interface ReceiptProps {
 export default function Receipt({ open, onClose, transaction, items, storeSettings, paymentMethodName, cashierName }: ReceiptProps) {
   const { t, i18n } = useTranslation('settings');
   const receiptRef = useRef<HTMLDivElement>(null);
+  const printInProgressRef = useRef(false);
   const [generating, setGenerating] = useState(false);
   const [printing, setPrinting] = useState(false);
 
@@ -136,7 +137,8 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
   };
 
   const handlePrint = async () => {
-    if (printing) return;
+    if (printInProgressRef.current) return;
+    printInProgressRef.current = true;
     setPrinting(true);
     const printData = { 
       transaction, 
@@ -197,6 +199,7 @@ export default function Receipt({ open, onClose, transaction, items, storeSettin
       } catch (error) {
         console.warn('Failed to disconnect from Bluetooth printer:', error);
       } finally {
+        printInProgressRef.current = false;
         setPrinting(false);
       }
     }

@@ -1329,7 +1329,9 @@ export function setupSyncHooks(db: PosDatabase) {
       if (obj.syncedAt === undefined) {
         obj.syncedAt = null;
       }
-      import('./sync').then(({ triggerBackgroundSync }) => triggerBackgroundSync());
+      import('./sync')
+        .then(({ triggerBackgroundSync }) => triggerBackgroundSync())
+        .catch((err) => console.error('[Sync] Failed to schedule background sync after create:', err));
     });
 
     table.hook('updating', (mods, primKey, obj) => {
@@ -1338,7 +1340,9 @@ export function setupSyncHooks(db: PosDatabase) {
         return;
       }
 
-      import('./sync').then(({ triggerBackgroundSync }) => triggerBackgroundSync());
+      import('./sync')
+        .then(({ triggerBackgroundSync }) => triggerBackgroundSync())
+        .catch((err) => console.error('[Sync] Failed to schedule background sync after update:', err));
 
       // Otherwise, it's a user modification: set updatedAt to now, and reset syncedAt to null
       return {
@@ -1370,7 +1374,9 @@ export function setupSyncHooks(db: PosDatabase) {
         }).catch((err) => {
           console.error(`Failed to record deletedRecord tombstone for ${tableName} (ID: ${primKey}):`, err);
         });
-        import('./sync').then(({ triggerBackgroundSync }) => triggerBackgroundSync());
+        import('./sync')
+          .then(({ triggerBackgroundSync }) => triggerBackgroundSync())
+          .catch((err) => console.error('[Sync] Failed to schedule background sync after delete:', err));
       }, 0);
     });
   });

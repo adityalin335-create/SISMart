@@ -120,8 +120,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           deletedAt: null,
         });
         existingNames.add(u);
-      } catch {
-        // unique-constraint race: ignore
+      } catch (error) {
+        if (error instanceof Error && error.name === 'ConstraintError') continue;
+        throw error;
       }
     }
 
@@ -273,6 +274,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       await markAllFeaturesSeen();
 
       onComplete();
+    } catch (error) {
+      console.error('Failed to finish store setup:', error);
+      toast.error(error instanceof Error ? error.message : t('toast.saveError'));
     } finally {
       setSaving(false);
     }

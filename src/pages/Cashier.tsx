@@ -1014,7 +1014,7 @@ export default function Kasir() {
 
       {/* Checkout Dialog */}
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-        <DialogContent className="max-w-[95vw] md:max-w-6xl rounded-xl max-h-[calc(100dvh-1rem)] h-[92dvh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="max-w-[95vw] md:max-w-6xl rounded-xl max-h-[calc(100vh-1rem)] h-[92vh] flex flex-col p-0 overflow-hidden">
           <DialogHeader className="p-6 pb-2 shrink-0">
             <DialogTitle>{t('cashier.checkout.title')}</DialogTitle>
           </DialogHeader>

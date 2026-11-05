@@ -74,6 +74,7 @@
   },
   "toast": {
     "googleLoginFailed": "Login Google gagal",
+    "saveError": "Gagal menyimpan pengaturan toko",
     "restoreInvalidFile": "File backup tidak valid",
     "restoreNoData": "File backup tidak berisi data",
     "restoreSuccess": "Data berhasil di-restore!",

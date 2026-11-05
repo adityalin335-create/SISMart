@@ -285,7 +285,7 @@ export default function BarcodeScanner({ open, onClose, onScan }: BarcodeScanner
 
   return (
     <Dialog open={open} onOpenChange={v => v || handleClose()}>
-      <DialogContent className="max-w-[95vw] max-h-[calc(100dvh-2rem)] rounded-xl p-0 overflow-y-auto">
+      <DialogContent className="max-w-[95vw] max-h-[calc(100vh-2rem)] rounded-xl p-0 overflow-y-auto">
         <DialogHeader className="p-4 pb-0">
           <DialogTitle className="flex items-center gap-2">
             <Camera className="w-5 h-5" />

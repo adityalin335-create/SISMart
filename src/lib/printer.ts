@@ -197,11 +197,11 @@ export const getESCPOSData = ({
     if (line) result.push(line);
     return result;
   };
-  const formatRow = (left: string, right: string, width = RECEIPT_COLUMNS) => {
-    if (left.length + right.length > width) {
-      return `${wrapText(left, width).join('\n')}\n${right.padStart(width)}\n`;
+  const formatRow = (left: string, right: string) => {
+    if (left.length + right.length > RECEIPT_COLUMNS) {
+      return `${wrapText(left, RECEIPT_COLUMNS).join('\n')}\n${right.padStart(RECEIPT_COLUMNS)}\n`;
     }
-    return `${left}${' '.repeat(width - left.length - right.length)}${right}\n`;
+    return `${left}${' '.repeat(RECEIPT_COLUMNS - left.length - right.length)}${right}\n`;
   };
 
   lines.push('\x1B\x61\x01'); // Center align
@@ -230,13 +230,13 @@ export const getESCPOSData = ({
   if (transaction.discountAmount > 0) {
     lines.push(formatRow('Diskon:', `-${rp(transaction.discountAmount)}`));
   }
-  lines.push(`\x1B\x45\x01\x1D\x21\x11${formatRow('TOTAL', rp(transaction.total), RECEIPT_COLUMNS / 2)}\x1B\x45\x00\x1D\x21\x00`);
+  lines.push(`\x1B\x61\x01\x1B\x45\x01\x1D\x21\x11TOTAL\n${rp(transaction.total)}\n\x1B\x45\x00\x1D\x21\x00\x1B\x61\x00`);
   lines.push(formatRow('Metode:', paymentMethodName));
   lines.push(formatRow('Bayar:', rp(transaction.paymentAmount)));
   if (transaction.debtAmount && transaction.debtAmount > 0) {
     lines.push(formatRow('Hutang:', rp(transaction.debtAmount)));
   } else {
-    lines.push(`\x1B\x45\x01\x1D\x21\x11${formatRow('KEMBALI', rp(transaction.change), RECEIPT_COLUMNS / 2)}\x1B\x45\x00\x1D\x21\x00`);
+    lines.push(`\x1B\x45\x01\x1D\x21\x01${formatRow('KEMBALI:', rp(transaction.change))}\x1B\x45\x00\x1D\x21\x00`);
   }
   lines.push(`${'-'.repeat(RECEIPT_COLUMNS)}\n`);
   lines.push('\x1B\x61\x01'); // Center

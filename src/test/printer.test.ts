@@ -77,7 +77,10 @@ describe('getESCPOSData formatting', () => {
       .replaceAll('\x1B\x45\x00', '')
       .replaceAll('\x1D\x21\x11', '')
       .replaceAll('\x1D\x21\x10', '')
+      .replaceAll('\x1D\x21\x01', '')
       .replaceAll('\x1D\x21\x00', '')
+      .replaceAll('\x1B\x61\x01', '')
+      .replaceAll('\x1B\x61\x00', '')
       .split('\n');
 
     // Quantity and unit price stay left-aligned while the item subtotal stays right-aligned.
@@ -94,8 +97,8 @@ describe('getESCPOSData formatting', () => {
 
     const totalLine = lines.find(line => line.startsWith('TOTAL'));
     expect(totalLine).toBeDefined();
-    expect(totalLine?.length).toBe(16);
-    expect(totalLine?.endsWith('65.000')).toBe(true);
+    expect(totalLine?.trim()).toBe('TOTAL');
+    expect(lines[lines.indexOf(totalLine!) + 1]).toBe('65.000');
 
     const paymentMethodLine = lines.find(line => line.startsWith('Metode:'));
     expect(paymentMethodLine).toBeDefined();
@@ -108,12 +111,11 @@ describe('getESCPOSData formatting', () => {
 
     const kembaliLine = lines.find(line => line.startsWith('KEMBALI'));
     expect(kembaliLine).toBeDefined();
-    expect(kembaliLine?.length).toBe(16);
+    expect(kembaliLine?.length).toBe(32);
     expect(kembaliLine?.endsWith('0')).toBe(true);
     expect(output.endsWith('\n\n\n\x1D\x56\x00')).toBe(true);
     expect(output).toContain('\x1B\x45\x01\x1D\x21\x11');
-    expect(output).toContain('\x1B\x45\x01\x1D\x21\x11TOTAL');
-    expect(output).toContain('\x1B\x45\x01\x1D\x21\x11KEMBALI');
+    expect(output).toContain('\x1B\x61\x01\x1B\x45\x01\x1D\x21\x11TOTAL');
   });
 
   const baseTransaction: Transaction = {

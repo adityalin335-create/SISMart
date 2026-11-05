@@ -31,6 +31,7 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
   const numberLocale = NUMBER_LOCALES[i18n.language] ?? 'id-ID';
   const currencySymbol = CURRENCY_SYMBOL[i18n.language] ?? 'Rp';
   const receiptRef = useRef<HTMLDivElement>(null);
+  const printInProgressRef = useRef(false);
   const [generating, setGenerating] = useState(false);
   const [printing, setPrinting] = useState(false);
 
@@ -129,7 +130,10 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
   };
 
   const handleBluetoothPrint = async () => {
+    if (printInProgressRef.current) return;
+    printInProgressRef.current = true;
     setPrinting(true);
+    let server: BluetoothRemoteGATTServer | null = null;
     try {
       const rawText = getDailyReportESCPOSData({
         ...data,
@@ -158,7 +162,7 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
         optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'],
       });
 
-      const server = await device.gatt.connect();
+      server = await device.gatt.connect();
       const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
       const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
       const encoder = new TextEncoder();
@@ -170,14 +174,22 @@ export default function DailyReportReceipt({ open, onClose, data }: DailyReportR
       }
 
       toast.success(t('dailyReceipt.printSuccess'));
-      await server.disconnect();
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== 'AbortError') {
         console.error('Daily report printing failed:', err);
         toast.error(t('dailyReceipt.printFailed'));
       }
     } finally {
-      setPrinting(false);
+      try {
+        if (server?.connected) {
+          server.disconnect();
+        }
+      } catch (error) {
+        console.warn('Failed to disconnect from Bluetooth printer:', error);
+      } finally {
+        printInProgressRef.current = false;
+        setPrinting(false);
+      }
     }
   };
 

@@ -74,6 +74,7 @@
   },
   "toast": {
     "googleLoginFailed": "Log masuk Google gagal",
+    "saveError": "Gagal menyimpan tetapan kedai",
     "restoreInvalidFile": "Fail backup tidak sah",
     "restoreNoData": "Fail backup tidak mengandungi data",
     "restoreSuccess": "Data berjaya dipulihkan!",

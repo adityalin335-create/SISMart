@@ -74,6 +74,7 @@
   },
   "toast": {
     "googleLoginFailed": "Google login failed",
+    "saveError": "Failed to save store settings",
     "restoreInvalidFile": "Invalid backup file",
     "restoreNoData": "Backup file contains no data",
     "restoreSuccess": "Data restored successfully!",

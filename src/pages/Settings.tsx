@@ -188,9 +188,13 @@ export default function Pengaturan() {
   const [storageUsage, setStorageUsage] = useState<{ usage: number; quota: number } | null>(null);
   useEffect(() => {
     if (navigator.storage?.estimate) {
-      navigator.storage.estimate().then(est => {
-        setStorageUsage({ usage: est.usage ?? 0, quota: est.quota ?? 0 });
-      });
+      void navigator.storage.estimate()
+        .then(est => {
+          setStorageUsage({ usage: est.usage ?? 0, quota: est.quota ?? 0 });
+        })
+        .catch(error => {
+          console.warn('[Settings] Storage estimate is unavailable:', error);
+        });
     }
   }, []);
 
