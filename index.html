@@ -89,56 +89,8 @@
 </head>
 
 <body>
-  <section id="pre-react-diagnostic" style="position: fixed; top: 8px; left: 8px; z-index: 2147483647; max-width: calc(100vw - 32px); padding: 12px; border: 2px solid #0169ff; border-radius: 8px; background: #fff; color: #111; font: 14px/1.4 sans-serif;">
-    <strong>SISMart Pre-React Diagnostic</strong>
-    <p style="margin: 4px 0 0;">If you can read this text, index.html loaded successfully.</p>
-  </section>
-  <script>
-    const scriptStatus = document.createElement('p');
-    scriptStatus.textContent = 'Script tag reached.';
-    scriptStatus.style.cssText = 'position: fixed; top: 72px; left: 8px; z-index: 2147483647; margin: 0; padding: 8px; background: #e8f0ff; color: #111; font: 14px/1.4 sans-serif;';
-    document.body.append(scriptStatus);
-  </script>
-  <div style="position: fixed; top: 0; left: 0; z-index: 2147483647; width: 100%; box-sizing: border-box; padding: 16px; background: #ffeb00; color: #ff0000; font: bold 36px/1.2 sans-serif;">
-    BUILD TEST<br>
-    Commit: 7b98535<br>
-    Timestamp: 2026-11-02
-  </div>
   <div id="root"></div>
-  <script>
-    document.body.insertAdjacentHTML(
-      'beforeend',
-      '<div id="before-bundle">Before Bundle</div>'
-    );
-
-    function showBundleError(message) {
-      const errorOutput = document.createElement('div');
-      errorOutput.style.cssText = 'position: fixed; top: 110px; left: 8px; z-index: 2147483647; max-width: calc(100vw - 32px); padding: 8px; background: #fee; color: #900; font: 14px/1.4 sans-serif;';
-      errorOutput.textContent = message;
-      document.body.append(errorOutput);
-    }
-
-    window.addEventListener('error', (event) => {
-      showBundleError(`JavaScript error: ${event.message || 'Unknown error'} (${event.filename || 'unknown file'}:${event.lineno || 0}:${event.colno || 0})`);
-    });
-
-    window.addEventListener('unhandledrejection', (event) => {
-      const reason = event.reason;
-      showBundleError(`Unhandled promise rejection: ${reason instanceof Error ? `${reason.name}: ${reason.message}` : String(reason)}`);
-    });
-  </script>
-  <script type="module">
-    document.body.insertAdjacentHTML(
-      "beforeend",
-      "<h1 style='color:green'>MODULE EXECUTED</h1>"
-    );
-  </script>
-  <script>
-    document.body.insertAdjacentHTML(
-      'beforeend',
-      '<div id="after-bundle">After Bundle Tag</div>'
-    );
-  </script>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 
 </html>
