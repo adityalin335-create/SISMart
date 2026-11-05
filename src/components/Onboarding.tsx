@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, type ChangeEvent } from 'react';
 import { Store, MapPin, Phone, ChevronRight, ChevronLeft, ShoppingCart, Package, BarChart3, Shield, Database, Palette, Download, CheckCircle2, Globe, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,6 +72,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [restoring, setRestoring] = useState(false);
   const [themeColor, setThemeColorState] = useState('215');
   const [installDone, setInstallDone] = useState(false);
+  const backupInputRef = useRef<HTMLInputElement>(null);
   const { canInstall, isInstalled, install } = usePWAInstall();
 
   const hasInstallStep = !isNative;
@@ -180,25 +181,38 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   const handleRestore = () => {
     if (restoring) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json,application/json';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      setRestoring(true);
-      try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        await restoreFromBackupData(data);
-        await finishAfterRestore(t('toast.restoreSuccess'));
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t('toast.restoreError'));
-      } finally {
-        setRestoring(false);
-      }
-    };
-    input.click();
+    backupInputRef.current?.click();
+  };
+
+  const handleBackupFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    setRestoring(true);
+    try {
+      const text = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            reject(new Error('File backup tidak dapat dibaca sebagai teks'));
+          }
+        };
+        reader.onerror = () => reject(reader.error ?? new Error('Gagal membaca file backup'));
+        reader.onabort = () => reject(new Error('Pembacaan file backup dibatalkan'));
+        reader.readAsText(file);
+      });
+      const data = JSON.parse(text);
+      await restoreFromBackupData(data);
+      await finishAfterRestore(t('toast.restoreSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('toast.restoreError'));
+    } finally {
+      input.value = '';
+      setRestoring(false);
+    }
   };
 
   // Tutup wizard onboarding setelah restore berhasil (paksa onboardingDone).
@@ -265,7 +279,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[100] bg-background max-w-lg md:max-w-6xl mx-auto overflow-y-auto" style={{ height: '100dvh', WebkitOverflowScrolling: 'touch' }}>
+    <div className="fixed left-0 right-0 top-0 bottom-0 z-[100] mx-auto max-w-lg overflow-y-auto bg-background md:max-w-6xl" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
       <div className="min-h-full flex flex-col">
         <div className="flex items-center justify-center gap-2 pt-8 pb-4">
           {Array.from({ length: totalSteps }).map((_, i) => (
@@ -399,7 +413,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           </div>
         ) : (
           /* Store setup - LAST */
-          <div className="flex-1 flex flex-col overflow-y-auto space-y-6 py-4 -mx-1 px-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex flex-col space-y-6 py-4 -mx-1 px-1">
             <div className="text-center space-y-2">
               <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
                 <Store className="w-8 h-8" />
@@ -422,6 +436,16 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 <Upload className="w-4 h-4" />
                 {restoring ? t('restore.restoring') : t('restore.backupButton')}
               </Button>
+              <input
+                ref={backupInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleBackupFileChange}
+                disabled={restoring}
+                aria-hidden="true"
+                tabIndex={-1}
+                style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
+              />
 
             </div>
 
