@@ -24,4 +24,13 @@ if (typeof window !== "undefined") {
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+const rootElement = document.getElementById("root")!;
+const startupObserver = new MutationObserver(() => {
+  if (rootElement.childNodes.length > 0) {
+    document.getElementById("startup-fallback")?.remove();
+    startupObserver.disconnect();
+  }
+});
+startupObserver.observe(rootElement, { childList: true });
+
+createRoot(rootElement).render(<App />);
